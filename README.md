@@ -2,7 +2,7 @@
 
 This repository is designed to organize and maintain the current ARPES data processing software used in Chen's group, ensuring it remains up-to-date for all users. It is an ongoing project and will be updated periodically.
 
-A manual for this software (`./Manual/manual.md`) is also available to help new group members become familiar with the software and data processing workflow.
+A manual for this software (`./Manual/manual.md`) is available to help new group members become familiar with the software and data processing workflow.
 
 The yulinARPES software and functions are the collective contributions of numerous group members across various generations (the full list can be found on the [group website](http://www.arpes.org.uk/People.html)).
 
