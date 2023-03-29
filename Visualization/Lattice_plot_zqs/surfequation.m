@@ -1,0 +1,86 @@
+function [A,B,C]=surfequation(a,b,c,beta,gamma,k,l,m)
+if k==0
+    if l==0
+        y1=a*cosd(beta);
+        z1=a*cosd(gamma);
+        x1=sqrt(a^2-y1^2-z1^2);
+        x2=0;
+        y2=b;
+        z2=0;
+        x3=0;
+        y3=0;
+        z3=0;
+    else 
+        if m==0
+            y1=a*cosd(beta);
+            z1=a*cosd(gamma);
+            x1=sqrt(a^2-y1^2-z1^2);
+            x2=0;
+            y2=0;
+            z2=0;
+            x3=0;
+            y3=0;
+            z3=c;
+        else
+            y1=a*cosd(beta);
+            z1=a*cosd(gamma);
+            x1=sqrt(a^2-y1^2-z1^2);
+            x2=0;
+            y2=0;
+            z2=0;
+            x3=0;
+            y3=b/l;
+            z3=0-(1/m)*c;
+        end
+    end
+else
+    if l==0
+        if m==0
+            y1=0;
+            z1=0;
+            x1=0;
+            x2=0;
+            y2=b;
+            z2=0;
+            x3=0;
+            y3=0;
+            z3=c;
+        else
+            y1=(1/k)*a*cosd(beta);
+            z1=(1/k)*a*cosd(gamma);
+            x1=(1/k)*sqrt(a^2-y1^2-z1^2);
+            x2=0;
+            y2=b;
+            z2=c/m;
+            x3=0;
+            y3=0;
+            z3=(1/m)*c;
+        end
+    else
+        if m==0
+            y1=(1/k)*a*cosd(beta);
+            z1=(1/k)*a*cosd(gamma);
+            x1=(1/k)*sqrt(a^2-y1^2-z1^2);
+            x2=0;
+            y2=(1/l)*b;
+            z2=0;
+            x3=0;
+            y3=b/l;
+            z3=c;
+        else
+            y1=(1/k)*a*cosd(beta);
+            z1=(1/k)*a*cosd(gamma);
+            x1=(1/k)*sqrt(a^2-y1^2-z1^2);
+            x2=0;
+            y2=(1/l)*b;
+            z2=0;
+            x3=0;
+            y3=0;
+            z3=(1/m)*c;
+        end
+    end
+end
+    A=(y2-y1)*(z3-z1)-(z2-z1)*(y3-y1);
+    B=(z2-z1)*(x3-x1)-(x2-x1)*(z3-z1);
+    C=(x2-x1)*(y3-y1)-(y2-y1)*(x3-x1);
+end

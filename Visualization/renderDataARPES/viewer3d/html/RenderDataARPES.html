@@ -1,0 +1,1461 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>RenderDataARPES</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-06-02"><meta name="DC.source" content="RenderDataARPES.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#3">Build Gui</a></li><li><a href="#6">Load Panel</a></li><li><a href="#7">Plot Panel</a></li><li><a href="#8">Make Movie Panel</a></li><li><a href="#10">Set Callbacks</a></li><li><a href="#12">Method: Callbacks</a></li><li><a href="#13">Method: Helper functions</a></li></ul></div><pre class="codeinput"><span class="comment">% RenderDataARPES works with data_browser. It will volume render an image of</span>
+<span class="comment">% a 3D ARPES data.</span>
+<span class="comment">%</span>
+<span class="comment">% To start the gui, simply call</span>
+<span class="comment">% RenderDataARPES();</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% GUI Layout Toolbox is PREREQUISITE:</span>
+<span class="comment">%</span>
+<span class="comment">% GUI Layout Toolbox is required to run this gui (and most guis built purely</span>
+<span class="comment">% by code). Please download the proper version from Mathwork website.</span>
+<span class="comment">% Incorrect GUI Layout Toolbox version will result in error.</span>
+<span class="comment">%</span>
+<span class="comment">% For Matlab 2014a (or earlier version) users, please use old version Gui</span>
+<span class="comment">% Layout Toolbox.</span>
+<span class="comment">% http://uk.mathworks.com/matlabcentral/fileexchange/27758-gui-layout-toolbox</span>
+<span class="comment">%</span>
+<span class="comment">% For Matlab 2014b (or newer version) users, please use new version Gui</span>
+<span class="comment">% Layout Toolbox.</span>
+<span class="comment">% http://www.mathworks.com/matlabcentral/fileexchange/47982-gui-layout-toolbox</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% This GUI is written by Han Peng</span>
+<span class="comment">% han.peng@physics.ox.ac.uk</span>
+<span class="comment">% Uinversity of Oxford (April 2015)</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% The core function render.m is written by Dr.D.Kroon</span>
+<span class="comment">% University of Twente (April 2009)</span>
+
+<span class="keyword">classdef</span> RenderDataARPES &lt; handle
+</pre><pre class="codeinput">    properties <span class="comment">% Figure and uicontrols</span>
+        <span class="comment">% CONVENTION OF PREFIX</span>
+        <span class="comment">% s = select</span>
+        <span class="comment">% i = input</span>
+        <span class="comment">% f = flag</span>
+        <span class="comment">% ui = user interface</span>
+        <span class="comment">% pb = push button</span>
+        <span class="comment">% str = string</span>
+
+        Figure
+
+        <span class="comment">% LOAD DATA</span>
+        StrDataName
+        PbLoadData
+        PbLoadDataResize
+        <span class="comment">% % resize data</span>
+        InputSizeZ
+        InputSizeXY
+
+        <span class="comment">% PLOT</span>
+        PbPlot
+        <span class="comment">% % Plot Options</span>
+        FlagAutoUpdate
+        InputFigNum
+        <span class="comment">% % Render Options</span>
+        SelectRenderType
+        SelectShadingMaterial
+        InAlphaMin
+        InputAlphaMax
+        SelectColorMapStyle
+        FlagColorMapFlip
+        uiDegTheta
+        uiDegPhi
+        <span class="comment">% % Movie Options</span>
+        PbMakeMovie
+        InputFileName
+        InputTotalFrames
+        InputFPS
+        <span class="comment">% STATUS</span>
+        StrStatus
+    <span class="keyword">end</span>
+</pre><h2>Build Gui<a name="3"></a></h2><pre class="codeinput">    methods <span class="comment">% Constructor &amp; Initialization methods</span>
+</pre><pre class="codeinput">        <span class="keyword">function</span> obj=RenderDataARPES(varargin)
+            <span class="comment">% Build Gui layout and set callbacks</span>
+            echo <span class="string">off</span>
+            obj = obj.createUIComponents();
+            obj = obj.setCallbacks();
+            obj = obj.openningFunction();
+        <span class="keyword">end</span>
+        <span class="keyword">function</span> obj = createUIComponents(obj)
+</pre><pre class="codeinput">            <span class="comment">% CONVENTION OF PREFIX</span>
+            <span class="comment">% s = select</span>
+            <span class="comment">% i = input</span>
+            <span class="comment">% f = flag</span>
+            <span class="comment">% ui = user interface</span>
+            <span class="comment">% pb = push button</span>
+            <span class="comment">% str = string</span>
+            STR_WIDTH=90;
+            STR_HEIGHT=25;
+            PB_HEIGHT=40;
+            UIANG_SIZE=150;
+            LOADDATA_HEIGHT=125;
+            PLOT_HEIGHT=340;
+            MAKEMOVIE_HEIGHT=125;
+
+            FIG_POSITION = [500 50 320 610];
+
+            obj.Figure=figure(<span class="keyword">...</span>
+                <span class="string">'Position'</span>,         FIG_POSITION,<span class="keyword">...</span>
+                <span class="string">'Name'</span>,             <span class="string">'RenderDataARPES'</span>,<span class="keyword">...</span>
+                <span class="string">'NumberTitle'</span>,      <span class="string">'off'</span>,<span class="keyword">...</span>
+                <span class="string">'MenuBar'</span>,          <span class="string">'none'</span>,<span class="keyword">...</span>
+                <span class="string">'IntegerHandle'</span>,    <span class="string">'off'</span>,<span class="keyword">...</span>
+                <span class="string">'HandleVisibility'</span>, <span class="string">'off'</span>,<span class="keyword">...</span>
+                <span class="string">'Tag'</span>,              <span class="string">'RenderDataARPES'</span>);
+
+            homeVBox = uiextras.VBox(<span class="string">'Parent'</span>,obj.Figure);
+</pre><img vspace="5" hspace="5" src="RenderDataARPES_01.png" alt=""> <h2>Load Panel<a name="6"></a></h2><pre class="codeinput">            <span class="keyword">try</span>
+            panelLoadData = uiextras.Panel(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           homeVBox,<span class="keyword">...</span>
+                <span class="string">'Title'</span>,            <span class="string">'Load Data'</span>,<span class="keyword">...</span>
+                <span class="string">'Padding'</span>,          5);
+            <span class="keyword">catch</span>
+                errMsg = <span class="keyword">...</span>
+                    {[<span class="string">'Unable to create GUI, please check your '</span>,<span class="keyword">...</span>
+                    <span class="string">'GUI Layout Toolbox version. '</span>,<span class="keyword">...</span>
+                    <span class="string">'For more information, run: '</span>],<span class="keyword">...</span>
+                    <span class="string">''' help RenderDataARPES ''.'</span>};
+                errordlg(errMsg);
+                <span class="keyword">return</span>;
+            <span class="keyword">end</span>
+            vBoxPanelLoadData = uiextras.VBox(<span class="string">'Parent'</span>,panelLoadData);
+
+
+            <span class="comment">% LOAD DATA</span>
+            obj.StrDataName = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           vBoxPanelLoadData,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Empty Data'</span>,<span class="keyword">...</span>
+                <span class="string">'BackgroundColor'</span>,  <span class="string">'w'</span>);
+
+            hBoxLoadData = uiextras.HBox(<span class="string">'Parent'</span>,vBoxPanelLoadData);
+            obj.PbLoadData = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxLoadData,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,             <span class="string">'PushButton'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Load Data'</span>);
+            obj.PbLoadDataResize = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxLoadData,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,             <span class="string">'PushButton'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Load Data &amp; Resize'</span>);
+            set(hBoxLoadData,<span class="string">'Sizes'</span>,[-1,-1]);
+            <span class="comment">%</span>
+
+
+            <span class="comment">% % resize data</span>
+            hBoxSize = uiextras.HBox(<span class="string">'Parent'</span>,vBoxPanelLoadData);
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxSize,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,             <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Size of Z'</span>);
+            obj.InputSizeZ = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxSize,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,             <span class="string">'Edit'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'150'</span>);
+            <span class="comment">%</span>
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxSize,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,             <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Size of // axis'</span>);
+            obj.InputSizeXY = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxSize,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,             <span class="string">'Edit'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'200'</span>);
+            set(hBoxSize,<span class="string">'Sizes'</span>,<span class="keyword">...</span>
+                [STR_WIDTH,STR_WIDTH/2,STR_WIDTH,STR_WIDTH/2]);
+            <span class="comment">%</span>
+            set(vBoxPanelLoadData,<span class="keyword">...</span>
+                <span class="string">'Sizes'</span>,        [STR_HEIGHT,PB_HEIGHT,STR_HEIGHT]);
+</pre><img vspace="5" hspace="5" src="RenderDataARPES_02.png" alt=""> <h2>Plot Panel<a name="7"></a></h2><p>PLOT</p><pre class="codeinput">            panelPlot = uiextras.Panel(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           homeVBox,<span class="keyword">...</span>
+                <span class="string">'Title'</span>,            <span class="string">'Plot'</span>,<span class="keyword">...</span>
+                <span class="string">'Padding'</span>,          5);
+            vBoxPanelPlot = uiextras.VBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           panelPlot);
+            obj.PbPlot = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           vBoxPanelPlot,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'PushButton'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Plot'</span>);
+
+
+            <span class="comment">% % Plot Options</span>
+            <span class="comment">%</span>
+            hBoxFigNum = uiextras.HBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           vBoxPanelPlot);
+            obj.FlagAutoUpdate = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxFigNum,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'CheckBox'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Auto Update Figure'</span>,<span class="keyword">...</span>
+                <span class="string">'Value'</span>,            0);
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxFigNum,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Fig Num'</span>);
+            obj.InputFigNum = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxFigNum,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Edit'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'100'</span>);
+            set(hBoxFigNum,<span class="string">'Sizes'</span>,[STR_WIDTH*3/2+10,STR_WIDTH,STR_WIDTH/2]);
+
+            <span class="comment">% % Render Options</span>
+            selectRenderType = <span class="keyword">...</span>
+                {<span class="string">'mip'</span>,<span class="string">'bw'</span>,<span class="string">'color'</span>,<span class="string">'shaded'</span>};
+            selectShadingMaterial = <span class="keyword">...</span>
+                {<span class="string">'shiny'</span>,<span class="string">'dull'</span>,<span class="string">'metal'</span>};
+            hBoxRenderType = uiextras.HBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           vBoxPanelPlot);
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxRenderType,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Render Type'</span>);
+            obj.SelectRenderType = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxRenderType,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'PopupMenu'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           selectRenderType,<span class="keyword">...</span>
+                <span class="string">'Value'</span>,            1,<span class="keyword">...</span>
+                <span class="string">'Tag'</span>,              <span class="string">'RenderOption'</span>);
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxRenderType,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Shading Material'</span>);
+            obj.SelectShadingMaterial = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxRenderType,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'PopupMenu'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           selectShadingMaterial,<span class="keyword">...</span>
+                <span class="string">'Value'</span>,            1,<span class="keyword">...</span>
+                <span class="string">'Tag'</span>,              <span class="string">'RenderOption'</span>);
+            set(hBoxRenderType,<span class="keyword">...</span>
+                <span class="string">'Sizes'</span>,<span class="keyword">...</span>
+                [STR_WIDTH,STR_WIDTH/2+10,STR_WIDTH,STR_WIDTH/2+10]);
+            <span class="comment">%</span>
+            hBoxAlphaMin = uiextras.HBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           vBoxPanelPlot);
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxAlphaMin,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Valve Min'</span>);
+            obj.InAlphaMin = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxAlphaMin,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Slider'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Valve Min'</span>,<span class="keyword">...</span>
+                <span class="string">'Value'</span>,            0,<span class="keyword">...</span>
+                <span class="string">'Min'</span>,              0,<span class="keyword">...</span>
+                <span class="string">'Max'</span>,              100,<span class="keyword">...</span>
+                <span class="string">'Tag'</span>,              <span class="string">'RenderOption'</span>);
+            set(hBoxAlphaMin,<span class="string">'Sizes'</span>,[STR_WIDTH,-1]);
+            <span class="comment">%</span>
+            hBoxAlphaMax = uiextras.HBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           vBoxPanelPlot);
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxAlphaMax,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Valve Max'</span>);
+            obj.InputAlphaMax = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxAlphaMax,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Slider'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Valve Max'</span>,<span class="keyword">...</span>
+                <span class="string">'Value'</span>,            100,<span class="keyword">...</span>
+                <span class="string">'Min'</span>,              0,<span class="keyword">...</span>
+                <span class="string">'Max'</span>,              100,<span class="keyword">...</span>
+                <span class="string">'Tag'</span>,              <span class="string">'RenderOption'</span>);
+            set(hBoxAlphaMax,<span class="string">'Sizes'</span>,[STR_WIDTH,-1]);
+
+            <span class="comment">%</span>
+            hBoxColorMapStyle = uiextras.HBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           vBoxPanelPlot);
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxColorMapStyle,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Color Map'</span>);
+            selectionColorMap = {<span class="keyword">...</span>
+                <span class="string">'gray'</span>,<span class="string">'jet'</span>,<span class="string">'hsv'</span>,<span class="string">'hot'</span>,<span class="string">'copper'</span>,<span class="string">'cool'</span>,<span class="keyword">...</span>
+                <span class="string">'spring'</span>,<span class="string">'summer'</span>,<span class="string">'autumn'</span>,<span class="string">'winter'</span>,<span class="string">'cm_blackbody'</span>,<span class="keyword">...</span>
+                <span class="string">'cm_blue'</span>,<span class="string">'cm_bluehot'</span>,<span class="string">'cm_blueredgreen'</span>,<span class="string">'cm_copper'</span>,<span class="keyword">...</span>
+                <span class="string">'cm_cyan'</span>,<span class="string">'cm_cyanmagenta'</span>,<span class="string">'cm_geo'</span>,<span class="string">'cm_gold'</span>,<span class="string">'cm_green'</span>,<span class="keyword">...</span>
+                <span class="string">'cm_landandsea'</span>,<span class="string">'cm_magenta'</span>,<span class="string">'cm_pastels'</span>,<span class="string">'cm_pastelsmap'</span>,<span class="keyword">...</span>
+                <span class="string">'cm_planetearth'</span>,<span class="string">'cm_rainbow'</span>,<span class="string">'red'</span>,<span class="string">'cm_redwhiteblue'</span>,<span class="keyword">...</span>
+                <span class="string">'cm_redwhitegreen'</span>,<span class="string">'cm_relief'</span>,<span class="string">'cm_spectrum'</span>,<span class="string">'cm_terrain'</span>,<span class="keyword">...</span>
+                <span class="string">'cm_yellow'</span>,<span class="string">'cm_yellowhot'</span>};
+            obj.SelectColorMapStyle = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxColorMapStyle,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'PopupMenu'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           selectionColorMap,<span class="keyword">...</span>
+                <span class="string">'Value'</span>,            1,<span class="keyword">...</span>
+                <span class="string">'Tag'</span>,              <span class="string">'RenderOption'</span>);
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxColorMapStyle,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">''</span>);
+            obj.FlagColorMapFlip = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxColorMapStyle,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'CheckBox'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Color Flip'</span>,<span class="keyword">...</span>
+                <span class="string">'Value'</span>,            0,<span class="keyword">...</span>
+                <span class="string">'Tag'</span>,              <span class="string">'RenderOption'</span>);
+            set(hBoxColorMapStyle,<span class="keyword">...</span>
+                <span class="string">'Sizes'</span>,<span class="keyword">...</span>
+                [STR_WIDTH,STR_WIDTH,20,STR_WIDTH]);
+
+
+            <span class="comment">%</span>
+            func1=@()obj.uiDegreeUpdate(1);
+            func2=@()obj.uiDegreeUpdate(2);
+            hBoxDeg = uiextras.HBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           vBoxPanelPlot);
+            hBoxDeg1=uiextras.HBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxDeg);
+            hBoxDeg2=uiextras.HBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxDeg);
+            set(hBoxDeg,<span class="string">'Sizes'</span>,[UIANG_SIZE UIANG_SIZE]);
+            set(vBoxPanelPlot,<span class="keyword">...</span>
+                <span class="string">'Sizes'</span>,<span class="keyword">...</span>
+                [PB_HEIGHT,<span class="keyword">...</span>
+                STR_HEIGHT,<span class="keyword">...</span>
+                STR_HEIGHT,<span class="keyword">...</span>
+                STR_HEIGHT,<span class="keyword">...</span>
+                STR_HEIGHT,<span class="keyword">...</span>
+                STR_HEIGHT,<span class="keyword">...</span>
+                UIANG_SIZE]);
+            pause(0.1);
+            obj.uiDegTheta = <span class="keyword">...</span>
+                phuitools.uiDegree(hBoxDeg1,obj.Figure,<span class="string">'Theta'</span>,func1,func2);
+            obj.uiDegPhi = <span class="keyword">...</span>
+                phuitools.uiDegree(hBoxDeg2,obj.Figure,<span class="string">'Phi'</span>,func1,func2);
+
+            <span class="comment">%</span>
+</pre><img vspace="5" hspace="5" src="RenderDataARPES_03.png" alt=""> <h2>Make Movie Panel<a name="8"></a></h2><p>% Movie Options</p><pre class="codeinput">            panelMakeMovie = uiextras.Panel(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           homeVBox,<span class="keyword">...</span>
+                <span class="string">'Title'</span>,            <span class="string">'Make Movie'</span>,<span class="keyword">...</span>
+                <span class="string">'Padding'</span>,          5);
+            vBoxPanelMakeMovie = uiextras.VBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           panelMakeMovie);
+            obj.PbMakeMovie = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           vBoxPanelMakeMovie,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'PushButton'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Make Movie'</span>);
+            hBoxFileName = uiextras.HBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           vBoxPanelMakeMovie);
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxFileName,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Output File Name'</span>);
+            obj.InputFileName = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxFileName,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Edit'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'RenderOutput.mp4'</span>);
+            set(hBoxFileName,<span class="string">'Sizes'</span>,[STR_WIDTH,-1]);
+            <span class="comment">%</span>
+            hBoxTotalFrames = uiextras.HBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           vBoxPanelMakeMovie);
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxTotalFrames,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Total Frames'</span>);
+            obj.InputTotalFrames = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxTotalFrames,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Edit'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'360'</span>);
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxTotalFrames,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'FPS'</span>);
+            obj.InputFPS = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxTotalFrames,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Edit'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'20'</span>);
+            set(hBoxTotalFrames,<span class="keyword">...</span>
+            <span class="string">'Sizes'</span>,[STR_WIDTH,STR_WIDTH/2,STR_WIDTH,STR_WIDTH/2]);
+            <span class="comment">%</span>
+            set(vBoxPanelMakeMovie,<span class="keyword">...</span>
+                <span class="string">'Sizes'</span>,<span class="keyword">...</span>
+                [PB_HEIGHT,STR_HEIGHT,STR_HEIGHT]);
+
+            <span class="comment">% Status String</span>
+            hBoxStatus = uiextras.HBox(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           homeVBox);
+            uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxStatus,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'Status: '</span>);
+            obj.StrStatus = uicontrol(<span class="keyword">...</span>
+                <span class="string">'Parent'</span>,           hBoxStatus,<span class="keyword">...</span>
+                <span class="string">'Style'</span>,            <span class="string">'Text'</span>,<span class="keyword">...</span>
+                <span class="string">'String'</span>,           <span class="string">'No data loaded.'</span>,<span class="keyword">...</span>
+                <span class="string">'HorizontalAlignment'</span>,<span class="string">'Left'</span>,<span class="keyword">...</span>
+                <span class="string">'BackgroundColor'</span>,  <span class="string">'w'</span>);
+            set(hBoxStatus,<span class="string">'Sizes'</span>,[60,-1]);
+            set(homeVBox,<span class="keyword">...</span>
+                <span class="string">'Sizes'</span>,<span class="keyword">...</span>
+                [LOADDATA_HEIGHT, PLOT_HEIGHT,MAKEMOVIE_HEIGHT,STR_HEIGHT]);
+</pre><img vspace="5" hspace="5" src="RenderDataARPES_04.png" alt=""> <pre class="codeinput">        <span class="keyword">end</span>
+</pre><h2>Set Callbacks<a name="10"></a></h2><pre class="codeinput">        <span class="keyword">function</span> obj=setCallbacks(obj)
+            <span class="comment">% This function set all callbacks</span>
+            <span class="comment">% except for uiDegree objects</span>
+
+            <span class="comment">% % Load Data</span>
+            set(obj.PbLoadData,<span class="keyword">...</span>
+                <span class="string">'Callback'</span>,{@obj.pbLoadCallback,0});
+            set(obj.PbLoadDataResize,<span class="keyword">...</span>
+                <span class="string">'Callback'</span>,{@obj.pbLoadCallback,1});
+
+            <span class="comment">% % Plot</span>
+            set(obj.PbPlot,<span class="keyword">...</span>
+                <span class="string">'Callback'</span>,@obj.PbPlotCallback);
+            <span class="comment">% obj.sRenderOptionCallback</span>
+            set(obj.SelectColorMapStyle,<span class="keyword">...</span>
+                <span class="string">'Callback'</span>,@obj.sRenderOptionCallback);
+            set(obj.SelectRenderType,<span class="keyword">...</span>
+                <span class="string">'Callback'</span>,@obj.sRenderOptionCallback);
+            set(obj.SelectShadingMaterial,<span class="keyword">...</span>
+                <span class="string">'Callback'</span>,@obj.sRenderOptionCallback);
+            set(obj.FlagColorMapFlip,<span class="keyword">...</span>
+                <span class="string">'Callback'</span>,@obj.sRenderOptionCallback);
+            <span class="comment">% obj.updatePlotData</span>
+            set(obj.InputAlphaMax,<span class="keyword">...</span>
+                <span class="string">'Callback'</span>,@obj.updatePlotData);
+            set(obj.InAlphaMin,<span class="keyword">...</span>
+                <span class="string">'Callback'</span>,@obj.updatePlotData);
+
+            <span class="comment">% % Make Movie</span>
+            set(obj.PbMakeMovie,<span class="keyword">...</span>
+                <span class="string">'Callback'</span>,@obj.PbMakeMovieCallback);
+        <span class="keyword">end</span>
+        <span class="keyword">function</span> obj = openningFunction(obj)
+            handles = findall(0,<span class="string">'Tag'</span>,<span class="string">'DataBrowser'</span>);
+            <span class="keyword">if</span> isempty(handles)
+                dataBrowser;
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+</pre><pre class="codeoutput">ans = 
+  RenderDataARPES with properties:
+
+                   Figure: [1x1 Figure]
+              StrDataName: [1x1 UIControl]
+               PbLoadData: [1x1 UIControl]
+         PbLoadDataResize: [1x1 UIControl]
+               InputSizeZ: [1x1 UIControl]
+              InputSizeXY: [1x1 UIControl]
+                   PbPlot: [1x1 UIControl]
+           FlagAutoUpdate: [1x1 UIControl]
+              InputFigNum: [1x1 UIControl]
+         SelectRenderType: [1x1 UIControl]
+    SelectShadingMaterial: [1x1 UIControl]
+               InAlphaMin: [1x1 UIControl]
+            InputAlphaMax: [1x1 UIControl]
+      SelectColorMapStyle: [1x1 UIControl]
+         FlagColorMapFlip: [1x1 UIControl]
+               uiDegTheta: [1x1 phuitools.uiDegree]
+                 uiDegPhi: [1x1 phuitools.uiDegree]
+              PbMakeMovie: [1x1 UIControl]
+            InputFileName: [1x1 UIControl]
+         InputTotalFrames: [1x1 UIControl]
+                 InputFPS: [1x1 UIControl]
+                StrStatus: [1x1 UIControl]
+</pre><pre class="codeinput">    <span class="keyword">end</span>
+</pre><h2>Method: Callbacks<a name="12"></a></h2><pre class="codeinput">    methods <span class="comment">% callbacks</span>
+        <span class="keyword">function</span> pbLoadCallback(obj,~,~,fResize)
+            set(obj.StrStatus,<span class="string">'String'</span>,<span class="string">'Loading Data...'</span>);
+            drawnow;
+            LOW_RES = 64;
+            <span class="comment">% High Resolution Data</span>
+            varNames=getDataNames();
+            dataName=varNames{1};
+            dataHighRes = evalin(<span class="string">'base'</span>,dataName);
+            <span class="comment">% check input</span>
+            xflag = ~isfield(dataHighRes,<span class="string">'x'</span>);
+            yflag = ~isfield(dataHighRes,<span class="string">'y'</span>);
+            zflag = ~isfield(dataHighRes,<span class="string">'z'</span>);
+            vflag = (~isfield(dataHighRes,<span class="string">'value'</span>))||<span class="keyword">...</span>
+                (ndims(dataHighRes.value)~=3);
+            <span class="keyword">if</span> xflag||yflag||zflag||vflag
+                errordlg([<span class="string">'Target data set is not typical 3D ARPES data.'</span>,<span class="keyword">...</span>
+                    <span class="string">' Only 3D ARPES map is accepted.'</span>]);
+                <span class="keyword">return</span>
+            <span class="keyword">end</span>
+
+            <span class="comment">% Preprocessing</span>
+            hMsg=msgbox(<span class="string">'Preprocessing Data...'</span>,<span class="string">'Busy'</span>);
+            dataHighRes.value(isnan(dataHighRes.value))=0;
+
+            ResizeOption=obj.getResizeOption();
+
+            <span class="comment">% Read Original/High Resolution Data</span>
+            <span class="keyword">if</span> fResize == 1
+                <span class="comment">% resize data</span>
+                xmin=min(dataHighRes.x);
+                xmax=max(dataHighRes.x);
+                ymin=min(dataHighRes.y);
+                ymax=max(dataHighRes.y);
+                Lx=xmax-xmin;
+                Ly=ymax-ymin;
+                sizeXY=ResizeOption.sizeXY;
+                <span class="keyword">if</span> Lx&gt;Ly
+                    sizeX=sizeXY;
+                    sizeY=ceil(Ly/Lx*sizeXY);
+                <span class="keyword">else</span>
+                    sizeY=sizeXY;
+                    sizeX=ceil(Lx/Ly*sizeXY);
+                <span class="keyword">end</span>
+                sizeZ=ResizeOption.sizeZ;
+                dataHighRes=resizeData(dataHighRes,sizeX,sizeY,sizeZ);
+            <span class="keyword">else</span>
+                sizeX=length(dataHighRes.x);
+                sizeY=length(dataHighRes.y);
+                sizeZ=length(dataHighRes.z);
+                sizeXY=max([sizeX,sizeY]);
+                Lx=sizeX;
+                Ly=sizeY;
+            <span class="keyword">end</span>  <span class="comment">% end of fResize == 1</span>
+            setappdata(obj.Figure,<span class="string">'dataHighRes'</span>,dataHighRes);
+            setappdata(obj.Figure,<span class="string">'dataHighResPlot'</span>,dataHighRes);
+
+            <span class="comment">% Read Low Resolution Data</span>
+            <span class="keyword">if</span> Lx&gt;Ly
+                sizeXLowRes=LOW_RES;
+                sizeYLowRes=ceil(Ly/Lx*LOW_RES);
+            <span class="keyword">else</span>
+                sizeYLowRes=LOW_RES;
+                sizeXLowRes=ceil(Lx/Ly*LOW_RES);
+            <span class="keyword">end</span>
+            sizeZLowRes=sizeZ*LOW_RES/sizeXY;
+            dataLowRes=resizeData(<span class="keyword">...</span>
+                dataHighRes,sizeXLowRes,sizeYLowRes,sizeZLowRes);
+            setappdata(obj.Figure,<span class="string">'dataLowRes'</span>,dataLowRes);
+            setappdata(obj.Figure,<span class="string">'dataLowResPlot'</span>,dataLowRes);
+            delete(hMsg);
+            <span class="comment">% Ending</span>
+            set(obj.StrDataName,<span class="string">'String'</span>,dataName);
+            set(obj.StrStatus,<span class="string">'String'</span>,<span class="string">'Data Loaded. Ready.'</span>);
+        <span class="keyword">end</span> <span class="comment">% end of pbLoadCallback</span>
+
+        <span class="keyword">function</span> PbPlotCallback(obj,varargin)
+            data=getappdata(obj.Figure,<span class="string">'dataHighResPlot'</span>);
+            renderOption=obj.getRenderOption();
+            plotOption=obj.getPlotOption();
+            obj.renderAndPlot(data,renderOption,plotOption);
+        <span class="keyword">end</span> <span class="comment">% end of PbPlotCallback</span>
+
+        <span class="keyword">function</span> sRenderOptionCallback(obj,varargin)
+            plotOption=obj.getPlotOption();
+            <span class="keyword">if</span> plotOption.AutoUpdate
+                <span class="comment">% Render and Plot</span>
+                data=getappdata(obj.Figure,<span class="string">'dataHighResPlot'</span>);
+                renderOption=obj.getRenderOption();
+                plotOption=obj.getPlotOption();
+                obj.renderAndPlot(data,renderOption,plotOption);
+            <span class="keyword">else</span>
+                <span class="keyword">return</span>;
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> updatePlotData(obj,varargin)
+            AlphaOption=obj.getAlphaOption();
+            <span class="comment">% High Resolution</span>
+            data=getappdata(obj.Figure,<span class="string">'dataHighRes'</span>);
+            maxData=max(data.value(:));
+            alphaMin=maxData*AlphaOption.AlphaMin/100;
+            alphaMax=maxData*AlphaOption.AlphaMax/100;
+            data.value(data.value&lt;alphaMin)=alphaMin;
+            data.value(data.value&gt;alphaMax)=alphaMax;
+            setappdata(obj.Figure,<span class="string">'dataHighResPlot'</span>,data);
+            <span class="comment">% Low Resolution</span>
+            data=getappdata(obj.Figure,<span class="string">'dataLowRes'</span>);
+            maxData=max(data.value(:));
+            alphaMin=maxData*AlphaOption.AlphaMin/100;
+            alphaMax=maxData*AlphaOption.AlphaMax/100;
+            data.value(data.value&lt;alphaMin)=alphaMin;
+            data.value(data.value&gt;alphaMax)=alphaMax;
+            setappdata(obj.Figure,<span class="string">'dataLowResPlot'</span>,data);
+            <span class="comment">% Render and Plot</span>
+            data=getappdata(obj.Figure,<span class="string">'dataHighResPlot'</span>);
+            renderOption=obj.getRenderOption();
+            plotOption=obj.getPlotOption();
+            obj.renderAndPlot(data,renderOption,plotOption);
+        <span class="keyword">end</span> <span class="comment">% end of updatePlotData</span>
+
+        <span class="keyword">function</span> uiDegreeUpdate(obj,actionType,varargin)
+            plotOption=obj.getPlotOption();
+            <span class="keyword">if</span> plotOption.AutoUpdate==0
+                <span class="keyword">return</span>
+            <span class="keyword">end</span>
+            <span class="keyword">if</span> actionType==1
+                data=getappdata(obj.Figure,<span class="string">'dataLowResPlot'</span>);
+            <span class="keyword">elseif</span> actionType==2
+                data=getappdata(obj.Figure,<span class="string">'dataHighResPlot'</span>);
+            <span class="keyword">else</span>
+                <span class="keyword">return</span>;
+            <span class="keyword">end</span>
+            <span class="comment">% Render And Plot</span>
+            renderOption=obj.getRenderOption();
+            plotOption=obj.getPlotOption();
+            obj.renderAndPlot(data,renderOption,plotOption);
+        <span class="keyword">end</span> <span class="comment">% end of uiDegreeUpdate</span>
+
+        <span class="keyword">function</span> PbMakeMovieCallback(obj,varargin)
+
+            movieOption = obj.getMovieOption();
+            plotOption = obj.getPlotOption();
+            renderOption = obj.getRenderOption();
+            data = getappdata(obj.Figure,<span class="string">'dataHighResPlot'</span>);
+
+            writerObj = VideoWriter(movieOption.FileName,<span class="string">'MPEG-4'</span>);
+            writerObj.FrameRate=movieOption.FPS;
+            n = movieOption.TotalFrames;
+            open(writerObj);
+            hWaitbar=waitbar(0,<span class="string">'Making movie... 0%'</span>,<span class="string">'Name'</span>,<span class="string">'Please wait'</span>);
+
+
+            <span class="keyword">for</span> i=1:n
+                <span class="comment">% Render and Plot</span>
+                <span class="comment">% Mview</span>
+                Theta=obj.uiDegTheta.getDegree();
+                Phi=i*360/n;
+                v=[0 Theta Phi];
+                renderOption.Mview=makeViewMatrix(v,[1 1 1],[0 0 0]);
+                obj.renderAndPlot(data,renderOption,plotOption);
+                frame=getframe;
+                writeVideo(writerObj,frame);
+                <span class="comment">% Update hWaitbar</span>
+                waitbar(i/n,hWaitbar,<span class="keyword">...</span>
+                    [num2str(i/n*100,<span class="string">'Making movie... %6.2f%%'</span>),<span class="keyword">...</span>
+                    <span class="string">' phi='</span>,num2str(i*360/n)]);
+            <span class="keyword">end</span>
+            close(writerObj);
+            close(hWaitbar);
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+</pre><h2>Method: Helper functions<a name="13"></a></h2><pre class="codeinput">    methods <span class="comment">% helper functions</span>
+        <span class="keyword">function</span> renderAndPlot(obj,data,renderOption,plotOption)
+            figure(plotOption.FigNum);
+            sizeX=length(data.x);
+            sizeY=length(data.y);
+            sizeZ=length(data.z);
+            <span class="keyword">if</span> sizeX&gt;128||sizeY&gt;128
+                set(obj.StrStatus,<span class="string">'String'</span>,<span class="string">'Rendering... Please wait.'</span>);
+                drawnow;
+            <span class="keyword">end</span>
+            sizeD=ceil(norm([sizeX,sizeY,sizeZ])*1.07/16)*16;
+            renderOption.ImageSize=[sizeD,sizeD];
+            renderData=render(data.value,renderOption);
+            imagesc(renderData);
+            axis <span class="string">off</span>;
+            set(obj.StrStatus,<span class="string">'String'</span>,<span class="string">'Ready.'</span>);
+        <span class="keyword">end</span> <span class="comment">% end of renderAndPlot</span>
+
+        <span class="keyword">function</span> ResizeOption=getResizeOption(obj)
+            ResizeOption.sizeZ = str2double(get(obj.InputSizeZ,<span class="string">'String'</span>));
+            ResizeOption.sizeXY = str2double(get(obj.InputSizeXY,<span class="string">'String'</span>));
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> PlotOption=getPlotOption(obj)
+            PlotOption.AutoUpdate=get(obj.FlagAutoUpdate,<span class="string">'Value'</span>);
+            PlotOption.FigNum=str2double(get(obj.InputFigNum,<span class="string">'String'</span>));
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> RenderOption=getRenderOption(obj)
+            <span class="comment">% RenderType</span>
+            selectRenderType=get(obj.SelectRenderType,<span class="string">'String'</span>);
+            ind=get(obj.SelectRenderType,<span class="string">'Value'</span>);
+            RenderOption.RenderType=selectRenderType{ind};
+            <span class="comment">% ShadingMaterial</span>
+            selectShadingMaterial=get(obj.SelectShadingMaterial,<span class="string">'String'</span>);
+            ind=get(obj.SelectShadingMaterial,<span class="string">'Value'</span>);
+            RenderOption.ShadingMaterial=selectShadingMaterial{ind};
+            <span class="comment">% ColorTable</span>
+            selectColorMapStyle=get(obj.SelectColorMapStyle,<span class="string">'String'</span>);
+            ind=get(obj.SelectColorMapStyle,<span class="string">'Value'</span>);
+            flagColorMapFlip=get(obj.FlagColorMapFlip,<span class="string">'Value'</span>);
+            load(<span class="string">'Colormap.mat'</span>);
+            ColorMapTable=eval(selectColorMapStyle{ind});
+            <span class="keyword">if</span> flagColorMapFlip
+                ColorMapTable=flipud(ColorMapTable);
+            <span class="keyword">else</span>
+            <span class="keyword">end</span>
+            RenderOption.ColorTable=ColorMapTable;
+            <span class="comment">% Mview</span>
+            Theta=obj.uiDegTheta.getDegree();
+            Phi=obj.uiDegPhi.getDegree();
+            v=[0 Theta Phi];
+            RenderOption.Mview=makeViewMatrix(v,[1 1 1],[0 0 0]);
+        <span class="keyword">end</span> <span class="comment">% end of getRenderOption</span>
+
+        <span class="keyword">function</span> AlphaOption=getAlphaOption(obj)
+            <span class="comment">% Alpha Setting</span>
+            AlphaOption.AlphaMin=get(obj.InAlphaMin,<span class="string">'Value'</span>);
+            AlphaOption.AlphaMax=get(obj.InputAlphaMax,<span class="string">'Value'</span>);
+        <span class="keyword">end</span> <span class="comment">% end of getAlphaOption</span>
+
+        <span class="keyword">function</span> MovieOption = getMovieOption(obj)
+            MovieOption.FileName = get(obj.InputFileName,<span class="string">'String'</span>);
+            MovieOption.TotalFrames = str2double(<span class="keyword">...</span>
+                get(obj.InputTotalFrames,<span class="string">'String'</span>));
+            MovieOption.FPS = str2double(get(obj.InputFPS,<span class="string">'String'</span>));
+        <span class="keyword">end</span>
+
+    <span class="keyword">end</span>
+</pre><pre class="codeinput"><span class="keyword">end</span>
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% RenderDataARPES works with data_browser. It will volume render an image of
+% a 3D ARPES data.
+% 
+% To start the gui, simply call 
+% RenderDataARPES();
+% 
+% 
+% GUI Layout Toolbox is PREREQUISITE:
+%
+% GUI Layout Toolbox is required to run this gui (and most guis built purely
+% by code). Please download the proper version from Mathwork website. 
+% Incorrect GUI Layout Toolbox version will result in error.
+%
+% For Matlab 2014a (or earlier version) users, please use old version Gui
+% Layout Toolbox.
+% http://uk.mathworks.com/matlabcentral/fileexchange/27758-gui-layout-toolbox
+%
+% For Matlab 2014b (or newer version) users, please use new version Gui
+% Layout Toolbox.
+% http://www.mathworks.com/matlabcentral/fileexchange/47982-gui-layout-toolbox
+%
+%
+% This GUI is written by Han Peng
+% han.peng@physics.ox.ac.uk
+% Uinversity of Oxford (April 2015)
+%
+%
+% The core function render.m is written by Dr.D.Kroon
+% University of Twente (April 2009) 
+
+classdef RenderDataARPES < handle                      
+    properties % Figure and uicontrols
+        % CONVENTION OF PREFIX
+        % s = select
+        % i = input
+        % f = flag
+        % ui = user interface
+        % pb = push button
+        % str = string
+        
+        Figure
+        
+        % LOAD DATA
+        StrDataName
+        PbLoadData
+        PbLoadDataResize
+        % % resize data
+        InputSizeZ
+        InputSizeXY
+                      
+        % PLOT
+        PbPlot
+        % % Plot Options
+        FlagAutoUpdate
+        InputFigNum
+        % % Render Options
+        SelectRenderType
+        SelectShadingMaterial
+        InAlphaMin
+        InputAlphaMax
+        SelectColorMapStyle
+        FlagColorMapFlip      
+        uiDegTheta
+        uiDegPhi
+        % % Movie Options
+        PbMakeMovie
+        InputFileName
+        InputTotalFrames
+        InputFPS
+        % STATUS
+        StrStatus
+    end
+    
+    %% Build Gui
+    methods % Constructor & Initialization methods
+        function obj=RenderDataARPES(varargin)
+            % Build Gui layout and set callbacks
+            echo off
+            obj = obj.createUIComponents();
+            obj = obj.setCallbacks();
+            obj = obj.openningFunction();
+        end
+        function obj = createUIComponents(obj)
+            % CONVENTION OF PREFIX
+            % s = select
+            % i = input
+            % f = flag
+            % ui = user interface
+            % pb = push button
+            % str = string
+            STR_WIDTH=90;
+            STR_HEIGHT=25;
+            PB_HEIGHT=40;
+            UIANG_SIZE=150;
+            LOADDATA_HEIGHT=125;
+            PLOT_HEIGHT=340;
+            MAKEMOVIE_HEIGHT=125;
+            
+            FIG_POSITION = [500 50 320 610];
+            
+            obj.Figure=figure(...
+                'Position',         FIG_POSITION,...
+                'Name',             'RenderDataARPES',...
+                'NumberTitle',      'off',...
+                'MenuBar',          'none',...
+                'IntegerHandle',    'off',...
+                'HandleVisibility', 'off',...
+                'Tag',              'RenderDataARPES');
+            
+            homeVBox = uiextras.VBox('Parent',obj.Figure);
+            %% Load Panel
+            try
+            panelLoadData = uiextras.Panel(...
+                'Parent',           homeVBox,...
+                'Title',            'Load Data',...
+                'Padding',          5);
+            catch
+                errMsg = ...
+                    {['Unable to create GUI, please check your ',...
+                    'GUI Layout Toolbox version. ',...
+                    'For more information, run: '],...
+                    ''' help RenderDataARPES ''.'};
+                errordlg(errMsg);
+                return;
+            end
+            vBoxPanelLoadData = uiextras.VBox('Parent',panelLoadData);
+            
+            
+            % LOAD DATA
+            obj.StrDataName = uicontrol(...
+                'Parent',           vBoxPanelLoadData,...
+                'Style',            'Text',...
+                'String',           'Empty Data',...
+                'BackgroundColor',  'w');
+            
+            hBoxLoadData = uiextras.HBox('Parent',vBoxPanelLoadData);
+            obj.PbLoadData = uicontrol(...
+                'Parent',           hBoxLoadData,...
+                'Style',             'PushButton',...
+                'String',           'Load Data');
+            obj.PbLoadDataResize = uicontrol(...
+                'Parent',           hBoxLoadData,...
+                'Style',             'PushButton',...
+                'String',           'Load Data & Resize');
+            set(hBoxLoadData,'Sizes',[-1,-1]);
+            %
+
+            
+            % % resize data
+            hBoxSize = uiextras.HBox('Parent',vBoxPanelLoadData);
+            uicontrol(...
+                'Parent',           hBoxSize,...
+                'Style',             'Text',...
+                'String',           'Size of Z');
+            obj.InputSizeZ = uicontrol(...
+                'Parent',           hBoxSize,...
+                'Style',             'Edit',...
+                'String',           '150');
+            %
+            uicontrol(...
+                'Parent',           hBoxSize,...
+                'Style',             'Text',...
+                'String',           'Size of // axis');
+            obj.InputSizeXY = uicontrol(...
+                'Parent',           hBoxSize,...
+                'Style',             'Edit',...
+                'String',           '200');
+            set(hBoxSize,'Sizes',...
+                [STR_WIDTH,STR_WIDTH/2,STR_WIDTH,STR_WIDTH/2]);
+            %
+            set(vBoxPanelLoadData,...
+                'Sizes',        [STR_HEIGHT,PB_HEIGHT,STR_HEIGHT]);
+            
+            
+            %% Plot Panel
+            % PLOT
+            panelPlot = uiextras.Panel(...
+                'Parent',           homeVBox,...
+                'Title',            'Plot',...
+                'Padding',          5);
+            vBoxPanelPlot = uiextras.VBox(...
+                'Parent',           panelPlot);
+            obj.PbPlot = uicontrol(...
+                'Parent',           vBoxPanelPlot,...
+                'Style',            'PushButton',...
+                'String',           'Plot');
+            
+            
+            % % Plot Options
+            %
+            hBoxFigNum = uiextras.HBox(...
+                'Parent',           vBoxPanelPlot);
+            obj.FlagAutoUpdate = uicontrol(...
+                'Parent',           hBoxFigNum,...
+                'Style',            'CheckBox',...
+                'String',           'Auto Update Figure',...
+                'Value',            0);
+            uicontrol(...
+                'Parent',           hBoxFigNum,...
+                'Style',            'Text',...
+                'String',           'Fig Num');
+            obj.InputFigNum = uicontrol(...
+                'Parent',           hBoxFigNum,...
+                'Style',            'Edit',...
+                'String',           '100');
+            set(hBoxFigNum,'Sizes',[STR_WIDTH*3/2+10,STR_WIDTH,STR_WIDTH/2]);
+            
+            % % Render Options
+            selectRenderType = ...
+                {'mip','bw','color','shaded'};
+            selectShadingMaterial = ...
+                {'shiny','dull','metal'};
+            hBoxRenderType = uiextras.HBox(...
+                'Parent',           vBoxPanelPlot);
+            uicontrol(...
+                'Parent',           hBoxRenderType,...
+                'Style',            'Text',...
+                'String',           'Render Type');
+            obj.SelectRenderType = uicontrol(...
+                'Parent',           hBoxRenderType,...
+                'Style',            'PopupMenu',...
+                'String',           selectRenderType,...
+                'Value',            1,...
+                'Tag',              'RenderOption');   
+            uicontrol(...
+                'Parent',           hBoxRenderType,...
+                'Style',            'Text',...
+                'String',           'Shading Material');
+            obj.SelectShadingMaterial = uicontrol(...
+                'Parent',           hBoxRenderType,...
+                'Style',            'PopupMenu',...
+                'String',           selectShadingMaterial,...
+                'Value',            1,...
+                'Tag',              'RenderOption');
+            set(hBoxRenderType,...
+                'Sizes',...
+                [STR_WIDTH,STR_WIDTH/2+10,STR_WIDTH,STR_WIDTH/2+10]);
+            %
+            hBoxAlphaMin = uiextras.HBox(...
+                'Parent',           vBoxPanelPlot);
+            uicontrol(...
+                'Parent',           hBoxAlphaMin,...
+                'Style',            'Text',...
+                'String',           'Valve Min');
+            obj.InAlphaMin = uicontrol(...
+                'Parent',           hBoxAlphaMin,...
+                'Style',            'Slider',...
+                'String',           'Valve Min',...
+                'Value',            0,...
+                'Min',              0,...
+                'Max',              100,...
+                'Tag',              'RenderOption');
+            set(hBoxAlphaMin,'Sizes',[STR_WIDTH,-1]);
+            %
+            hBoxAlphaMax = uiextras.HBox(...
+                'Parent',           vBoxPanelPlot);
+            uicontrol(...
+                'Parent',           hBoxAlphaMax,...
+                'Style',            'Text',...
+                'String',           'Valve Max');    
+            obj.InputAlphaMax = uicontrol(...
+                'Parent',           hBoxAlphaMax,...
+                'Style',            'Slider',...
+                'String',           'Valve Max',...
+                'Value',            100,...
+                'Min',              0,...
+                'Max',              100,...
+                'Tag',              'RenderOption');
+            set(hBoxAlphaMax,'Sizes',[STR_WIDTH,-1]);
+            
+            %
+            hBoxColorMapStyle = uiextras.HBox(...
+                'Parent',           vBoxPanelPlot);
+            uicontrol(...
+                'Parent',           hBoxColorMapStyle,...
+                'Style',            'Text',...
+                'String',           'Color Map');   
+            selectionColorMap = {...
+                'gray','jet','hsv','hot','copper','cool',...
+                'spring','summer','autumn','winter','cm_blackbody',...
+                'cm_blue','cm_bluehot','cm_blueredgreen','cm_copper',...
+                'cm_cyan','cm_cyanmagenta','cm_geo','cm_gold','cm_green',...
+                'cm_landandsea','cm_magenta','cm_pastels','cm_pastelsmap',...
+                'cm_planetearth','cm_rainbow','red','cm_redwhiteblue',...
+                'cm_redwhitegreen','cm_relief','cm_spectrum','cm_terrain',...
+                'cm_yellow','cm_yellowhot'};
+            obj.SelectColorMapStyle = uicontrol(...
+                'Parent',           hBoxColorMapStyle,...
+                'Style',            'PopupMenu',...
+                'String',           selectionColorMap,...
+                'Value',            1,...
+                'Tag',              'RenderOption'); 
+            uicontrol(...
+                'Parent',           hBoxColorMapStyle,...
+                'Style',            'Text',...
+                'String',           ''); 
+            obj.FlagColorMapFlip = uicontrol(...
+                'Parent',           hBoxColorMapStyle,...
+                'Style',            'CheckBox',...
+                'String',           'Color Flip',...
+                'Value',            0,...
+                'Tag',              'RenderOption'); 
+            set(hBoxColorMapStyle,...
+                'Sizes',...
+                [STR_WIDTH,STR_WIDTH,20,STR_WIDTH]);
+            
+
+            %
+            func1=@()obj.uiDegreeUpdate(1);
+            func2=@()obj.uiDegreeUpdate(2);
+            hBoxDeg = uiextras.HBox(...
+                'Parent',           vBoxPanelPlot);
+            hBoxDeg1=uiextras.HBox(...
+                'Parent',           hBoxDeg);
+            hBoxDeg2=uiextras.HBox(...
+                'Parent',           hBoxDeg);
+            set(hBoxDeg,'Sizes',[UIANG_SIZE UIANG_SIZE]);
+            set(vBoxPanelPlot,...
+                'Sizes',...
+                [PB_HEIGHT,...
+                STR_HEIGHT,...
+                STR_HEIGHT,...
+                STR_HEIGHT,...
+                STR_HEIGHT,...
+                STR_HEIGHT,...
+                UIANG_SIZE]);
+            pause(0.1);
+            obj.uiDegTheta = ...
+                phuitools.uiDegree(hBoxDeg1,obj.Figure,'Theta',func1,func2);
+            obj.uiDegPhi = ...
+                phuitools.uiDegree(hBoxDeg2,obj.Figure,'Phi',func1,func2);
+            
+            %
+
+            %% Make Movie Panel
+            % % Movie Options
+            panelMakeMovie = uiextras.Panel(...
+                'Parent',           homeVBox,...
+                'Title',            'Make Movie',...
+                'Padding',          5);
+            vBoxPanelMakeMovie = uiextras.VBox(...
+                'Parent',           panelMakeMovie);
+            obj.PbMakeMovie = uicontrol(...
+                'Parent',           vBoxPanelMakeMovie,...
+                'Style',            'PushButton',...
+                'String',           'Make Movie');
+            hBoxFileName = uiextras.HBox(...
+                'Parent',           vBoxPanelMakeMovie);
+            uicontrol(...
+                'Parent',           hBoxFileName,...
+                'Style',            'Text',...
+                'String',           'Output File Name');   
+            obj.InputFileName = uicontrol(...
+                'Parent',           hBoxFileName,...
+                'Style',            'Edit',...
+                'String',           'RenderOutput.mp4'); 
+            set(hBoxFileName,'Sizes',[STR_WIDTH,-1]);
+            %
+            hBoxTotalFrames = uiextras.HBox(...
+                'Parent',           vBoxPanelMakeMovie);
+            uicontrol(...
+                'Parent',           hBoxTotalFrames,...
+                'Style',            'Text',...
+                'String',           'Total Frames');   
+            obj.InputTotalFrames = uicontrol(...
+                'Parent',           hBoxTotalFrames,...
+                'Style',            'Edit',...
+                'String',           '360'); 
+            uicontrol(...
+                'Parent',           hBoxTotalFrames,...
+                'Style',            'Text',...
+                'String',           'FPS');   
+            obj.InputFPS = uicontrol(...
+                'Parent',           hBoxTotalFrames,...
+                'Style',            'Edit',...
+                'String',           '20'); 
+            set(hBoxTotalFrames,...
+            'Sizes',[STR_WIDTH,STR_WIDTH/2,STR_WIDTH,STR_WIDTH/2]);
+            %
+            set(vBoxPanelMakeMovie,...
+                'Sizes',...
+                [PB_HEIGHT,STR_HEIGHT,STR_HEIGHT]);
+            
+            % Status String
+            hBoxStatus = uiextras.HBox(...
+                'Parent',           homeVBox);
+            uicontrol(...
+                'Parent',           hBoxStatus,...
+                'Style',            'Text',...
+                'String',           'Status: '); 
+            obj.StrStatus = uicontrol(...
+                'Parent',           hBoxStatus,...
+                'Style',            'Text',...
+                'String',           'No data loaded.',...
+                'HorizontalAlignment','Left',...
+                'BackgroundColor',  'w'); 
+            set(hBoxStatus,'Sizes',[60,-1]);
+            set(homeVBox,...
+                'Sizes',...
+                [LOADDATA_HEIGHT, PLOT_HEIGHT,MAKEMOVIE_HEIGHT,STR_HEIGHT]);
+        end
+        
+        %% Set Callbacks
+        function obj=setCallbacks(obj)
+            % This function set all callbacks
+            % except for uiDegree objects
+            
+            % % Load Data
+            set(obj.PbLoadData,...
+                'Callback',{@obj.pbLoadCallback,0});
+            set(obj.PbLoadDataResize,...
+                'Callback',{@obj.pbLoadCallback,1});
+            
+            % % Plot
+            set(obj.PbPlot,...
+                'Callback',@obj.PbPlotCallback);
+            % obj.sRenderOptionCallback
+            set(obj.SelectColorMapStyle,...
+                'Callback',@obj.sRenderOptionCallback);
+            set(obj.SelectRenderType,...
+                'Callback',@obj.sRenderOptionCallback);
+            set(obj.SelectShadingMaterial,...
+                'Callback',@obj.sRenderOptionCallback);
+            set(obj.FlagColorMapFlip,...
+                'Callback',@obj.sRenderOptionCallback);
+            % obj.updatePlotData
+            set(obj.InputAlphaMax,...
+                'Callback',@obj.updatePlotData);
+            set(obj.InAlphaMin,...
+                'Callback',@obj.updatePlotData);
+            
+            % % Make Movie
+            set(obj.PbMakeMovie,...
+                'Callback',@obj.PbMakeMovieCallback);
+        end
+        function obj = openningFunction(obj)
+            handles = findall(0,'Tag','DataBrowser');
+            if isempty(handles)
+                dataBrowser;
+            end
+        end            
+    end
+    
+    
+    %% Method: Callbacks
+    methods % callbacks
+        function pbLoadCallback(obj,~,~,fResize)
+            set(obj.StrStatus,'String','Loading Data...');
+            drawnow;
+            LOW_RES = 64;
+            % High Resolution Data
+            varNames=getDataNames();
+            dataName=varNames{1};
+            dataHighRes = evalin('base',dataName);
+            % check input
+            xflag = ~isfield(dataHighRes,'x');
+            yflag = ~isfield(dataHighRes,'y');
+            zflag = ~isfield(dataHighRes,'z');
+            vflag = (~isfield(dataHighRes,'value'))||...
+                (ndims(dataHighRes.value)~=3);
+            if xflag||yflag||zflag||vflag
+                errordlg(['Target data set is not typical 3D ARPES data.',...
+                    ' Only 3D ARPES map is accepted.']);
+                return
+            end
+            
+            % Preprocessing
+            hMsg=msgbox('Preprocessing Data...','Busy');
+            dataHighRes.value(isnan(dataHighRes.value))=0;
+            
+            ResizeOption=obj.getResizeOption();
+            
+            % Read Original/High Resolution Data
+            if fResize == 1
+                % resize data
+                xmin=min(dataHighRes.x);
+                xmax=max(dataHighRes.x);
+                ymin=min(dataHighRes.y);
+                ymax=max(dataHighRes.y);
+                Lx=xmax-xmin;
+                Ly=ymax-ymin;
+                sizeXY=ResizeOption.sizeXY;
+                if Lx>Ly
+                    sizeX=sizeXY;
+                    sizeY=ceil(Ly/Lx*sizeXY);
+                else
+                    sizeY=sizeXY;
+                    sizeX=ceil(Lx/Ly*sizeXY);
+                end
+                sizeZ=ResizeOption.sizeZ;
+                dataHighRes=resizeData(dataHighRes,sizeX,sizeY,sizeZ);
+            else
+                sizeX=length(dataHighRes.x);
+                sizeY=length(dataHighRes.y);
+                sizeZ=length(dataHighRes.z);
+                sizeXY=max([sizeX,sizeY]);
+                Lx=sizeX;
+                Ly=sizeY;
+            end  % end of fResize == 1          
+            setappdata(obj.Figure,'dataHighRes',dataHighRes);
+            setappdata(obj.Figure,'dataHighResPlot',dataHighRes); 
+            
+            % Read Low Resolution Data
+            if Lx>Ly
+                sizeXLowRes=LOW_RES;
+                sizeYLowRes=ceil(Ly/Lx*LOW_RES);
+            else
+                sizeYLowRes=LOW_RES;
+                sizeXLowRes=ceil(Lx/Ly*LOW_RES);
+            end
+            sizeZLowRes=sizeZ*LOW_RES/sizeXY;
+            dataLowRes=resizeData(...
+                dataHighRes,sizeXLowRes,sizeYLowRes,sizeZLowRes);
+            setappdata(obj.Figure,'dataLowRes',dataLowRes);
+            setappdata(obj.Figure,'dataLowResPlot',dataLowRes); 
+            delete(hMsg);
+            % Ending
+            set(obj.StrDataName,'String',dataName);
+            set(obj.StrStatus,'String','Data Loaded. Ready.');
+        end % end of pbLoadCallback
+                
+        function PbPlotCallback(obj,varargin)
+            data=getappdata(obj.Figure,'dataHighResPlot');
+            renderOption=obj.getRenderOption();
+            plotOption=obj.getPlotOption();
+            obj.renderAndPlot(data,renderOption,plotOption);         
+        end % end of PbPlotCallback
+        
+        function sRenderOptionCallback(obj,varargin)
+            plotOption=obj.getPlotOption();
+            if plotOption.AutoUpdate
+                % Render and Plot
+                data=getappdata(obj.Figure,'dataHighResPlot');
+                renderOption=obj.getRenderOption();
+                plotOption=obj.getPlotOption();
+                obj.renderAndPlot(data,renderOption,plotOption);
+            else
+                return;
+            end
+        end
+        
+        function updatePlotData(obj,varargin)
+            AlphaOption=obj.getAlphaOption();
+            % High Resolution
+            data=getappdata(obj.Figure,'dataHighRes');
+            maxData=max(data.value(:));
+            alphaMin=maxData*AlphaOption.AlphaMin/100;
+            alphaMax=maxData*AlphaOption.AlphaMax/100;
+            data.value(data.value<alphaMin)=alphaMin;
+            data.value(data.value>alphaMax)=alphaMax;
+            setappdata(obj.Figure,'dataHighResPlot',data);
+            % Low Resolution
+            data=getappdata(obj.Figure,'dataLowRes');
+            maxData=max(data.value(:));
+            alphaMin=maxData*AlphaOption.AlphaMin/100;
+            alphaMax=maxData*AlphaOption.AlphaMax/100;
+            data.value(data.value<alphaMin)=alphaMin;
+            data.value(data.value>alphaMax)=alphaMax;
+            setappdata(obj.Figure,'dataLowResPlot',data);
+            % Render and Plot
+            data=getappdata(obj.Figure,'dataHighResPlot');
+            renderOption=obj.getRenderOption();
+            plotOption=obj.getPlotOption();
+            obj.renderAndPlot(data,renderOption,plotOption);
+        end % end of updatePlotData
+        
+        function uiDegreeUpdate(obj,actionType,varargin)
+            plotOption=obj.getPlotOption();
+            if plotOption.AutoUpdate==0
+                return
+            end
+            if actionType==1
+                data=getappdata(obj.Figure,'dataLowResPlot');  
+            elseif actionType==2
+                data=getappdata(obj.Figure,'dataHighResPlot');
+            else
+                return;
+            end
+            % Render And Plot
+            renderOption=obj.getRenderOption();
+            plotOption=obj.getPlotOption();
+            obj.renderAndPlot(data,renderOption,plotOption);
+        end % end of uiDegreeUpdate
+        
+        function PbMakeMovieCallback(obj,varargin)
+            
+            movieOption = obj.getMovieOption();
+            plotOption = obj.getPlotOption();
+            renderOption = obj.getRenderOption();
+            data = getappdata(obj.Figure,'dataHighResPlot');
+            
+            writerObj = VideoWriter(movieOption.FileName,'MPEG-4');
+            writerObj.FrameRate=movieOption.FPS;
+            n = movieOption.TotalFrames;
+            open(writerObj);
+            hWaitbar=waitbar(0,'Making movie... 0%','Name','Please wait');
+            
+            
+            for i=1:n
+                % Render and Plot
+                % Mview
+                Theta=obj.uiDegTheta.getDegree();
+                Phi=i*360/n;
+                v=[0 Theta Phi];
+                renderOption.Mview=makeViewMatrix(v,[1 1 1],[0 0 0]);
+                obj.renderAndPlot(data,renderOption,plotOption);
+                frame=getframe;
+                writeVideo(writerObj,frame);
+                % Update hWaitbar
+                waitbar(i/n,hWaitbar,...
+                    [num2str(i/n*100,'Making movie... %6.2f%%'),...
+                    ' phi=',num2str(i*360/n)]);
+            end
+            close(writerObj);
+            close(hWaitbar);
+        end
+    end
+    
+    
+    %% Method: Helper functions
+    methods % helper functions
+        function renderAndPlot(obj,data,renderOption,plotOption)
+            figure(plotOption.FigNum);
+            sizeX=length(data.x);
+            sizeY=length(data.y);
+            sizeZ=length(data.z);
+            if sizeX>128||sizeY>128
+                set(obj.StrStatus,'String','Rendering... Please wait.');
+                drawnow;
+            end
+            sizeD=ceil(norm([sizeX,sizeY,sizeZ])*1.07/16)*16;
+            renderOption.ImageSize=[sizeD,sizeD];
+            renderData=render(data.value,renderOption);
+            imagesc(renderData);
+            axis off;
+            set(obj.StrStatus,'String','Ready.');
+        end % end of renderAndPlot
+        
+        function ResizeOption=getResizeOption(obj)
+            ResizeOption.sizeZ = str2double(get(obj.InputSizeZ,'String'));
+            ResizeOption.sizeXY = str2double(get(obj.InputSizeXY,'String'));
+        end
+        
+        function PlotOption=getPlotOption(obj)
+            PlotOption.AutoUpdate=get(obj.FlagAutoUpdate,'Value');
+            PlotOption.FigNum=str2double(get(obj.InputFigNum,'String'));
+        end
+        
+        function RenderOption=getRenderOption(obj)
+            % RenderType
+            selectRenderType=get(obj.SelectRenderType,'String');
+            ind=get(obj.SelectRenderType,'Value');
+            RenderOption.RenderType=selectRenderType{ind};
+            % ShadingMaterial
+            selectShadingMaterial=get(obj.SelectShadingMaterial,'String');
+            ind=get(obj.SelectShadingMaterial,'Value');
+            RenderOption.ShadingMaterial=selectShadingMaterial{ind};
+            % ColorTable
+            selectColorMapStyle=get(obj.SelectColorMapStyle,'String');
+            ind=get(obj.SelectColorMapStyle,'Value');
+            flagColorMapFlip=get(obj.FlagColorMapFlip,'Value');
+            load('Colormap.mat');
+            ColorMapTable=eval(selectColorMapStyle{ind});
+            if flagColorMapFlip
+                ColorMapTable=flipud(ColorMapTable);
+            else
+            end
+            RenderOption.ColorTable=ColorMapTable;
+            % Mview
+            Theta=obj.uiDegTheta.getDegree();
+            Phi=obj.uiDegPhi.getDegree();
+            v=[0 Theta Phi];
+            RenderOption.Mview=makeViewMatrix(v,[1 1 1],[0 0 0]);           
+        end % end of getRenderOption
+        
+        function AlphaOption=getAlphaOption(obj)
+            % Alpha Setting
+            AlphaOption.AlphaMin=get(obj.InAlphaMin,'Value');
+            AlphaOption.AlphaMax=get(obj.InputAlphaMax,'Value');
+        end % end of getAlphaOption
+        
+        function MovieOption = getMovieOption(obj)
+            MovieOption.FileName = get(obj.InputFileName,'String');
+            MovieOption.TotalFrames = str2double(...
+                get(obj.InputTotalFrames,'String'));
+            MovieOption.FPS = str2double(get(obj.InputFPS,'String'));
+        end
+
+    end
+end
+        
+
+##### SOURCE END #####
+--></body></html>

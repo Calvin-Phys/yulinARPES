@@ -1,0 +1,10 @@
+Project Name: Lattice_plot
+
+Author: Qunsong Zeng
+
+Email: zqs1111@mail.ustc.edu.cn
+
+Use Steps:
+1. Open the Matlab software;
+2. Input "Lattice_plot" in the Command Window;
+3. Press Enter and you can see the GUI.

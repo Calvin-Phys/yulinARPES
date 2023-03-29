@@ -1,0 +1,10 @@
+Project Name: arbicut_3d_plot
+
+Authors: Qunsong Zeng & Xinjing Huang
+
+Email: zqs1111@mail.ustc.edu.cn & aliciah@mail.ustc.edu.cn
+
+Use Steps:
+1. Open the Matlab software;
+2. Input "arbicut_3d_plot" in the Command Window;
+3. Press Enter and you can see the GUI.
