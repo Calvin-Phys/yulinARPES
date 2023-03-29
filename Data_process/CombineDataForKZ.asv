@@ -117,36 +117,45 @@ if size(index_selected,2)==1
     errordlg('more variables, please!');
     return;
 end
-
-datafin = evalin('base',list_entries{index_selected(1)});
-
+% declare final variable name
+datafin.x = [];
+datafin.y = [];
+datafin.z = [];
+datafin.value = [];
+datafin.ztot = [];
+datafin.info = [];
 % looping for each data
-for i = 2:size(index_selected,2)
-    % get variable
-    datain2 = evalin('base',list_entries{index_selected(i)});
+for i = 1:size(index_selected,2)
+    % get var name
+    var_name1 = list_entries{index_selected(i)};
+    % call the data
+    datain1=evalin('base',var_name1);
     % error control
-%     if ~isstruct(datain1)
-%         errordlg(['data',num2str(i),'is not struct'])
-%         return;
-%     elseif (~(isfield(datain1,'x') && isfield(datain1,'y') && isfield(datain1,'z') && isfield(datain1,'ztot') && isfield(datain1,'value')))
-%         errordlg(['data',num2str(i),'is wrong. Data needs at least x,y,z,ztot, and value field']);
-%         return;
-%     end
-    if ndims(datain2.value) ~= 3
-        errordlg(['Data ',list_entries{index_selected(i)},' is not a 3D kz map. Please check the data type.']);
+    if ~isstruct(datain1)
+        errordlg(['data',num2str(i),'is not struct'])
+        return;
+    elseif (~(isfield(datain1,'x') && isfield(datain1,'y') && isfield(datain1,'z') && isfield(datain1,'ztot') && isfield(datain1,'value')))
+        errordlg(['data',num2str(i),'is wrong. Data needs at least x,y,z,ztot, and value field']);
         return;
     end
     % combining
-    datafin.x = cat(2,datafin.x,datain2.x);
-    datafin.value = cat(1,datafin.value,datain2.value);
+    datafin.x = cat(2,datafin.x,datain1.x);
+    datafin.y = datain1.y;
+    datafin.z = datain1.z;
+    datafin.value=cat(1,datafin.value,datain1.value);
+    datafin.ztot= cat(2,datafin.ztot,datain1.ztot);
 end
 
 [~,I]=sort(datafin.x);
 datafin.x = datafin.x(I);
 datafin.value = datafin.value(I,:,:);
-% datafin.ztot = datafin.ztot(:,I);
+datafin.ztot = datafin.ztot(:,I);
 
-assignin('base',get(handles.edit14,'String'),datafin);
+assignin('base','Combined3DPhotonDependence',datafin);
+display('combine 3D PhotonData done')
+load chirp;
+sound(y, Fs);
+
 
 
 % --- Executes on button press in resampledata.
@@ -400,10 +409,7 @@ datafin.x = datafin.x(I);
 datafin.value = datafin.value(I,:,:);
 % datafin.ztot = datafin.ztot(:,I);
 
-if isa(datain1,'OxA_CUT')
-    datafin = OxA_KZ(datafin);
-    datafin.info.workfunction = workfunction;
-end
+if isa()
 
 assignin('base',new_map_name,datafin);
 

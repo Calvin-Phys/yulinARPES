@@ -19,6 +19,7 @@ data_browser_demo_v32
 ```
 
 Press Enter to run the command, and the main window of the software will appear as shown below.
+
 ![Main Window](./pictures/main_window.png)
 
 ---
@@ -43,6 +44,7 @@ You can select and load multiple files at once by using the file selection dialo
 > It is recommended to use the new loader due to its added functionality, but the old loader remains available within the software for those who prefer it.
 
 Once the loading process is finished, click on the list in the main window to refresh it. The newly-loaded data variables will then appear in the list.
+
 ![Main Window List](./pictures/main_window_list.png)
 
 ---
@@ -54,6 +56,7 @@ plot -> plot along x/y/z.
 ```
 
 The data plot window will look like this:
+
 ![Plot](./pictures/plot.png)
 
 You can:
@@ -70,6 +73,7 @@ To view the EDC and MDC of a cut, click on the `ARPES Tools` menu and select `ED
 ARPES Tools -> EDC/MDC
 ```
 This will open the EDC and MDC windows alongside the plot window, as shown below:
+
 ![EDCMDC](./pictures/EDCMDC.png)
 
 You can move the solid-line crosshair to change the integration area, and move the dashed-line crosshair to change the integration range.
@@ -83,6 +87,7 @@ ARPES Tools -> Interpolate
 This will improve the visualization of the data. 
 
 Here is an example (left without interpolation, right with interpolation):
+
 ![Interpolation](./pictures/Interpolate.png)
 
 ### Mass plot
@@ -119,6 +124,7 @@ to enable the crosshair. Move the vertical line of the crosshair to the center o
 Plot Window -> ARPES Tools -> K-Convert (object)
 ```
 Wait for a moment the variable converted to k-space would appear in the main windows's list.
+
 ![kconvert cut](./pictures/kconvert_cut.png)
 
 ### Map
@@ -148,6 +154,7 @@ Basic data process includes:
 - truncate data
 - normalise data
 - fit fermi level and offset
+- combine photon energy scan cuts to 3D kz maps
 
 ### Data truncate
 
@@ -185,6 +192,24 @@ Then, follow these steps:
 3. An EDC of the selected area will appear in the `FitFermiSurface` window. Click `Fit FS` button. 
 4. Repeat steps 2-3 if the fitting is not satisfactory. When the fitting looks good enough, click `Offset Energy` button. A new variable will appear in the workspace.
 
+### Combine Data for KZ
+
+This tool helps you combine 2D cuts at different photon energies into a 3D kz map. To open the window, follow these steps:
+```
+Main Window -> Process -> Combine Data for KZ
+```
+![Combine KZ](./pictures/combine_kz.png)
+
+1. Click on Refresh Variables to update the variable list.
+2. Select all the relevant cuts, input the photon energy array, the work function, and the new map name.
+3. Click on Combine 2D Cuts and wait for a moment. The combined data will be created shortly.
+
+Moreover, the tool has the capability to merge multiple 3D kz maps. To do this, follow the steps below:
+
+1. Select the desired kz maps. Modify the new map name.
+2. Click on `Combine 3D Data`.
+
+
 ## More Data Visualisation
 
 ### Brillouin zone and KZ plot
@@ -208,6 +233,7 @@ Main Window -> Visualization -> Plot cut in kz
 Input the necessary parameters in the fields provided and click the Push it button. The line of a cut at a specific photon energy will be plotted in the target figure.
 
 Below is an example of plotting the Brillouin zone and photon energy cuts together:
+
 ![bz cut](./pictures/bz_c.png)
 
 Several other functions for visualizing ARPES data are provided below. These operations are designed to be user-friendly and straightforward:
