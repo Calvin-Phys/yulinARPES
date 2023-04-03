@@ -112,6 +112,16 @@ function combinedata_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 list_entries = get(handles.listbox1,'String');
 index_selected = get(handles.listbox1,'Value');
+new_map_name = get(handles.edit14,'String');
+% check if the variable name exists
+ise = evalin( 'base', append("exist('",new_map_name, "','var') == 1") );
+if ise
+    answer = questdlg('The variable name already exists. Would you like to continue?', ...
+	'Variable name','Yes','Cancel','Cancel');
+    if strcmp(answer,'Cancel')
+        return
+    end
+end
 
 if size(index_selected,2)==1
     errordlg('more variables, please!');
@@ -368,6 +378,15 @@ num_cuts = size(index_selected,2);
 hv_array = eval(get(handles.edit12,'String'));
 workfunction = str2num(get(handles.edit13,'String'));
 new_map_name = get(handles.edit14,'String');
+% check if the variable name exists
+ise = evalin( 'base', append("exist('",new_map_name, "','var') == 1") );
+if ise
+    answer = questdlg('The variable name already exists. Would you like to continue?', ...
+	'Variable name','Yes','Cancel','Cancel');
+    if strcmp(answer,'Cancel')
+        return
+    end
+end
 
 e_min = zeros(1,num_cuts);
 e_max = zeros(1,num_cuts);
