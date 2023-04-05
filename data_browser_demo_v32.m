@@ -907,7 +907,7 @@ if isempty(data)
     return
 end
 
-if isstruct(data) || (isobject(data) && isprop(data,'value'))
+if (isstruct(data) && isfield(data,'value')) || (isobject(data) && isprop(data,'value'))
     di=size(size(data.value),2);
 
 %set(handles.hTitle_panel_datainfo,'String',['info: ' varname ' - ' num2str(di) 'D']);

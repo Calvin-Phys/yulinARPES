@@ -843,6 +843,9 @@ classdef PlotSlices < handle
                 maxSlider = 10^get(obj.SliderMax,'Value') -1;
                 minPercent = min(maxSlider,minSlider);
                 maxPercent = max(maxSlider,minSlider);
+                if maxPercent == minPercent
+                    maxPercent = maxPercent + 0.001;
+                end
                 clim(obj.Axis,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
                 set(obj.MinValue,'String',num2str(minSlider));
                 set(obj.MaxValue,'String',num2str(maxSlider));
