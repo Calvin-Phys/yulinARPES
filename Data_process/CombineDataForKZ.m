@@ -147,7 +147,12 @@ for i = 2:size(index_selected,2)
         return;
     end
     % combining
-    datafin.x = cat(2,datafin.x,datain2.x);
+    if size(datafin.x,1) == 1
+        datafin.x = cat(2,datafin.x,datain2.x);
+    else
+        datafin.x = cat(1,datafin.x,datain2.x);
+    end
+    
     datafin.value = cat(1,datafin.value,datain2.value);
 end
 

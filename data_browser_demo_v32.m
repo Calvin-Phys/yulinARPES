@@ -387,9 +387,9 @@ function plotDos_CallbackFcn(~,~,Direction)
             y = data.value;
         end
 
-        if length(dataName) > 1
+%         if length(dataName) > 1
             y = y/mean(y,"all");
-        end
+%         end
 
         switch Direction
             case 'H'
@@ -784,19 +784,24 @@ end
 %part092501
 
 function VarList_CallbackFcn(hObject,varargin)
+
 handles=guidata(hObject);
 SelectionTypeFlag=get(handles.mObject,'SelectionType');
 switch SelectionTypeFlag
     case 'open'
-        PlotData()
+        PlotData(hObject)
     case 'normal'
        UpdateVarList(hObject);
     otherwise
         return;PlotSlices
 end
 
-function PlotData()
-VarNames=getDataNames;
+function PlotData(hObject)
+handles=guidata(hObject);
+list_entries = get(handles.VarList,'String');
+index_selected = get(handles.VarList,'Value');
+
+VarNames=list_entries(index_selected);
 if isempty(VarNames)
     return;
 end

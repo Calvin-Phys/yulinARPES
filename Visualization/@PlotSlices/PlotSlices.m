@@ -353,6 +353,8 @@ classdef PlotSlices < handle
             obj.MDCEDC_Menu=uimenu(hmenu,'Label','EDC/MDC',...
                 'Separator','on','Callback',@obj.MDCEDC_menu_callback);
 
+            uimenu(hmenu,'Label','Histogram','Callback',@obj.histogram_menu_callback);
+
             obj.CrosshairMenu=uimenu(hmenu,'Label','Crosshair',...
                 'Separator','on','Callback',@obj.crosshair_menu_callback);
             uimenu(hmenu,'Label','K-Convert (object)','Callback',@obj.quick_KConvert);
@@ -499,9 +501,11 @@ classdef PlotSlices < handle
             end
 
  
+            % get position and width
             pos = get(obj.Slider,'Value');
             width = str2double(get(obj.Width, 'String'));
 
+            % slice data
             sliceData = [];
             switch obj.Direction
                 case 'x'
@@ -550,6 +554,7 @@ classdef PlotSlices < handle
 %             sliceData = interp2(sliceData,K,'spline');
 %             sliceData(sliceData<0) = 0;
 
+            % for crosshair
             obj.PosX = mean(xData);
             obj.PosY = mean(yData);
             obj.DX = 0.1*(max(xData) - min(xData));
@@ -561,7 +566,7 @@ classdef PlotSlices < handle
                 sliceData = (sliceData/obj.maxValue).^gamma .* sliceData;
             end
 
-            % select axis
+            % select axis and plot
             if axFlag == 0
                 obj.imag = imagesc(obj.Axis,xData,yData,sliceData');
                 set(obj.Axis,'YDir','normal');
@@ -637,21 +642,26 @@ classdef PlotSlices < handle
 
             % plot energy contour
             if obj.energy_contour_flag == 1
-
-                for i = 1:length(obj.energy_contour_lines)
-                    delete(obj.energy_contour_lines{i})
+                if axFlag == 0
+                    for i = 1:length(obj.energy_contour_lines)
+                        delete(obj.energy_contour_lines{i})
+                    end
+                    obj.energy_contour_lines = obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,axPlot);
+                elseif axFlag == 1 || axFlag == 3
+                    obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,axPlot);
                 end
-
-                obj.energy_contour_lines = obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,axPlot);
             end
-             % plot brillouin zone
+            % plot brillouin zone
             if obj.bz_line_flag == 1
+                if axFlag == 0
+                    for i = 1:length(obj.bz_line_lines)
+                        delete(obj.bz_line_lines{i});
+                    end
+                    obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(axPlot);
 
-                for i = 1:length(obj.bz_line_lines)
-                    delete(obj.bz_line_lines{i})
+                elseif axFlag == 1 || axFlag == 3
+                    obj.Data.info.BZBS.plotBrillouinZoneOnAxes(axPlot);
                 end
-
-                obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(axPlot);
             end
             
             % set EDC/MDC
@@ -715,9 +725,9 @@ classdef PlotSlices < handle
              % plot brillouin zone
             if obj.bz_line_flag == 1
 
-                for i = 1:length(obj.bz_line_lines)
-                    delete(obj.bz_line_lines{i})
-                end
+%                 for i = 1:length(obj.bz_line_lines)
+%                     delete(obj.bz_line_lines{i})
+%                 end
 
                 obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(obj.Axis);
             end
@@ -988,6 +998,11 @@ classdef PlotSlices < handle
             end
         end
 
+        function histogram_menu_callback(obj,~,~)
+            figure;
+            histogram(obj.imag.CData);
+        end
+
         function perp_DC_menu_callback(obj,~,~)
             if get(obj.PerpDistributionMenu,'Checked')
                 close(obj.PerpDistributionFigure);
@@ -1093,6 +1108,7 @@ classdef PlotSlices < handle
             elseif obj.Data.info.pass_energy == 50
                 Erng = '(0:-0.2:-2.2)';
             end
+            
             if strcmp(obj.Data.z_name,'Kinetic Energy')
                 def_cmd = [num2str(Ef) '+' Erng];
             else
@@ -1126,6 +1142,7 @@ classdef PlotSlices < handle
 
             for i = 1:row*column
                 obj.Slider.Value = posi(i);
+%                 pause(0.1)
                 ha1 = subplot(row,column,i,'parent',Fig);
                 obj.initial_plot('new2',ha1);
                 set(ha1,'xlabel',[]);
@@ -1141,7 +1158,7 @@ classdef PlotSlices < handle
                         nn = obj.Data.z_name;
                         uu = obj.Data.z_unit;
 
-                        if strcmp(nn,'Binding Energy')
+                        if strcmp(nn,'{\it E}-{\it E}_F')
                             nn = 'BE';
                         elseif strcmp(nn,'Kinetic Energy')
                             nn = 'KE';
@@ -1149,16 +1166,21 @@ classdef PlotSlices < handle
                 end
                 title(ha1,[nn '= ' num2str(posi(i)) ' ' uu]);
 
-                for j = 1:length(obj.bz_line_lines)
-                    copyobj(obj.bz_line_lines{j},ha1)
-                end
-                for j = 1:length(obj.energy_contour_lines)
-                    copyobj(obj.energy_contour_lines{j},ha1)
-                end
+%                 if obj.bz_line_flag == 1
+%                     for j = 1:length(obj.bz_line_lines)
+%                         copyobj(obj.bz_line_lines{j},ha1)
+%                     end
+%                 end
+%                 if obj.energy_contour_flag
+%                     for j = 1:length(obj.energy_contour_lines)
+%                         copyobj(obj.energy_contour_lines{j},ha1)
+%                     end
+%                 end
                 
             end
+
             try
-            sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV ' char(obj.Data.info.polarization)],'interpreter', 'none');
+                sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV ' char(obj.Data.info.polarization)],'interpreter', 'none');
             catch
             end
             obj.Slider.Value = pos0;
