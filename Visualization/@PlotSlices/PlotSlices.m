@@ -329,7 +329,7 @@ classdef PlotSlices < handle
             if ~strcmp(obj.Direction,'z')
                 set(cutMenu,'Enable','off');
             end
-            uimenu(hmenu,'Label','Save Slice','Callback',@obj.save);
+            uimenu(hmenu,'Label','Save Slice','Callback',@obj.save_slice);
 
 
             uimenu(hmenu,'Label','Sub plot in new figure',...
@@ -387,56 +387,33 @@ classdef PlotSlices < handle
 %                 'Callback',{@print,obj.Figure,'-clipboard','-dpng'});
         end
         
-        function save(obj,varargin)
-%             pos=get(obj.Slider,'Value');
-%             width = str2double(get(obj.Width, 'String'));
-%             [~,posInd]=min(abs(obj.AxisData-pos));
-%             [~,leftInd]=min(abs(obj.AxisData - (pos-width/2)));
-%             [~,rightInd]=min(abs(obj.AxisData - (pos+width/2)));
-%             set(obj.Position,'String',num2str(pos));
-%             set(obj.PositionIndex,'String',num2str(posInd));
-%             switch obj.Direction
-%                 case 'x'
-%                     d=1;
-%                     xData=obj.Data.y;
-%                     yData=obj.Data.z;
-%                 case 'y'
-%                     d=2;
-%                     xData=obj.Data.x;
-%                     yData=obj.Data.z;
-%                 otherwise
-%                     d=3;
-%                     xData=obj.Data.x;
-%                     yData=obj.Data.y;
-%             end
-%             index=arraySliceIndex(3,[leftInd:rightInd],d);
-%             sliceData=squeeze(mean(obj.Data.value(index{:}),d));
-% %             data=obj.Data;
-% %             data=rmfield(data,'z');
-%             data.x=xData;
-%             data.y=yData;
-%             data.value=sliceData;
-%             data.SliceInfo.Direction=obj.Direction;
-%             data.SliceInfo.pos=pos;
-%             data.SliceInfo.parentData=obj.DataName;
-
+        function save_slice(obj,varargin)
+            
             x = obj.imag.XData;
             y = obj.imag.YData;
             value = obj.imag.CData';
             data = OxA_CUT(x,y,value);
             data.info = obj.Data.info;
 
-
-            switch obj.Direction
-                case 'x'
-                    data.x_name = obj.Data.y_name;
-                    data.y_name = obj.Data.z_name;
-                case 'y'
-                    data.x_name = obj.Data.x_name;
-                    data.y_name = obj.Data.z_name;
-                otherwise
-                    data.x_name = obj.Data.x_name;
-                    data.y_name = obj.Data.y_name;
+            try
+                switch obj.Direction
+                    case 'x'
+                        data.x_name = obj.Data.y_name;
+                        data.x_unit = obj.Data.y_unit;
+                        data.y_name = obj.Data.z_name;
+                        data.y_unit = obj.Data.z_unit;
+                    case 'y'
+                        data.x_name = obj.Data.x_name;
+                        data.x_unit = obj.Data.x_unit;
+                        data.y_name = obj.Data.z_name;
+                        data.y_unit = obj.Data.z_unit;
+                    otherwise
+                        data.x_name = obj.Data.x_name;
+                        data.x_unit = obj.Data.x_unit;
+                        data.y_name = obj.Data.y_name;
+                        data.y_unit = obj.Data.y_unit;
+                end
+            catch
             end
 
             SaveName=inputdlg({'Data Name'},'Save Slice',1,{[obj.DataName,'_sa']});
@@ -1200,7 +1177,6 @@ classdef PlotSlices < handle
         correction(obj,varargin) % Fermi surface correction
         plotCrossHair(obj,~,~) % plotCrossHair and EDC/MDC plot drawing
         ButtonDownFcn(obj,~,~) % mouse click action
-        mdcedc(obj,varargin) % EDC/MDC function
         saveMdcEdc(obj,varargin) % save data of EDC/MDC plots
         sqCorrection(obj,varargin) % Square Correction for data set
     end

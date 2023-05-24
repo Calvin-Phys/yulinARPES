@@ -59,11 +59,11 @@ yData = obj.imag.YData;
 % get points
 [m,n]=getpts;
 
-% fit ferimi surface curve
-
+% which order of the polynomial should we use ?
 % A=polyfit(m,n,2);
 % FS_CURVE=polyval(A,xData);
 
+% fit ferimi surface curve
 FS_CURVE = interp1(m,n,xData,'spline');
 FS_mean = mean(FS_CURVE,'all');
 
@@ -102,11 +102,11 @@ else
     switch obj.Direction
         case 'x'
             for i = 1:length(newData.x)
-                VALUE_new3(i,:,:) = interp2(xData,yData,squeeze(newData.value(i,:,:))',XX,EEFF+FS_m','spline',0);
+                VALUE_new3(i,:,:) = interp2(newData.y,newData.z,squeeze(newData.value(i,:,:)),XX,EEFF+FS_m','spline',0);
             end
         case 'y'
             for i = 1:length(newData.y)
-                VALUE_new3(:,i,:) = interp2(xData,yData,squeeze(newData.value(:,i,:))',XX,EEFF+FS_m','spline',0);
+                VALUE_new3(:,i,:) = interp2(newData.x,newData.z,squeeze(newData.value(:,i,:)),XX,EEFF+FS_m','spline',0);
             end
     
         otherwise
