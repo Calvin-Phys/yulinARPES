@@ -22,7 +22,7 @@ function varargout = EmassFitting(varargin)
 
 % Edit the above text to modify the response to help EmassFitting
 
-% Last Modified by GUIDE v2.5 27-Nov-2019 18:28:16
+% Last Modified by GUIDE v2.5 11-May-2023 04:28:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -147,7 +147,9 @@ name_output=get(handles.edit3,'String');
 data=evalin('base',name_output);
 fitobject=fit(data.x,data.y,'poly2');
 data.para=coeffvalues(fitobject);
-data.emass=roundn(7.631/data.para(1)/2,-2);
+
+data.emass=roundn(3.80998212/data.para(1),-5);
+
 set(handles.edit2,'String',num2str(data.emass));
 assignin('base',name_output,data);
 
@@ -175,3 +177,44 @@ function edit3_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
+function edit4_Callback(hObject, eventdata, handles)
+% hObject    handle to edit4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit4 as text
+%        str2double(get(hObject,'String')) returns contents of edit4 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit4_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton4.
+function pushbutton4_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+name_output=get(handles.edit3,'String');
+data=evalin('base',name_output);
+fig_num=str2num(get(handles.edit1,'String'));
+
+km = str2num(get(handles.edit4,'String'));
+k = -km:0.02:km;
+Ek = data.para(1)*k.^2;
+figure(fig_num)
+hold on
+plot(k,Ek);
+hold off

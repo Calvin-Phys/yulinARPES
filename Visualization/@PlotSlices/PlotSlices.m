@@ -725,9 +725,9 @@ classdef PlotSlices < handle
              % plot brillouin zone
             if obj.bz_line_flag == 1
 
-%                 for i = 1:length(obj.bz_line_lines)
-%                     delete(obj.bz_line_lines{i})
-%                 end
+                for i = 1:length(obj.bz_line_lines)
+                    delete(obj.bz_line_lines{i})
+                end
 
                 obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(obj.Axis);
             end
@@ -1100,13 +1100,14 @@ classdef PlotSlices < handle
         end
 
         function mass_plot(obj,~,~)
-            
             Ef = obj.Data.info.photon_energy - obj.Data.info.workfunction;
 
             if obj.Data.info.pass_energy == 20
                 Erng = '(0:-0.05:-1)';
             elseif obj.Data.info.pass_energy == 50
                 Erng = '(0:-0.2:-2.2)';
+            else
+                Erng = '(0:-0.05:-1)';
             end
             
             if strcmp(obj.Data.z_name,'Kinetic Energy')
@@ -1182,6 +1183,7 @@ classdef PlotSlices < handle
             try
                 sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV ' char(obj.Data.info.polarization)],'interpreter', 'none');
             catch
+                sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV '],'interpreter', 'none');
             end
             obj.Slider.Value = pos0;
 

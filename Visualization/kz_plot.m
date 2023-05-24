@@ -101,7 +101,7 @@ xl = xlim;
 yl = ylim;
 hold on;
 
-plot(kz,kx,'LineWidth',1.5,'Color',"#EDB120");
+plot(kz,kx,'LineWidth',1.5,'Color',[0.4660 0.6740 0.1880]);
 text(kz(1),kx(1),hv_str);
 
 hold off;
