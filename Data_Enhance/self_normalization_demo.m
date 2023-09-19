@@ -533,6 +533,7 @@ if direz==1 && isempty(data.z) && scale_real==1
     errordlg('Data have no real scale info along z direction ','Incorrect input');
     return;
 end
+
 %----------------------------
 
 %--------------------start handling data--------------------

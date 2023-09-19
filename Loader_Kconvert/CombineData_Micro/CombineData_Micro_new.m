@@ -22,7 +22,7 @@ function varargout = CombineData_Micro_new(varargin)
 
 % Edit the above text to modify the response to help CombineData_Micro
 
-% Last Modified by GUIDE v2.5 14-Dec-2022 18:12:03
+% Last Modified by GUIDE v2.5 11-Jun-2023 14:41:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -79,7 +79,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-load("MCP_calibration.mat");
+
 
 % get input variables
 list_entries = get(handles.listbox1,'String');
@@ -109,18 +109,14 @@ T_step=str2num(get(handles.edit7,'String'));
 MapName=get(handles.edit9,'String');
 map_num=var_num/cut_num;
 %----------end get the info for map-------------
+
 %----------whether truncate?-------------
 truncate=str2num(get(handles.edit8,'String'));
 flag_trun=get(handles.radiobutton1,'value');
-%----------end whether truncate?-------------
-
 %----------whether Normal yz before combine?-------------
 flag_yz=get(handles.radiobutton5,'value');
-%----------end whether Normal yz before combine?-------------
-
 %----------whether Normal xz-------------
 flag_xz=get(handles.radiobutton3,'value');
-%----------end whether Normal-------------
 %----------whether Normal analyser-------------
 flag_analyser=get(handles.Analyser,'value');
 if flag_analyser==1
@@ -128,6 +124,7 @@ if flag_analyser==1
     try
         ref=evalin('base',gold_name);
     catch
+        load("MCP_calibration.mat");
         ref.value = MCP_calibration;
     end
 end
@@ -153,7 +150,7 @@ for i= 1: map_num % for each tilt
    name_output=[MapName,'_Part',num2str(i)];
    assignin('base',name_output,new_data(i));
 end
-clear datav;clear j; clear h;
+
 %-------end Combine Data 2D to 3D---------
 
 %--------Normal yz before combine-------
@@ -173,6 +170,7 @@ if (flag_yz==1)
     end
 end
 %--------End Normal yz before combine----
+
 %--------Truncate before combine-------
 if (flag_trun==1)&&(map_num>1)
     for i=1:map_num
@@ -227,7 +225,6 @@ end
 for i=1:map_num
     new_data(i).value=cat(2,zeros(sizeX,left(i)-1,sizeZ),new_data(i).value,zeros(sizeX,sizeY-right(i),sizeZ));
 
-
     data.value=data.value+new_data(i).value;
 end
 
@@ -240,6 +237,13 @@ end
 % end
 
 name_output=[MapName,'_combine'];
+
+cut1 = evalin('base',list_entries{index_selected(1)});
+if isa(cut1,'OxA_CUT')
+    data = OxA_MAP(data);
+    data.info = cut1.info;
+end
+
 assignin('base',name_output,data);
 
 
@@ -593,51 +597,54 @@ function pushbutton3_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+    %----------get the info for map-------------
+    P_initial=str2num(get(handles.edit1,'String'));
+    P_final=str2num(get(handles.edit2,'String'));
+    P_step=str2num(get(handles.edit3,'String'));
+    
+    num_polar = round((P_final-P_initial)/P_step)+1;% maybe bug here
+    
+    T_initial=str2num(get(handles.edit4,'String'));
+    T_final=str2num(get(handles.edit6,'String'));
+    T_step=str2num(get(handles.edit7,'String'));
+    
+    num_tilt = round((T_final-T_initial)/T_step)+1;% maybe bug here
+
+
     % get selected variable list
     list_entries = get(handles.listbox1,'String');
     index_selected = get(handles.listbox1,'Value');
     var_num = size(index_selected,2);
 
+    CUT = evalin('base',list_entries{index_selected(1)});
+
     % truncate cuts or not
     flag_trun = get(handles.radiobutton1,'value');
     truncate = str2num(get(handles.edit8,'String'));
 
-    % polar and tilt for gamma
+    % polar, tilt & azimuth for gamma
     P0 = str2num(get(handles.edit12,'String'));
     T0 = str2num(get(handles.edit13,'String'));
 
     % get data points
-    CUT_combined = [];
-    coord = [];
     kk1 = [];
     kk2 = [];
-    num_tilt = 1;
     
-    for i = 1:var_num
-        CUT = evalin('base',list_entries{index_selected(i)});
-
-        if flag_trun
-            [~,xn_min] = min(abs(min(CUT.x)+truncate - CUT.x));
-            [~,xn_max] = min(abs(max(CUT.x)-truncate - CUT.x));
-            CUT.x = CUT.x(xn_min:xn_max);
-            CUT.value = CUT.value(xn_min:xn_max,:);
-        end
-
-        CUT_combined(:,:,i) = CUT.value;
-    %     fprintf('%5.2f %5.2f \n', CUT.info.phi, CUT.info.theta);
-        coord(i,:) = [CUT.info.theta-P0, CUT.info.phi-T0];
-
-        if i~=1 && coord(i,2) - coord(i-1,2) > 10
-            num_tilt = num_tilt + 1;
-        end
-
-        for j = 1:length(CUT.x)
-            [kx,ky,kz] = rotate2K(min(CUT.y),CUT.info.phi-T0,CUT.info.theta-P0,CUT.x(j));
-            kk1(end+1,:) = [kx, ky, kz];
-            [kx,ky,kz] = rotate2K(max(CUT.y),CUT.info.phi-T0,CUT.info.theta-P0,CUT.x(j));
-            kk2(end+1,:) = [kx, ky, kz];
-        end
+    Eki = max(CUT.y);
+    Ekj = min(CUT.y);
+    CONST = 0.512316722;
+    
+    tic
+    for y_offset = T_initial:T_step:T_final
+        [ThetaX, ThetaY] = meshgrid(P_initial:P_step:P_final,CUT.x);
+        kx = ( cosd(ThetaY).*sind(ThetaX-90) );
+        ky = ( cosd(y_offset).*sind(ThetaY) +sind(y_offset).*cosd(ThetaY).*cosd(ThetaX-90) );
+        kz = ( -sind(y_offset).*sind(ThetaY) +cosd(y_offset).*cosd(ThetaY).*cosd(ThetaX-90) );
+        kk1 = vertcat(kk1,CONST* sqrt(Eki)* [kx(:), ky(:), kz(:)]);
+        kk2 = vertcat(kk2,CONST* sqrt(Ekj)* [kx(:), ky(:), kz(:)]);
+    
     end
+    toc
     
     % plot data points
     figure
@@ -662,26 +669,26 @@ function pushbutton3_Callback(hObject, eventdata, handles)
     legend('Data points (lowest E)','Data points (highest E)','Interpolation points');
 
 
-function [kx,ky,kz] = rotate2K(Eki,y_offset,thetax,thetay)
-    % electron mass = 9.1093837 × 10-31 kilograms
-    % hbar = 6.582119569...×10−16 eV⋅s
-    % k (A-1) = CONST [sqrt(2m)/hbar] * sqrt(Ek (eV)) * sin(theta)
-    CONST = 0.512316722;
-    z_i = [0 0 1]';
-    z_f = RM(RM([0 cosd(y_offset) -sind(y_offset)]',thetax)*[1 0 0]',-thetay)*RM([0 cosd(y_offset) -sind(y_offset)]',thetax)*RM([1 0 0]',-y_offset)*z_i;
-    kx = CONST* sqrt(Eki)* z_f(1);
-    ky = CONST* sqrt(Eki)* z_f(2);
-    kz = CONST* sqrt(Eki)* z_f(3);
-
-function M = RM(U,deg)
-%ROTATION_MATRIX Summary of this function goes here
-%   Detailed explanation goes here
-    ux = U(1);
-    uy = U(2);
-    uz = U(3);
-    M =[cosd(deg)+ux^2*(1-cosd(deg)), ux*uy*(1-cosd(deg))-uz*sind(deg), ux*uz*(1-cosd(deg))+uy*sind(deg);
-        uy*ux*(1-cosd(deg))+uz*sind(deg), cosd(deg)+uy^2*(1-cosd(deg)), uy*uz*(1-cosd(deg))-ux*sind(deg);
-        uz*ux*(1-cosd(deg))-uy*sind(deg), uz*uy*(1-cosd(deg))+ux*sind(deg), cosd(deg)+uz^2*(1-cosd(deg))];
+% function [kx,ky,kz] = rotate2K(Eki,y_offset,thetax,thetay)
+%     % electron mass = 9.1093837 × 10-31 kilograms
+%     % hbar = 6.582119569...×10−16 eV⋅s
+%     % k (A-1) = CONST [sqrt(2m)/hbar] * sqrt(Ek (eV)) * sin(theta)
+%     CONST = 0.512316722;
+%     z_i = [0 0 1]';
+%     z_f = RM(RM([0 cosd(y_offset) -sind(y_offset)]',thetax)*[1 0 0]',-thetay)*RM([0 cosd(y_offset) -sind(y_offset)]',thetax)*RM([1 0 0]',-y_offset)*z_i;
+%     kx = CONST* sqrt(Eki)* z_f(1);
+%     ky = CONST* sqrt(Eki)* z_f(2);
+%     kz = CONST* sqrt(Eki)* z_f(3);
+% 
+% function M = RM(U,deg)
+% %ROTATION_MATRIX Summary of this function goes here
+% %   Detailed explanation goes here
+%     ux = U(1);
+%     uy = U(2);
+%     uz = U(3);
+%     M =[cosd(deg)+ux^2*(1-cosd(deg)), ux*uy*(1-cosd(deg))-uz*sind(deg), ux*uz*(1-cosd(deg))+uy*sind(deg);
+%         uy*ux*(1-cosd(deg))+uz*sind(deg), cosd(deg)+uy^2*(1-cosd(deg)), uy*uz*(1-cosd(deg))-ux*sind(deg);
+%         uz*ux*(1-cosd(deg))-uy*sind(deg), uz*uy*(1-cosd(deg))+ux*sind(deg), cosd(deg)+uz^2*(1-cosd(deg))];
 
 function CUT_out = GaussianSmoothen(CUT_in,sig_x,sig_y)
 % sigma - standard deviation
@@ -784,9 +791,9 @@ function pushbutton4_Callback(hObject, eventdata, handles)
 
         % smoothen the cuts to avoid moire pattern after interpolation
         try
-            CUT = CUT.Gaussian_smoothen(1.5,1.5);
+            CUT = CUT.Gaussian_smoothen(0.5,0.5);
         catch
-            CUT.value = GaussianSmoothen(CUT.value,1.5,1.5);
+            CUT.value = GaussianSmoothen(CUT.value,0.5,0.5);
         end
 
         CUT_combined(:,:,i) = CUT.value;
@@ -922,7 +929,7 @@ function pushbutton4_Callback(hObject, eventdata, handles)
         KMAP.x_unit = 'Å^{-1}';
         KMAP.y_name = 'K_y';
         KMAP.y_unit = 'Å^{-1}';
-        KMAP.z_name = 'Binding Energy';
+        KMAP.z_name = '{\it E}-{\it E}_F';
         KMAP.z_unit = 'eV';
         KMAP.name = [KMAP.name '_ksp'];
         KMAP.info = CUT.info;
@@ -1027,6 +1034,252 @@ function edit13_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function edit13_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to edit13 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton6.
+function pushbutton6_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% disable the button
+
+    handles.pushbutton4.Enable = "off";
+    pause(0.1);
+
+    % get selected variable list
+    list_entries = get(handles.listbox1,'String');
+    index_selected = get(handles.listbox1,'Value');
+    var_num = size(index_selected,2);
+
+    % truncate cuts or not
+    flag_trun = get(handles.radiobutton1,'value');
+    truncate = str2num(get(handles.edit8,'String'));
+
+    % polar and tilt for gamma
+    P0 = str2num(get(handles.edit12,'String'));
+    T0 = str2num(get(handles.edit13,'String'));
+
+    %----------whether Normal yz/xz before combine?-------------
+    flag_yz=get(handles.radiobutton5,'value');
+    flag_xz=get(handles.radiobutton3,'value');
+
+    %----------whether Normal analyser-------------
+    flag_analyser=get(handles.Analyser,'value');
+    if flag_analyser==1
+        gold_name=get(handles.Gold,'String');
+        try
+            ref=evalin('base',gold_name);
+        catch
+            load("MCP_calibration.mat");
+            ref.value = MCP_calibration;
+        end
+    end
+
+    %----------get the info for map-------------
+    P_initial=str2num(get(handles.edit1,'String'));
+    P_final=str2num(get(handles.edit2,'String'));
+    P_step=str2num(get(handles.edit3,'String'));
+    
+    num_polar = round((P_final-P_initial)/P_step)+1;% maybe bug here
+    
+    T_initial=str2num(get(handles.edit4,'String'));
+    T_final=str2num(get(handles.edit6,'String'));
+    T_step=str2num(get(handles.edit7,'String'));
+    
+    num_tilt = round((T_final-T_initial)/T_step)+1;% maybe bug here
+
+    % get data points
+    CUT_combined = [];
+    coord = [];
+    kk1 = [];
+    kk2 = [];
+    
+    for i = 1:var_num % for each cut
+
+        % get the cut from the workspace
+        CUT = evalin('base',list_entries{index_selected(i)});
+
+        % calibrate
+        if flag_analyser==1
+            CUT.value = CUT.value./ref.value;
+        end
+
+        % smoothen the cuts to avoid moire pattern after interpolation
+        try
+            CUT = CUT.Gaussian_smoothen(0.5,1);
+        catch
+            CUT.value = GaussianSmoothen(CUT.value,0.5,1);
+        end
+
+        CUT_combined(:,:,i) = CUT.value;
+        coord(i,:) = [CUT.info.theta - P0, CUT.info.phi - T0];
+
+        % record K
+        for j = 1:length(CUT.x)
+            [kx,ky,kz] = rotate2K(min(CUT.y),CUT.info.phi-T0,CUT.info.theta-P0,CUT.x(j));
+            kk1(end+1,:) = [kx, ky, kz];
+            [kx,ky,kz] = rotate2K(max(CUT.y),CUT.info.phi-T0,CUT.info.theta-P0,CUT.x(j));
+            kk2(end+1,:) = [kx, ky, kz];
+        end
+    end
+
+    % normalize yz/xz
+    if flag_yz == 1
+        N_curve = sum(CUT_combined,[2 3]);
+        N_curve = N_curve/mean(N_curve);
+        for j = 1:length(N_curve)
+            CUT_combined(j,:,:) = CUT_combined(j,:,:)/N_curve(j);
+        end
+    end
+    if flag_xz == 1
+        N_curve = sum(CUT_combined,[1 3]);
+        N_curve = N_curve/mean(N_curve);
+        for j = 1:length(N_curve)
+            CUT_combined(:,j,:) = CUT_combined(:,j,:)/N_curve(j);
+        end
+    end
+
+    % get Kx/Ky range
+    Kx_min = min([kk1(:,1);kk2(:,1)]);
+    Kx_max = max([kk1(:,1);kk2(:,1)]);
+    Ky_min = min([kk1(:,2);kk2(:,2)]);
+    Ky_max = max([kk1(:,2);kk2(:,2)]);
+
+    kx = linspace(Kx_min,Kx_max, round(2*num_polar));
+    ky = linspace(Ky_min,Ky_max, round(1.6*num_tilt*length(CUT.x)));
+    [KY,KX] = meshgrid(ky,kx);
+
+    % truncate
+%     if get(handles.checkbox3,'value') % use parallel computation
+    % split the data
+    for i=1:num_tilt
+        MAP_separated{i} = CUT_combined(:,:,(i-1)*num_polar+1:i*num_polar);
+        coord_separated{i} = coord((i-1)*num_polar+1:i*num_polar,:);
+
+        % interpolate
+        data_new{i} = zeros(length(kx),length(ky),length(CUT.y));
+
+        % for each energy
+        for s=1:length(CUT.y)
+
+            % data to be interpolated
+            value3 = MAP_separated{i}(:,s,:);
+
+            % Kx/Ky of the data points
+            Kx3 = zeros(1,num_polar*length(CUT.x));
+            Ky3 = zeros(1,num_polar*length(CUT.x));
+            t = 1;
+            for p=1:num_polar
+                for j=1:length(CUT.x)
+                    [Kx3(t),Ky3(t),~] = rotate2K(CUT.y(s),coord_separated{i}(p,2),coord_separated{i}(p,1),CUT.x(j));
+                    t=t+1;
+                end
+            end
+
+
+            % two method: no obvious differences
+            data_new{i}(:,:,s) = griddata(Kx3(:),Ky3(:),value3(:),KX,KY,'natural');
+    %         data_new(:,:,s) = griddata(Kx3(:),Ky3(:),value3(:),KX,KY,'v4');
+    %         F = scatteredInterpolant(Kx3(:),Ky3(:),value3(:),'natural','none');
+    %         data_new(:,:,s) = F(KX,KY);
+%             fprintf('%3.0f/%3.0f \n', s, length(CUT.y));
+        end
+
+        data_new{i}(data_new{i}<0) = 0;
+        data_new{i}(isnan(data_new{i})) = 0;
+
+    end
+
+    % merge
+    for i = 1:num_tilt-1
+
+        % Kx/Ky of the data points
+        Ky3 = zeros(1,num_polar*length(CUT.y));
+        t = 1;
+        for p=1:num_polar
+            for j=1:length(CUT.y)
+                [~,Ky3(t),~] = rotate2K(CUT.y(j),coord_separated{i}(p,2),coord_separated{i}(p,1),CUT.x(end));
+                t=t+1;
+            end
+        end
+        [~,right(i)] = min(abs(ky-min(Ky3)));
+
+        Ky3 = zeros(1,num_polar*length(CUT.y));
+        t = 1;
+        for p=1:num_polar
+            for j=1:length(CUT.y)
+                [~,Ky3(t),~] = rotate2K(CUT.y(j),coord_separated{i+1}(p,2),coord_separated{i+1}(p,1),CUT.x(1));
+                t=t+1;
+            end
+        end
+        [~,left(i)] = min(abs(ky-max(Ky3)));
+        
+        mask = -1/abs(right(i) - left(i))*([1:length(ky)]-right(i));
+        mask(mask>1) = 1;
+        mask(mask<0) = 0;
+
+        for m = 1:length(ky)
+            data_new{i}(:,m,:) = data_new{i}(:,m,:)*mask(m);
+            data_new{i+1}(:,m,:) = data_new{i+1}(:,m,:)*(1-mask(m));
+        end
+
+    end
+
+    % merge
+    data_output = zeros(length(kx),length(ky),length(CUT.y));
+    for i = 1:num_tilt
+        data_output = data_output + data_new{i};
+    end
+
+
+    KMAP.x = kx;
+    KMAP.y = ky;
+    KMAP.z = CUT.y;
+    KMAP.value = data_output;
+    
+    % for object
+    if isa(CUT,'OxA_CUT')
+        KMAP = OxA_MAP(KMAP);
+        KMAP.x_name = 'K_x';
+        KMAP.x_unit = 'Å^{-1}';
+        KMAP.y_name = 'K_y';
+        KMAP.y_unit = 'Å^{-1}';
+        KMAP.z_name = '{\it E}-{\it E}_F';
+        KMAP.z_unit = 'eV';
+        KMAP.name = [KMAP.name '_ksp'];
+        KMAP.info = CUT.info;
+        KMAP.info = rmfield(KMAP.info,'phi');
+        KMAP.info = rmfield(KMAP.info,'theta');
+        KMAP.z = KMAP.z - KMAP.info.photon_energy + KMAP.info.workfunction;
+    end
+
+    MapName = get(handles.edit9,'String');
+    assignin('base',[MapName,'_combine_k_sp'],KMAP);
+
+    handles.pushbutton4.Enable = "on";
+
+
+
+function edit14_Callback(hObject, eventdata, handles)
+% hObject    handle to edit14 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit14 as text
+%        str2double(get(hObject,'String')) returns contents of edit14 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit14_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit14 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

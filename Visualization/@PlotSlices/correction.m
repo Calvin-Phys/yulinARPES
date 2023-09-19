@@ -64,7 +64,8 @@ yData = obj.imag.YData;
 % A=polyfit(m,n,2);
 % FS_CURVE=polyval(A,xData);
 
-FS_CURVE = interp1(m,n,xData,'spline');
+% FS_CURVE = interp1(m,n,xData,'spline');
+FS_CURVE = interp1(m,n,xData,'makima');
 FS_mean = mean(FS_CURVE,'all');
 
 % plot points and curve
@@ -112,6 +113,7 @@ else
         otherwise
             return
     end
+    VALUE_new3(VALUE_new3<0) = 0;
     newData.value = VALUE_new3;
 end
 
