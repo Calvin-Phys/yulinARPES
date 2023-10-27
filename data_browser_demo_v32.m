@@ -22,7 +22,7 @@ VBoxHome = uiextras.VBox('Parent',handles.mObject);
 %% menu redo
 LoaderMenu = uimenu(handles.mObject,'Label','Loader');
 uimenu(LoaderMenu,'Label','Load ARPES Data','Callback',@LoadDataARPES.main);
-uimenu(LoaderMenu,'Label','Load ARPES Data (Object)','Callback',@loader_UI);
+uimenu(LoaderMenu,'Label','Load ARPES Data (New)','Callback',@loader_UI);
 uimenu(LoaderMenu,'Label','Cut conversion','Callback',@k_space_conversion_cut,'Separator','On');
 uimenu(LoaderMenu,'Label','Map conversion 1','Callback',@k_space_conversion_demo);
 uimenu(LoaderMenu,'Label','Map conversion 2','Callback',@flash_k_space_conversion_v2);

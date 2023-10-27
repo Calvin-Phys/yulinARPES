@@ -27,7 +27,7 @@ Press Enter to run the command, and the main window of the software will appear 
 
 The program can load raw data into the workspace. To load data, click on 
 ```
-Loader -> Load ARPES Data (object)
+Loader -> Load ARPES Data (New)
 ```
 
 This will open the Loader window, as shown below:
@@ -37,11 +37,12 @@ You can select and load multiple files at once by using the file selection dialo
 
 > **What are the differences between the new and old loader?**
 > 
-> 1. The new loader differs from the old loader in that it loads raw data into pre-defined class objects, whereas the old loader only produces structs. By using pre-defined class objects, the new loader can integrate more information and provide processing methods for the data.
-> 2. One notable improvement of the new loader is its enhanced compatibility with Dropbox. It can now access online Dropbox folders without any disruptions and selectively download desired data files.
-> 3. Additionally, the new loader can remember the last path it opened, which can save users time and effort when accessing frequently-used directories.
+> 1. The new loader differs from the old loader in that it loads raw data into pre-defined class objects (The data structure is defined in project `OX_ARPES`), whereas the old loader only produces raw Matlab structs. By using pre-defined class objects, the new loader can integrate more information (photon energy, polarisation, pass energy, scan mod, temperature ...) and provide processing methods (truncate, k-convert, normalise ...) for the data.
+> 2. The new loader has enhanced compatibility with Dropbox. It can now access online Dropbox folders without any disruptions and selectively download desired data files.
+> 3. The new loader can remember the last path it opened, which can save users time and effort when accessing frequently-used directories.
+> 4. The new loader is being actively maintained and upgraded, and it usually has better compitablity and speed.
 > 
-> It is recommended to use the new loader due to its added functionality, but the old loader remains available within the software for those who prefer it.
+> It is recommended to use the new loader due to its added functionality, but the old loader remains available within the software.
 
 Once the loading process is finished, click on the list in the main window to refresh it. The newly-loaded data variables will then appear in the list.
 
