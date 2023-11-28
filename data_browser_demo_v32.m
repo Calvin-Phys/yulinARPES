@@ -726,10 +726,15 @@ end
 % put the first file
 dataout = data{1};
 
+
 for i = 2:size(index_selected,2)
     datain = data{i};
-    if dataout.y == datain.y
-        dataout.x = cat(2,dataout.x, datain.x);
+    if isequal(dataout.y,datain.y)
+        try
+            dataout.x = cat(2,dataout.x, datain.x);
+        catch
+            dataout.x = cat(1,dataout.x, datain.x);
+        end
         dataout.value = cat(1,dataout.value,datain.value);
     else
         errordlg(['data ',num2str(i),' is not the same as previous'])

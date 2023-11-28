@@ -986,7 +986,7 @@ classdef PlotSlices < handle
                 set(obj.PerpDistributionMenu,'Checked','off');
             else
                 obj.PerpDistributionFigure = figure();
-                x = obj.AxisData;
+                % display data
                 
                 set(obj.PerpDistributionMenu,'Checked','on');
             end
