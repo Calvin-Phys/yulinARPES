@@ -334,11 +334,11 @@ classdef PlotSlices < handle
 
             uimenu(hmenu,'Label','Sub plot in new figure',...
                 'Callback',@obj.newFigureSubPlot);
-            obj.MenuMDCEDC=uimenu(hmenu,'Label','MDC/EDC',...
-                'Callback',@obj.mdcedc); 
-            obj.MenuSaveMDCEDC=uimenu(hmenu,'Label','Save MDC/EDC',...
-                'Callback',@obj.saveMdcEdc);
-            set(obj.MenuSaveMDCEDC,'Enable','off');
+%             obj.MenuMDCEDC=uimenu(hmenu,'Label','MDC/EDC',...
+%                 'Callback',@obj.mdcedc); 
+%             obj.MenuSaveMDCEDC=uimenu(hmenu,'Label','Save MDC/EDC',...
+%                 'Callback',@obj.saveMdcEdc);
+%             set(obj.MenuSaveMDCEDC,'Enable','off');
             corMenu=uimenu(hmenu,'Label','Square correction',...
                 'Callback',@obj.sqCorrection);
             if strcmp(obj.Direction,'z')
@@ -434,7 +434,7 @@ classdef PlotSlices < handle
             xx=repmat(x,max(size(obj.Data.z)),1);
             yy=repmat(y,max(size(obj.Data.z)),1);
             zz=repmat(obj.Data.z',1,max(size(x)));
-
+initial_plot
             data.value=interp3(x_grid,y_grid,z_grid, permute(obj.Data.value,[2,1,3]),xx,yy,zz);
 
             data.value=data.value';
@@ -1070,33 +1070,23 @@ classdef PlotSlices < handle
 
         %% mass plot
         function copy_axis(obj,~,~)
-            ax1Chil = obj.Axis.Children;
+%             ax1Chil = obj.Axis.Children;
+            ax1Chil = obj.Axis;
             f2 = figure();
             ha2 = axes('parent',f2);
             copyobj(ax1Chil,ha2);
         end
 
         function mass_plot(obj,~,~)
-            Ef = obj.Data.info.photon_energy - obj.Data.info.workfunction;
 
-            if obj.Data.info.pass_energy == 20
-                Erng = '(0:-0.05:-1)';
-            elseif obj.Data.info.pass_energy == 50
-                Erng = '(0:-0.2:-2.2)';
-            else
-                Erng = '(0:-0.05:-1)';
-            end
-            
-            if strcmp(obj.Data.z_name,'Kinetic Energy')
-                def_cmd = [num2str(Ef) '+' Erng];
-            else
-                def_cmd = Erng;
-            end
+            % create input dialog window and get parameters
+            Erng = '(0:-0.1:-1.9)';
+            def_cmd = Erng;
 
             prompt = {'Enter number of columns:','Enter number of rows:','Enter position array:','Save figure:'};
             dlgtitle = 'Input';
             dims = [1 35];
-            definput = {'7','3',def_cmd,'0'};
+            definput = {'5','4',def_cmd,'0'};
             answer = inputdlg(prompt,dlgtitle,dims,definput);
             if isempty(answer)
                 return
@@ -1107,11 +1097,12 @@ classdef PlotSlices < handle
             posi = str2num(answer{3});
             sf = str2num(answer{4});
 
+            % plot 
 
             pos0 = get(obj.Slider,'Value');
             
-
-            if sf == 0
+            % create the figure
+            if sf == 0 % whether save the figure
                 Fig = figure('Name',obj.Data.name);
             else
                 Fig = figure('Name',obj.Data.name,'visible','off');
@@ -1122,7 +1113,13 @@ classdef PlotSlices < handle
                 obj.Slider.Value = posi(i);
 %                 pause(0.1)
                 ha1 = subplot(row,column,i,'parent',Fig);
-                obj.initial_plot('new2',ha1);
+                
+                if get(obj.InterpolateMenu,'Checked')
+                    obj.initial_plot('new2intp',ha1);
+                else
+                    obj.initial_plot('new2',ha1);
+                end
+
                 set(ha1,'xlabel',[]);
                 set(ha1,'ylabel',[]);
                 switch obj.Direction
@@ -1144,24 +1141,17 @@ classdef PlotSlices < handle
                 end
                 title(ha1,[nn '= ' num2str(posi(i)) ' ' uu]);
 
-%                 if obj.bz_line_flag == 1
-%                     for j = 1:length(obj.bz_line_lines)
-%                         copyobj(obj.bz_line_lines{j},ha1)
-%                     end
-%                 end
-%                 if obj.energy_contour_flag
-%                     for j = 1:length(obj.energy_contour_lines)
-%                         copyobj(obj.energy_contour_lines{j},ha1)
-%                     end
-%                 end
-                
+                % copy line objects
+                lines = findall(obj.Axis,'Type','line');
+                copyobj(lines,ha1);
+
             end
 
-            try
-                sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV ' char(obj.Data.info.polarization)],'interpreter', 'none');
-            catch
-                sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV '],'interpreter', 'none');
-            end
+%             try
+%                 sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV ' char(obj.Data.info.polarization)],'interpreter', 'none');
+%             catch
+%                 sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV '],'interpreter', 'none');
+%             end
             obj.Slider.Value = pos0;
 
             if sf == 1
