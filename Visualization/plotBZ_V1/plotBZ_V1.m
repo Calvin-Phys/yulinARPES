@@ -22,7 +22,7 @@ function varargout = plotBZ_V1(varargin)
 
 % Edit the above text to modify the response to help plotBZ_V1
 
-% Last Modified by GUIDE v2.5 24-Jan-2023 15:02:24
+% Last Modified by GUIDE v2.5 15-Jan-2024 15:17:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -810,14 +810,32 @@ end
 [s1,s2] = plotBZ_V1_surface_realtime_vector(b1_origin_prim,b2_origin_prim,b3_origin_prim,g_origin_hkl,handles);
 [surf_rec_lattice_coordinates,surf_rec_lattice_rows] = plotBZ_V1_construct_surf_rec_lattice(s1,s2,handles);
 [v,c]=voronoin(surf_rec_lattice_coordinates);
+
+ln = str2num(get(handles.edit93,'String'));
+
+ff = figure(SurfBZ_fig);
+ax = gca;
+xl = xlim;
+yl = ylim;
+
 for ii=surf_rec_lattice_rows
         figure(SurfBZ_fig);
         vertices = v(c{ii},:);
         K=convhull(vertices);
-        drawPolygon(vertices(K,:),'Color',SurfBZ_color);
+        drawPolygon(vertices(K,:),'Linewidth',ln,'Color',SurfBZ_color);
 end
- xlabel('Kx');ylabel('Ky');
- axis equal;
+
+if ~(isequal(xl,[0 1]) && isequal(yl,[0 1]))
+    ff = figure(SurfBZ_fig);
+    ax = gca;
+    xlim(ax,xl);
+    ylim(ax,yl);
+else
+    axis equal;
+end
+
+%  xlabel('Kx');ylabel('Ky');
+%  axis equal;
  
 
 
@@ -1982,6 +2000,29 @@ function edit92_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function edit92_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to edit92 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit93_Callback(hObject, eventdata, handles)
+% hObject    handle to edit93 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit93 as text
+%        str2double(get(hObject,'String')) returns contents of edit93 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit93_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit93 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
