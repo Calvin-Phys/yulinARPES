@@ -675,7 +675,8 @@ initial_plot
 
             % interpolate
             if obj.interpolate_K ~= 1
-                sliceData = interp2(sliceData,obj.interpolate_K,'spline');
+%                 sliceData = interp2(sliceData,obj.interpolate_K,'spline');
+                sliceData = interp2(sliceData,obj.interpolate_K,'makima');
                 sliceData(sliceData<0) = 0;
             end
 
@@ -1126,6 +1127,10 @@ initial_plot
                     case 'x'
                         nn = obj.Data.x_name;
                         uu = obj.Data.x_unit;
+
+                        if strcmp(nn,'Photon Energy')
+                            nn = 'hv';
+                        end
                     case 'y'
                         nn = obj.Data.y_name;
                         uu = obj.Data.y_unit;
@@ -1147,11 +1152,42 @@ initial_plot
 
             end
 
+            % generate group title
+            SGT = obj.DataName;
+
+            try 
+                [r,c] = size(obj.Data.info.photon_energy);
+                if r*c>1
+                    hv_max = max(obj.Data.info.photon_energy);
+                    hv_min = min(obj.Data.info.photon_energy);
+                    hv_step = (hv_max - hv_min)/(r*c-1);
+                    HV_str = [num2str(round(hv_min,1)) '/' num2str(hv_step) '/' num2str(round(hv_max,1))];
+                else
+                    HV_str = num2str(round(obj.Data.info.photon_energy,1));
+                end
+
+                SGT = [SGT ': ' HV_str ' eV '];
+            catch
+            end
+
+            try
+                SGT = [SGT char(obj.Data.info.polarization)];
+            catch
+            end
+
+            sgtitle(Fig,SGT,'interpreter', 'none');
+
+
 %             try
 %                 sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV ' char(obj.Data.info.polarization)],'interpreter', 'none');
 %             catch
-%                 sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV '],'interpreter', 'none');
+%                 try
+%                     sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV '],'interpreter', 'none');
+%                 catch
+%                     sgtitle(Fig,obj.Data.name,'interpreter', 'none');
+%                 end
 %             end
+
             obj.Slider.Value = pos0;
 
             if sf == 1
