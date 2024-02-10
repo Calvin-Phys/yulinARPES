@@ -41,7 +41,8 @@ set(VarListVBox,'Sizes',[-1,45])
     handles.Flag4D=uicontrol('Parent',VarListFilter,...
         'Style','RadioButton',...
         'String','4D',...
-        'Pos',[42 2 40 20]);
+        'Pos',[42 2 40 20], ...
+        'Value',1);
     handles.Flag3D=uicontrol('Parent',VarListFilter,...
         'Style','RadioButton',...
         'String','3D',...
@@ -227,13 +228,13 @@ if ~isfield(data,'value') && ~isprop(data,'value')
     return;
 end
 
-if length(size(data.value))==2
-    data.k=[0,0];
-    data.z=[0,0];
-end
-if length(size(data.value))==3
-    data.k=[0 0];
-end
+% if length(size(data.value))==2
+%     data.k=[0,0];
+%     data.z=[0,0];
+% end
+% if length(size(data.value))==3
+%     data.k=[0 0];
+% end
 
 lx=length(data.x);
 ly=length(data.y);
@@ -495,43 +496,47 @@ else
     j=0;
     for i=1:Length
         data=evalin('base',NameListIn{i});
-        if isfield(data,'value') || isprop(data,'value')
+        try
             if length(size(data.value))==VarFlag && (isfield(data,'x') || isprop(data,'x'))
                 j=j+1;
                 NameListOut{j}=NameListIn{i}; %#ok<AGROW>
             end
+        catch
         end
     end
 end
 
 
 function PlotRealSpace(data,Lim)
-%% Get Plot Data
-if(Lim(1)<1)
-    msgbox('''From'' exceeds z range.');
-    Lim(1)=1;
-end
-%% For Elettra Data
-if length(size(data.value))==3
-    if(Lim(1)<2)
-        Lim(1)=2;
-    end
-end
+% %% Get Plot Data
+% if(Lim(1)<1)
+%     msgbox('''From'' exceeds z range.');
+%     Lim(1)=1;
+% end
+% %% For Elettra Data
+% if length(size(data.value))==3
+%     if(Lim(1)<2)
+%         Lim(1)=2;
+%     end
+% end
+% if Lim(2)>length(data.z)
+%     msgbox('''To'' exceeds z range.');
+%     Lim(2)=length(data.z);
+% end
+
+
 %%
-if Lim(2)>length(data.z)
-    msgbox('''To'' exceeds z range.');
-    Lim(2)=length(data.z);
-end
+
 if length(size(data.value))==4
-data.value=squeeze(sum(data.value,3));
+    value = squeeze(sum(data.value,3));
 end
-data.value=sum(data.value(:,:,Lim(1):Lim(2)),3);
+plot_value=sum(value(:,:,Lim(1):Lim(2)),3);
 
 %% Plot
 
-pcolor(data.x,data.y,data.value');
+pcolor(data.x,data.y,plot_value');
 shading interp;
-colormap('Gray');
+colormap('jet');
 axis equal;
 axis tight;
 

@@ -84,7 +84,10 @@ classdef PlotSlices < handle
             end
             if ndims(obj.Data.value) == 2
                 obj.data2Dto3D();
+            elseif ndims(obj.Data.value) == 4
+                return
             end
+
             obj.minValue = min(obj.Data.value(:));
             obj.maxValue = max(obj.Data.value(:));
 
@@ -387,75 +390,6 @@ classdef PlotSlices < handle
 %                 'Callback',{@print,obj.Figure,'-clipboard','-dpng'});
         end
         
-        function save_slice(obj,varargin)
-            
-            x = obj.imag.XData;
-            y = obj.imag.YData;
-            value = obj.imag.CData';
-            data = OxA_CUT(x,y,value);
-            data.info = obj.Data.info;
-
-            try
-                switch obj.Direction
-                    case 'x'
-                        data.x_name = obj.Data.y_name;
-                        data.x_unit = obj.Data.y_unit;
-                        data.y_name = obj.Data.z_name;
-                        data.y_unit = obj.Data.z_unit;
-                    case 'y'
-                        data.x_name = obj.Data.x_name;
-                        data.x_unit = obj.Data.x_unit;
-                        data.y_name = obj.Data.z_name;
-                        data.y_unit = obj.Data.z_unit;
-                    otherwise
-                        data.x_name = obj.Data.x_name;
-                        data.x_unit = obj.Data.x_unit;
-                        data.y_name = obj.Data.y_name;
-                        data.y_unit = obj.Data.y_unit;
-                end
-            catch
-            end
-
-            SaveName=inputdlg({'Data Name'},'Save Slice',1,{[obj.DataName,'_sa']});
-            if isempty(SaveName)
-                return;
-            end
-            assignin('base',SaveName{1},data);
-        end    
-        
-        function cut(obj,varargin)
-            [xlist,ylist]=getpts(obj.Axis);
-            x0=xlist(1);
-            y0=ylist(1);
-            x1=xlist(2);
-            y1=ylist(2);
-            [x,y,r]=area_secant_ph(obj.Data.x,obj.Data.y,x0,y0,x1,y1);
-            [x_grid,y_grid,z_grid]=meshgrid(obj.Data.x,obj.Data.y,obj.Data.z);
-            xx=repmat(x,max(size(obj.Data.z)),1);
-            yy=repmat(y,max(size(obj.Data.z)),1);
-            zz=repmat(obj.Data.z',1,max(size(x)));
-initial_plot
-            data.value=interp3(x_grid,y_grid,z_grid, permute(obj.Data.value,[2,1,3]),xx,yy,zz);
-
-            data.value=data.value';
-            data.x=r;
-            data.y=obj.Data.z;
-%             figure;
-%             imagesc(data.x,data.y,data.value');
-%             set('YDir','normal');
-            % save 
-            data.SliceInfo.Direction='nv';
-            data.SliceInfo.pos=[xlist,ylist];
-            data.SliceInfo.parentData=obj.DataName;
-            SaveName=inputdlg({'Data Name'},...
-                'Save Slice',...
-                1,...
-                {[obj.DataName,'_sa']});
-            if isempty(SaveName)
-                return;
-            end
-            assignin('base',SaveName{1},data);
-        end
      
         function initial_plot(obj,varargin)
 
@@ -824,20 +758,23 @@ initial_plot
         end
 
         function setClim(obj,~,~)
+
             if get(obj.ClimCheckbox,'Value')
                 clim(obj.Axis,"auto");
-            else
-                minSlider = 10^get(obj.SliderMin,'Value') -1;
-                maxSlider = 10^get(obj.SliderMax,'Value') -1;
-                minPercent = min(maxSlider,minSlider);
-                maxPercent = max(maxSlider,minSlider);
-                if maxPercent == minPercent
-                    maxPercent = maxPercent + 0.001;
-                end
-                clim(obj.Axis,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
-                set(obj.MinValue,'String',num2str(minSlider));
-                set(obj.MaxValue,'String',num2str(maxSlider));
+                
             end
+
+            minSlider = 10^get(obj.SliderMin,'Value') -1;
+            maxSlider = 10^get(obj.SliderMax,'Value') -1;
+            minPercent = min(maxSlider,minSlider);
+            maxPercent = max(maxSlider,minSlider);
+            if maxPercent == minPercent
+                maxPercent = maxPercent + 0.001;
+            end
+            clim(obj.Axis,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
+            set(obj.MinValue,'String',num2str(minSlider));
+            set(obj.MaxValue,'String',num2str(maxSlider));
+
         end
 
         function setGamma(obj,~,~)
@@ -1205,6 +1142,76 @@ initial_plot
         ButtonDownFcn(obj,~,~) % mouse click action
         saveMdcEdc(obj,varargin) % save data of EDC/MDC plots
         sqCorrection(obj,varargin) % Square Correction for data set
+
+        function save_slice(obj,varargin)
+            
+            x = obj.imag.XData;
+            y = obj.imag.YData;
+            value = obj.imag.CData';
+            data = OxA_CUT(x,y,value);
+            data.info = obj.Data.info;
+
+            try
+                switch obj.Direction
+                    case 'x'
+                        data.x_name = obj.Data.y_name;
+                        data.x_unit = obj.Data.y_unit;
+                        data.y_name = obj.Data.z_name;
+                        data.y_unit = obj.Data.z_unit;
+                    case 'y'
+                        data.x_name = obj.Data.x_name;
+                        data.x_unit = obj.Data.x_unit;
+                        data.y_name = obj.Data.z_name;
+                        data.y_unit = obj.Data.z_unit;
+                    otherwise
+                        data.x_name = obj.Data.x_name;
+                        data.x_unit = obj.Data.x_unit;
+                        data.y_name = obj.Data.y_name;
+                        data.y_unit = obj.Data.y_unit;
+                end
+            catch
+            end
+
+            SaveName=inputdlg({'Data Name'},'Save Slice',1,{[obj.DataName,'_sa']});
+            if isempty(SaveName)
+                return;
+            end
+            assignin('base',SaveName{1},data);
+        end    
+        
+        function cut(obj,varargin)
+            [xlist,ylist]=getpts(obj.Axis);
+            x0=xlist(1);
+            y0=ylist(1);
+            x1=xlist(2);
+            y1=ylist(2);
+            [x,y,r]=area_secant_ph(obj.Data.x,obj.Data.y,x0,y0,x1,y1);
+            [x_grid,y_grid,z_grid]=meshgrid(obj.Data.x,obj.Data.y,obj.Data.z);
+            xx=repmat(x,max(size(obj.Data.z)),1);
+            yy=repmat(y,max(size(obj.Data.z)),1);
+            zz=repmat(obj.Data.z',1,max(size(x)));
+% initial_plot
+            data.value=interp3(x_grid,y_grid,z_grid, permute(obj.Data.value,[2,1,3]),xx,yy,zz);
+
+            data.value=data.value';
+            data.x=r;
+            data.y=obj.Data.z;
+%             figure;
+%             imagesc(data.x,data.y,data.value');
+%             set('YDir','normal');
+            % save 
+            data.SliceInfo.Direction='nv';
+            data.SliceInfo.pos=[xlist,ylist];
+            data.SliceInfo.parentData=obj.DataName;
+            SaveName=inputdlg({'Data Name'},...
+                'Save Slice',...
+                1,...
+                {[obj.DataName,'_sa']});
+            if isempty(SaveName)
+                return;
+            end
+            assignin('base',SaveName{1},data);
+        end
     end
 end
 
