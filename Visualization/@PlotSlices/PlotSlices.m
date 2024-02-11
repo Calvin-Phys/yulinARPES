@@ -50,6 +50,7 @@ classdef PlotSlices < handle
         ColorMap
         FlipCheckbox
         ClimCheckbox
+        InterpCheckbox
         
         Position
         PositionIndex
@@ -94,9 +95,9 @@ classdef PlotSlices < handle
             % slider direction
             obj.AxisData = obj.Data.(obj.Direction);
 
-            % construct figure UI
+            % construct figure UI / menu
             obj.figureConstruct(DataName);
-
+            obj.setUIMenu();
 
             % some improvement - default settings
             if Direction == 'z' && ndims(obj.Data.value) == 3 && length(obj.Data.x) ~= 1
@@ -107,7 +108,7 @@ classdef PlotSlices < handle
 
             % plot figure & set menu
             obj.initial_plot();
-            obj.setUIMenu();
+            
 
             % hide menubar/toolbar
             ss = allchild(obj.Figure);
@@ -158,6 +159,9 @@ classdef PlotSlices < handle
 
             infoHBox=uiextras.HBox('Parent',obj.homeVBox); 
             colorHBox=uiextras.HBox('Parent',obj.homeVBox);
+%             optionHBox = uiextras.HBox('Parent',obj.homeVBox);
+            obj.Axis=axes('Parent',obj.homeVBox);
+
             colorleftVBox=uiextras.VBox('Parent',colorHBox);
             colorrightVBox=uiextras.VBox('Parent',colorHBox);
             colorMinHBox=uiextras.HBox('Parent',colorleftVBox);
@@ -165,7 +169,7 @@ classdef PlotSlices < handle
             colorGammaHBox=uiextras.HBox('Parent',colorrightVBox);
             colormapHBox=uiextras.HBox('Parent',colorrightVBox);
 
-            obj.Axis=axes('Parent',obj.homeVBox);
+            
             if obj.Data.x == 1
                 set(obj.homeVBox,'Sizes',[0,40,-1]);
             else
@@ -174,6 +178,7 @@ classdef PlotSlices < handle
             set(colorHBox,'Sizes',[-1,-1]);
             set(colorleftVBox,'Sizes',[-1,-1]);
             set(colorrightVBox,'Sizes',[-1,-1]);
+
             axisMin=min(obj.AxisData);
             axisMax=max(obj.AxisData);
             step=1/length(obj.AxisData);
@@ -221,7 +226,7 @@ classdef PlotSlices < handle
             %%
             uicontrol(...
                 'Parent',       infoHBox,...
-                'Style',        'Text',...setInd
+                'Style',        'Text',...
                 'String',       'Ind');
             uicontrol(...
                 'Parent',       infoHBox,...
@@ -239,7 +244,7 @@ classdef PlotSlices < handle
                 'Style',        'PushButton',...
                 'String',       '>',...
                 'Callback',     {@obj.setInd,'+'});
-            set(infoHBox,'Sizes',[50,70,-1,20,50,30,30,20,20,40,20]);
+            set(infoHBox,'Sizes',[40,60,-1,20,50,30,30,20,15,30,15]);
             
             %% uicontrols for color correction
             uicontrol(...
@@ -259,7 +264,7 @@ classdef PlotSlices < handle
                 'Max',          3,...
                 'Value',        0);
             addlistener(obj.SliderMin,'Value','PostSet',@obj.setClim);
-            set(colorMinHBox,'Sizes',[40,55,-1]);
+            set(colorMinHBox,'Sizes',[40,40,-1]);
             
             uicontrol(...
                 'Parent',       colorMaxHBox,...
@@ -268,7 +273,7 @@ classdef PlotSlices < handle
             obj.MaxValue=uicontrol(...
                 'Parent',       colorMaxHBox,...
                 'Style',        'Edit',...
-                'String',       '70',...
+                'String',       '100',...
                 'BackgroundColor','w',...
                 'Callback',     @obj.sliderinput);
             obj.SliderMax=uicontrol(...
@@ -276,9 +281,9 @@ classdef PlotSlices < handle
                 'Style',        'Slider',...
                 'Min',          0,...
                 'Max',          3,...
-                'Value',        log10(70+1));
+                'Value',        log10(100+1));
             addlistener(obj.SliderMax,'Value','PostSet',@obj.setClim);
-            set(colorMaxHBox,'Sizes',[40,55,-1]);
+            set(colorMaxHBox,'Sizes',[40,40,-1]);
             
             uicontrol(...
                 'Parent',       colorGammaHBox,...
@@ -301,9 +306,15 @@ classdef PlotSlices < handle
             obj.ClimCheckbox=uicontrol(...
                 'Parent',       colormapHBox,...
                 'Style',        'Checkbox',...
-                'String',       'Auto Clim',...
+                'String',       'Fix Clim',...
                 'Value',        1,...
                 'Callback',     @obj.setClim);
+            obj.InterpCheckbox=uicontrol(...
+                'Parent',       colormapHBox,...
+                'Style',        'Checkbox',...
+                'String',       'Interp',...
+                'Value',        0,...
+                'Callback',     @obj.interpolate_menu_callback);
             obj.FlipCheckbox=uicontrol(...
                 'Parent',       colormapHBox,...
                 'Style',        'Checkbox',...
@@ -323,7 +334,7 @@ classdef PlotSlices < handle
                     'cm_redwhitegreen','cm_relief','cm_spectrum','cm_terrain',...
                     'cm_yellow','cm_yellowhot'},...
                 'Callback',     @obj.setColor);
-            set(colormapHBox,'Sizes',[80,50,-1]);    
+            set(colormapHBox,'Sizes',[65,50,40,-1]);    
         end
         
         function setUIMenu(obj)
@@ -393,25 +404,10 @@ classdef PlotSlices < handle
      
         function initial_plot(obj,varargin)
 
-            % set plot axes
-            axPlot=obj.Axis;
-            axFlag=0;
-            if ~isempty(varargin)
-                if isa(varargin{1},'char')
-                    if strcmp(varargin{1},'new2')
-                        axPlot=varargin{2};
-                        axFlag=1;
-                    elseif strcmp(varargin{1},'new3')
-                        axPlot=varargin{2};
-                        axFlag=2;
-                    elseif strcmp(varargin{1},'new2intp')
-                        axPlot=varargin{2};
-                        axFlag=3;
-                    end
-                end
-            end
+            
 
  
+            %% get sliced data
             % get position and width
             pos = get(obj.Slider,'Value');
             width = str2double(get(obj.Width, 'String'));
@@ -460,46 +456,64 @@ classdef PlotSlices < handle
                     sliceData = squeeze(mean(obj.Data.value(:,:,cond),3));
             end
 
+            %% sliced data operation, enhance
+
+            % gamma
+%             gamma = get(obj.SliderGamma,'Value');
+%             if gamma~=1
+%                 sliceData = (sliceData/obj.maxValue).^gamma .* sliceData;
+%             end
+
             % interpolate
 %             K = 3;
 %             sliceData = interp2(sliceData,K,'spline');
 %             sliceData(sliceData<0) = 0;
 
-            % for crosshair
-            obj.PosX = mean(xData);
-            obj.PosY = mean(yData);
-            obj.DX = 0.1*(max(xData) - min(xData));
-            obj.DY = 0.1*(max(yData) - min(yData));
+
 
             % Color Mapping
-            gamma = get(obj.SliderGamma,'Value');
-            if gamma~=1
-                sliceData = (sliceData/obj.maxValue).^gamma .* sliceData;
+
+
+            %% set plot axes, get plot options
+            axPlot=obj.Axis;
+            axFlag=0;
+            if ~isempty(varargin)
+                if isa(varargin{1},'char')
+                    if strcmp(varargin{1},'new2')
+                        axPlot=varargin{2};
+                        axFlag=1;
+                    elseif strcmp(varargin{1},'new3')
+                        axPlot=varargin{2};
+                        axFlag=2;
+                    elseif strcmp(varargin{1},'new2intp')
+                        axPlot=varargin{2};
+                        axFlag=3;
+                    end
+                end
             end
 
-            % select axis and plot
             if axFlag == 0
                 obj.imag = imagesc(obj.Axis,xData,yData,sliceData');
                 set(obj.Axis,'YDir','normal');
                 try
-                xlabel(obj.Axis,xData_label);
-                ylabel(obj.Axis,yData_label);
+                    xlabel(obj.Axis,xData_label);
+                    ylabel(obj.Axis,yData_label);
                 catch
                 end
             elseif axFlag == 1
                 imagesc(axPlot,xData,yData,sliceData');
                 set(axPlot,'YDir','normal');
                 try
-                xlabel(axPlot,xData_label);
-                ylabel(axPlot,yData_label);
+                    xlabel(axPlot,xData_label);
+                    ylabel(axPlot,yData_label);
                 catch
                 end
             elseif axFlag == 2
                 mesh(axPlot,xData,yData,sliceData');
                 set(axPlot,'YDir','normal');
                 try
-                xlabel(axPlot,xData_label);
-                ylabel(axPlot,yData_label);
+                    xlabel(axPlot,xData_label);
+                    ylabel(axPlot,yData_label);
                 catch
                 end
             elseif axFlag == 3
@@ -509,15 +523,11 @@ classdef PlotSlices < handle
                 imagesc(axPlot,xData,yData,sliceData_new);
                 set(axPlot,'YDir','normal');
                 try
-                xlabel(axPlot,xData_label);
-                ylabel(axPlot,yData_label);
+                    xlabel(axPlot,xData_label);
+                    ylabel(axPlot,yData_label);
                 catch
                 end
-%                 s = pcolor(axPlot,xData,yData,sliceData');
-%                 s.FaceColor = 'interp';
-%                 s.EdgeColor = 'none';
-%                 s.FaceLighting = 'none';
-%                 s.BackFaceLighting = 'unlit';
+
             end
 
             % set colormap
@@ -532,13 +542,16 @@ classdef PlotSlices < handle
             end
 
             % set Clim
+            minSlider = 10^get(obj.SliderMin,'Value') -1;
+            maxSlider = 10^get(obj.SliderMax,'Value') -1;
+            minPercent = min(maxSlider,minSlider);
+            maxPercent = max(maxSlider,minSlider);
+
+            slice_data_max = max(sliceData,[],"all");
+
             if get(obj.ClimCheckbox,'Value')
-                clim(axPlot,"auto");
+                clim(axPlot,[minPercent/100*slice_data_max maxPercent/100*slice_data_max]);
             else
-                minSlider = 10^get(obj.SliderMin,'Value') -1;
-                maxSlider = 10^get(obj.SliderMax,'Value') -1;
-                minPercent = min(maxSlider,minSlider);
-                maxPercent = max(maxSlider,minSlider);
                 clim(axPlot,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
             end
 
@@ -551,41 +564,49 @@ classdef PlotSlices < handle
             set(gca,'linewidth',1.5);
             set(gca,'fontsize',12);
 
-            % plot energy contour
-            if obj.energy_contour_flag == 1
-                if axFlag == 0
-                    for i = 1:length(obj.energy_contour_lines)
-                        delete(obj.energy_contour_lines{i})
-                    end
-                    obj.energy_contour_lines = obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,axPlot);
-                elseif axFlag == 1 || axFlag == 3
-                    obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,axPlot);
-                end
-            end
-            % plot brillouin zone
-            if obj.bz_line_flag == 1
-                if axFlag == 0
-                    for i = 1:length(obj.bz_line_lines)
-                        delete(obj.bz_line_lines{i});
-                    end
-                    obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(axPlot);
-
-                elseif axFlag == 1 || axFlag == 3
-                    obj.Data.info.BZBS.plotBrillouinZoneOnAxes(axPlot);
-                end
-            end
+%             % plot energy contour
+%             if obj.energy_contour_flag == 1
+%                 if axFlag == 0
+%                     for i = 1:length(obj.energy_contour_lines)
+%                         delete(obj.energy_contour_lines{i})
+%                     end
+%                     obj.energy_contour_lines = obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,axPlot);
+%                 elseif axFlag == 1 || axFlag == 3
+%                     obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,axPlot);
+%                 end
+%             end
+%             % plot brillouin zone
+%             if obj.bz_line_flag == 1
+%                 if axFlag == 0
+%                     for i = 1:length(obj.bz_line_lines)
+%                         delete(obj.bz_line_lines{i});
+%                     end
+%                     obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(axPlot);
+% 
+%                 elseif axFlag == 1 || axFlag == 3
+%                     obj.Data.info.BZBS.plotBrillouinZoneOnAxes(axPlot);
+%                 end
+%             end
             
-            % set EDC/MDC
-            flagMDCEDC = get(obj.MenuMDCEDC,'Checked');
-            if strcmp(flagMDCEDC,'on')
-                obj.plotCrossHair;
-            end
+%             % for crosshair
+            obj.PosX = mean(xData);
+            obj.PosY = mean(yData);
+            obj.DX = 0.1*(max(xData) - min(xData));
+            obj.DY = 0.1*(max(yData) - min(yData));
+
+%             % set EDC/MDC
+%             flagMDCEDC = get(obj.MenuMDCEDC,'Checked');
+%             if strcmp(flagMDCEDC,'on')
+%                 obj.plotCrossHair;
+%             end
         end
 
         function update_CData(obj,varargin)
+
+            %% get sliced data
             pos = get(obj.Slider,'Value');
             width = str2double(get(obj.Width, 'String'));
-            gamma = get(obj.SliderGamma,'Value');
+            
             switch obj.Direction
                 case 'x'
                     cond = ( abs(obj.AxisData - pos) <= width/2 );
@@ -607,6 +628,7 @@ classdef PlotSlices < handle
                     sliceData = squeeze(mean(obj.Data.value(:,:,cond),3));
             end
 
+            %% data enhance
             % interpolate
             if obj.interpolate_K ~= 1
 %                 sliceData = interp2(sliceData,obj.interpolate_K,'spline');
@@ -614,35 +636,38 @@ classdef PlotSlices < handle
                 sliceData(sliceData<0) = 0;
             end
 
+            gamma = get(obj.SliderGamma,'Value');
             if gamma==1
                 obj.imag.CData = sliceData';
             else
                 obj.imag.CData = (sliceData'/obj.maxValue).^gamma .* sliceData';
             end
 
+            %% set value
             set(obj.Position,'String',num2str(pos));
             [~,cond] = min(abs(obj.AxisData - pos));
             set(obj.PositionIndex,'String',num2str(cond));
             set(obj.GammaValue,'String',num2str(gamma));
 
-            % plot energy contour
-            if obj.energy_contour_flag == 1
-
-                for i = 1:length(obj.energy_contour_lines)
-                    delete(obj.energy_contour_lines{i})
-                end
-
-                obj.energy_contour_lines = obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,obj.Axis);
-            end
-             % plot brillouin zone
-            if obj.bz_line_flag == 1
-
-                for i = 1:length(obj.bz_line_lines)
-                    delete(obj.bz_line_lines{i})
-                end
-
-                obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(obj.Axis);
-            end
+            obj.setClim();
+%             % plot energy contour
+%             if obj.energy_contour_flag == 1
+% 
+%                 for i = 1:length(obj.energy_contour_lines)
+%                     delete(obj.energy_contour_lines{i})
+%                 end
+% 
+%                 obj.energy_contour_lines = obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,obj.Axis);
+%             end
+%              % plot brillouin zone
+%             if obj.bz_line_flag == 1
+% 
+%                 for i = 1:length(obj.bz_line_lines)
+%                     delete(obj.bz_line_lines{i})
+%                 end
+% 
+%                 obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(obj.Axis);
+%             end
 
 
         end
@@ -667,49 +692,49 @@ classdef PlotSlices < handle
 
         end
         
-        function newFigureSubPlot(obj,varargin)
-            inputText=inputdlg('Input Positions');
-            plotArray=inputText{1};
-            plotArray=str2num(plotArray);
-            sliderMin=get(obj.Slider,'Min');           
-            sliderMax=get(obj.Slider,'Max');
-            if isnan(plotArray)
-                errordlg('Input Array should not be NaN');
-                return;
-            end
-            if sum(plotArray<sliderMin)
-                errordlg('Exeeds Min');
-                return;
-            end
-            if sum(plotArray>sliderMax)
-                errordlg('Exeeds Max');
-                return;
-            end
-            n=length(plotArray);
-            for i = 1:ceil(n/9)
-                figure('Name',[obj.DataName,' ',obj.Direction],...
-                    'Color','w');
-                for j=1:9
-                    k=(i-1)*9+j;
-                    if k<=n
-                        set(obj.Slider,'Value',plotArray(k));
-                        hAx=subplot(3,3,j);
-                        obj.plot('new',hAx);
-                        title([obj.Direction,'=',num2str(plotArray(k))]);
-                    end
-                end
-            end
-        end
+%         function newFigureSubPlot(obj,varargin)
+%             inputText=inputdlg('Input Positions');
+%             plotArray=inputText{1};
+%             plotArray=str2num(plotArray);
+%             sliderMin=get(obj.Slider,'Min');           
+%             sliderMax=get(obj.Slider,'Max');
+%             if isnan(plotArray)
+%                 errordlg('Input Array should not be NaN');
+%                 return;
+%             end
+%             if sum(plotArray<sliderMin)
+%                 errordlg('Exeeds Min');
+%                 return;
+%             end
+%             if sum(plotArray>sliderMax)
+%                 errordlg('Exeeds Max');
+%                 return;
+%             end
+%             n=length(plotArray);
+%             for i = 1:ceil(n/9)
+%                 figure('Name',[obj.DataName,' ',obj.Direction],...
+%                     'Color','w');
+%                 for j=1:9
+%                     k=(i-1)*9+j;
+%                     if k<=n
+%                         set(obj.Slider,'Value',plotArray(k));
+%                         hAx=subplot(3,3,j);
+%                         obj.plot('new',hAx);
+%                         title([obj.Direction,'=',num2str(plotArray(k))]);
+%                     end
+%                 end
+%             end
+%         end
         
-        function ButtonMotionFcn(obj,~,~)
-            obj.plotCrossHair;
-        end
-        
-        function ButtonUpFcn(obj,~,~)
-            set(obj.Figure,...
-                'WindowButtonMotionFcn',[],...
-                'WindowButtonUpFcn',[]);
-        end
+%         function ButtonMotionFcn(obj,~,~)
+%             obj.plotCrossHair;
+%         end
+%         
+%         function ButtonUpFcn(obj,~,~)
+%             set(obj.Figure,...
+%                 'WindowButtonMotionFcn',[],...
+%                 'WindowButtonUpFcn',[]);
+%         end
         
         function setInd(obj,~,~,SetMethod)
             switch SetMethod
@@ -759,23 +784,44 @@ classdef PlotSlices < handle
 
         function setClim(obj,~,~)
 
-            if get(obj.ClimCheckbox,'Value')
-                clim(obj.Axis,"auto");
-                
-            end
-
+            % set Clim
             minSlider = 10^get(obj.SliderMin,'Value') -1;
             maxSlider = 10^get(obj.SliderMax,'Value') -1;
             minPercent = min(maxSlider,minSlider);
             maxPercent = max(maxSlider,minSlider);
-            if maxPercent == minPercent
-                maxPercent = maxPercent + 0.001;
+
+            slice_data_max = max(obj.imag.CData,[],"all");
+
+            if get(obj.ClimCheckbox,'Value')
+                clim(obj.Axis,[minPercent/100*slice_data_max maxPercent/100*slice_data_max]);
+            else
+                clim(obj.Axis,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
             end
-            clim(obj.Axis,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
+
             set(obj.MinValue,'String',num2str(minSlider));
             set(obj.MaxValue,'String',num2str(maxSlider));
+            
 
         end
+
+%         function setAutoClim(obj,~,~)
+%             % set Clim
+%             minSlider = 10^get(obj.SliderMin,'Value') -1;
+%             maxSlider = 10^get(obj.SliderMax,'Value') -1;
+%             minPercent = min(maxSlider,minSlider);
+%             maxPercent = max(maxSlider,minSlider);
+% 
+%             slice_data_max = max(obj.imag.CData,[],"all");
+% 
+%             if get(obj.ClimCheckbox,'Value')
+%                 clim(obj.Axis,[minPercent/100*slice_data_max maxPercent/100*slice_data_max]);
+%             else
+%                 clim(obj.Axis,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
+%             end
+% 
+%             set(obj.MinValue,'String',num2str(minSlider));
+%             set(obj.MaxValue,'String',num2str(maxSlider));
+%         end
 
         function setGamma(obj,~,~)
             gamma = str2num(get(obj.GammaValue,'String'));
@@ -931,13 +977,16 @@ classdef PlotSlices < handle
         end
 
         function interpolate_menu_callback(obj,~,~)
-            if get(obj.InterpolateMenu,'Checked')
-                set(obj.InterpolateMenu,'Checked','off');
-                obj.interpolate_K = 1;
+            if obj.interpolate_K == 1
+                 obj.interpolate_K = 3;
+                 set(obj.InterpolateMenu,'Checked','on');
+                 set(obj.InterpCheckbox,'Value',1);
             else
-                set(obj.InterpolateMenu,'Checked','on');
-                obj.interpolate_K = 3;
+                obj.interpolate_K = 1;
+                 set(obj.InterpolateMenu,'Checked','off');
+                 set(obj.InterpCheckbox,'Value',0);
             end
+
             obj.update_CData();
         end
 
