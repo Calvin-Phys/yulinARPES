@@ -209,7 +209,7 @@ classdef PlotSlices < handle
             obj.Position=uicontrol(...
                 'Parent',       infoHBox,...
                 'Style',        'Edit',...
-                'String',       num2str(mean([axisMin,axisMax])),...
+                'String',       num2str(round(mean([axisMin,axisMax]),3)),...
                 'BackgroundColor','w',...
                 'Callback',     @obj.setPos);
             %%
@@ -334,7 +334,7 @@ classdef PlotSlices < handle
                     'cm_redwhitegreen','cm_relief','cm_spectrum','cm_terrain',...
                     'cm_yellow','cm_yellowhot'},...
                 'Callback',     @obj.setColor);
-            set(colormapHBox,'Sizes',[65,50,40,-1]);    
+            set(colormapHBox,'Sizes',[60,50,40,-1]);    
         end
         
         function setUIMenu(obj)
@@ -458,18 +458,18 @@ classdef PlotSlices < handle
 
             %% sliced data operation, enhance
 
-            % gamma
-%             gamma = get(obj.SliderGamma,'Value');
-%             if gamma~=1
-%                 sliceData = (sliceData/obj.maxValue).^gamma .* sliceData;
+            %% data enhance
+            % interpolate
+%             if obj.interpolate_K ~= 1
+% %                 sliceData = interp2(sliceData,obj.interpolate_K,'spline');
+%                 sliceData = interp2(sliceData,obj.interpolate_K,'makima');
+%                 sliceData(sliceData<0) = 0;
 %             end
 
-            % interpolate
-%             K = 3;
-%             sliceData = interp2(sliceData,K,'spline');
-%             sliceData(sliceData<0) = 0;
-
-
+            gamma = get(obj.SliderGamma,'Value');
+            if gamma~=1
+               sliceData = (sliceData/max(sliceData,[],"all")).^gamma .* sliceData;
+            end
 
             % Color Mapping
 
@@ -640,14 +640,14 @@ classdef PlotSlices < handle
             if gamma==1
                 obj.imag.CData = sliceData';
             else
-                obj.imag.CData = (sliceData'/obj.maxValue).^gamma .* sliceData';
+                obj.imag.CData = (sliceData'/max(sliceData,[],"all")).^gamma .* sliceData';
             end
 
             %% set value
-            set(obj.Position,'String',num2str(pos));
+            set(obj.Position,'String',num2str(round(pos,3)));
             [~,cond] = min(abs(obj.AxisData - pos));
             set(obj.PositionIndex,'String',num2str(cond));
-            set(obj.GammaValue,'String',num2str(gamma));
+            set(obj.GammaValue,'String',num2str(round(gamma,3)));
 
             obj.setClim();
 %             % plot energy contour
@@ -798,8 +798,8 @@ classdef PlotSlices < handle
                 clim(obj.Axis,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
             end
 
-            set(obj.MinValue,'String',num2str(minSlider));
-            set(obj.MaxValue,'String',num2str(maxSlider));
+            set(obj.MinValue,'String',num2str(round(minSlider,2)));
+            set(obj.MaxValue,'String',num2str(round(maxSlider,2)));
             
 
         end
@@ -841,7 +841,7 @@ classdef PlotSlices < handle
             else
                 minInput=log10(minInput+1);
             end
-            set(obj.SliderMin,'Value',minInput);
+            set(obj.SliderMin,'Value',round(minInput,3));
             
             maxInput=str2double(get(obj.MaxValue,'String'));
             if maxInput<0
@@ -849,7 +849,7 @@ classdef PlotSlices < handle
             else
                 maxInput=log10(maxInput+1);
             end
-            set(obj.SliderMax,'Value',maxInput);
+            set(obj.SliderMax,'Value',round(maxInput,3));
             
             obj.setClim();
 %             gammaInput=str2double(get(obj.GammaValue,'String'));
