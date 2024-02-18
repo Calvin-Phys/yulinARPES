@@ -52,6 +52,7 @@ classdef PlotSlices < handle
         ClimCheckbox
         InterpCheckbox
         CrosshairCheckbox
+        XYpos_Editfield
         
         Position
         PositionIndex
@@ -118,12 +119,12 @@ classdef PlotSlices < handle
             end
 
             % draw crosshair/guideline
-            obj.Crosshair = drawcrosshair('Parent',obj.Axis,'Position',[obj.PosX obj.PosY],'LineWidth',1,'Color','b','Visible','off');
+            obj.Crosshair = drawcrosshair('Parent',obj.Axis,'Position',[obj.PosX obj.PosY],'LineWidth',1,'Color',"c",'Visible','off');
             addlistener(obj.Crosshair,'ROIMoved',@(src,data) obj.update_Crosshair_Positions(data.CurrentPosition(1),data.CurrentPosition(2)));
 
             % draw MDCEDC crosshair
             obj.Crosshair2 = drawcrosshair('Parent',obj.Axis,'Position',[obj.PosX+obj.DX obj.PosY+obj.DY],'LineWidth',1,'Color','w','Visible','off');
-            obj.Crosshair2.StripeColor = "b";
+            obj.Crosshair2.StripeColor = "c";
             addlistener(obj.Crosshair2,'ROIMoved',@(src,data) obj.update_Crosshair2_Positions(data.CurrentPosition(1),data.CurrentPosition(2)));
         end
         
@@ -245,7 +246,7 @@ classdef PlotSlices < handle
                 'Style',        'PushButton',...
                 'String',       '>',...
                 'Callback',     {@obj.setInd,'+'});
-            set(infoHBox,'Sizes',[40,60,-1,20,50,30,30,20,15,30,15]);
+            set(infoHBox,'Sizes',[45,70,-1,20,50,30,30,20,15,30,15]);
             
             %% uicontrols for color correction
             uicontrol(...
@@ -306,16 +307,18 @@ classdef PlotSlices < handle
             obj.CrosshairCheckbox=uicontrol(...
                 'Parent',       colorGammaHBox,...
                 'Style',        'Checkbox',...
-                'String',       'Crosshair',...
+                'String',       'Cursor',...
                 'Value',        0,...
                 'Callback',     @obj.crosshair_menu_callback);
 
-%             obj.XY_postion_editfield = uicontrol(...
-%                 'Parent',       infoHBox,...
-%                 'Style',        'Text',...
-%                 'String',       '()',...
-%                 'BackgroundColor','w');
-            set(colorGammaHBox,'Sizes',[20,30,-1,70]);
+            obj.XYpos_Editfield = uicontrol(...
+                'Parent',       colorGammaHBox,...
+                'Style',        'Text',...
+                'String',       '()',...
+                'BackgroundColor','w');
+
+            set(colorGammaHBox,'Sizes',[20,30,-1,55,85]);
+
             obj.ClimCheckbox=uicontrol(...
                 'Parent',       colormapHBox,...
                 'Style',        'Checkbox',...
@@ -866,7 +869,7 @@ classdef PlotSlices < handle
             
             obj.setClim();
 %             gammaInput=str2double(get(obj.GammaValue,'String'));
-%             if 0.001>gammaInput
+%             if 0.001>gammaInputEditfield
 %                 gammaInput=0.001;
 %             end
 %             if 5<gammaInput
@@ -881,6 +884,7 @@ classdef PlotSlices < handle
             obj.PosX = x;
             obj.PosY = y;
 
+            set(obj.XYpos_Editfield,'String', [num2str(round(x,3)) ', ' num2str(round(y,3))]);
             obj.Crosshair2.Position = [obj.PosX + obj.DX, obj.PosY + obj.DY];
 
             if get(obj.MDCEDC_Menu,'Checked')
@@ -1053,6 +1057,10 @@ classdef PlotSlices < handle
                     disp("Unsupported direction!");
                     return
                 end
+
+                answer = inputdlg({'Enter azimuth offset (deg): + clockwise, - anticlockwise'},'Input',[1 60],{num2str(MAP.info.azimuth_offset)});
+                MAP.info.azimuth_offset = str2num(answer{1});
+
                 KMAP = MAP.kconvert();
                 assignin("base",[obj.DataName '_ksp'],KMAP);
             elseif class(obj.Data) == "OxA_KZ"
@@ -1106,6 +1114,8 @@ classdef PlotSlices < handle
             % create the figure
             if sf == 0 % whether save the figure
                 Fig = figure('Name',obj.Data.name);
+                Fig.Position = [0 0 1200 800];
+                set(Fig, 'color', 'white');
             else
                 Fig = figure('Name',obj.Data.name,'visible','off');
                 Fig.Position = [0 0 1600 1000];
@@ -1124,6 +1134,8 @@ classdef PlotSlices < handle
 
                 set(ha1,'xlabel',[]);
                 set(ha1,'ylabel',[]);
+
+                posi_i = num2str(posi(i));
                 switch obj.Direction
                     case 'x'
                         nn = obj.Data.x_name;
@@ -1141,11 +1153,12 @@ classdef PlotSlices < handle
 
                         if strcmp(nn,'{\it E}-{\it E}_F')
                             nn = 'BE';
+                            posi_i = num2str(-posi(i));
                         elseif strcmp(nn,'Kinetic Energy')
                             nn = 'KE';
                         end
                 end
-                title(ha1,[nn '= ' num2str(posi(i)) ' ' uu]);
+                title(ha1,[nn '= ' posi_i ' ' uu]);
 
                 % copy line objects
                 lines = findall(obj.Axis,'Type','line');
