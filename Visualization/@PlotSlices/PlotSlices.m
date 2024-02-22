@@ -104,8 +104,15 @@ classdef PlotSlices < handle
             % some improvement - default settings
             if Direction == 'z' && ndims(obj.Data.value) == 3 && length(obj.Data.x) ~= 1
                 obj.FlipCheckbox.Value = 1;
-                obj.Checkbox.Value = 1;
                 obj.Width.String = '0.05';
+                
+                try
+                    if strcmp(obj.Data.x_unit,obj.Data.y_unit)
+                        obj.Checkbox.Value = 1;
+                    end
+                catch
+                end
+
             end
 
             % plot figure & set menu
@@ -1121,7 +1128,7 @@ classdef PlotSlices < handle
                 Fig.Position = [0 0 1600 1000];
             end
 
-            for i = 1:row*column
+            for i = 1:length(posi)
                 obj.Slider.Value = posi(i);
 %                 pause(0.1)
                 ha1 = subplot(row,column,i,'parent',Fig);
