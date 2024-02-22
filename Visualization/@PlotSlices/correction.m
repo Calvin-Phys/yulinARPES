@@ -66,6 +66,7 @@ yData = obj.imag.YData;
 
 % FS_CURVE = interp1(m,n,xData,'spline');
 FS_CURVE = interp1(m,n,xData,'makima');
+FS_CURVE = reshape(FS_CURVE,[1,length(FS_CURVE)]);
 FS_mean = mean(FS_CURVE,'all');
 
 % plot points and curve
