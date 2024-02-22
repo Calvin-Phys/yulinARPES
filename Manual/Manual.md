@@ -208,6 +208,20 @@ Main Window -> Process -> Self Normalization.
 
 Select the target data from the main window's list, select the normalization direction, and click `Normalize`. The normalized data will be produced.
 
+### Fermi Edge correction
+
+Sometimes the Fermi edge of the data we got is curved and we would like to make it straight and flat. This can be done by, firstly plotting the data and adjusting the figure to make sure the Fermi edge is clear, and then click
+
+```
+Figure Window -> ARPES Tools -> Fermi Surface correction
+```
+to select a few point on the Fermi edge.
+
+![Fermi surface correction](./pictures/FS_correct.png)
+
+Finally, press ENTER and save the data.
+
+
 ### Fit Fermi level and offset
 
 > Note that the `Fit Fermi Level` feature is only useful for correcting the work function and is not used to convert kinetic energy to binding energy, which is done automatically by the `K-Convert` function.
