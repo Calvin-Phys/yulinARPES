@@ -10,7 +10,7 @@ Please note that this manual does not cover the principles of ARPES. If you woul
 ---
 ## Preparetion
 
-To use the latest version of the software, please download the latest versions of `yulinARPES` and `ARPES_OX`, and add their folders to the Matlab path. Additionally, make sure that any necessary toolboxes are installed. Once the folders have been added and the toolboxes installed, restart Matlab to ensure the changes are properly registered.
+To use the latest version of the software, please download the latest versions of `yulinARPES` and `OX_ARPES`, and add their folders to the Matlab path. Additionally, make sure that any necessary toolboxes (including the `GUI Layout Toolbox` in `\yulinARPES\Others_uncertain\`) are installed. Once the folders have been added and the toolboxes installed, restart Matlab to ensure the changes are properly registered.
 
 To launch the software, enter the following command into the Matlab command line:
 
@@ -43,6 +43,14 @@ You can select and load multiple files at once by using the file selection dialo
 > 4. The new loader is being actively maintained and upgraded, and it usually has better compitablity and speed.
 > 
 > It is recommended to use the new loader due to its added functionality, but the old loader remains available within the software.
+>
+> **How to convert the data loaded by the new loader to Matlab structure that is compitable with some older programs?**
+>
+> This can be done by calling the `struct` function in Matlab. For example,
+> ```
+> new_Cut = struct(Cut)
+> ```
+> will convert the object with class to a simple structure.
 
 Once the loading process is finished, click on the list in the main window to refresh it. The newly-loaded data variables will then appear in the list.
 
@@ -61,8 +69,13 @@ The data plot window will look like this:
 ![Plot](./pictures/plot.png)
 
 You can:
-- adjust the color map range by unchecking the `Auto Clim` checkbox and using the sliders to set the minimum and maximum percentages. To change the contrast, adjust the `Gamma` slider.
-- change the color map by selecting a new option from the drop-down list. To flip the color map, check or uncheck the `Flip` checkbox.
+- adjust the color map range with the sliders to set the minimum and maximum percentages. `Fix Clim` option decides whether percentages are set only for current slice or the entire data. 
+- To change the contrast, adjust the `/gamma` slider.
+- Change the color map by selecting a new option from the drop-down list. To flip the color map, check or uncheck the `Flip` checkbox.
+- Enable interpolation of the data by selecting the `Interp` option
+- Enable `Cursor` to plot a crosshair on the figure, and the position of the crosshair is shown in the field right to the checkbox.
+
+![Plot_cursor](./pictures/plot_cursor.png)
 
 If you are working with 3D data, you can also:
 - change the position along the axis that you are plotting by using the top slider. Additionally, you can adjust the integration range by entering a value in the `Width` field.
@@ -85,6 +98,7 @@ If the resolution of the cut is not sufficient, you can turn on the interpolatio
 ```
 ARPES Tools -> Interpolate
 ```
+or selecting the `Interp` option on the main panel.
 This will improve the visualization of the data. 
 
 Here is an example (left without interpolation, right with interpolation):
@@ -109,18 +123,14 @@ Next, enter the desired number of columns, rows, and the position array. This wi
 
 The latest version of the software provides a convenient and accurate way to convert raw data to k-space.
 
-> Before converting to k-space, it's important to ensure that the data has the correct photon energy and work function. If the data was collected in the form of hdf5, this information is already included by the loader program. However, if the data was collected by the Scienta SEC program in the form of .txt or .zip files, you may need to add this information manually.
+> Before converting to k-space, it's important to ensure that the data has the correct **photon energy** and **work function**. If the data was collected in certain forms (such as `hdf5` at DLS), this information is already included by the loader program. However, if the information is not included in the raw data (which can happen for data created by the Scienta SEC program in the form of .txt or .zip files), you may need to add this information manually.
 > - The photon energy and work function are stored in `data.info.photon_energy` and `data.info.workfunction`, respectively.
 
 Now that all necessary information has been obtained, let's go through each type of data.
 
 ### Cut
 
-Plot the cut. Click the menu
-```
-Plot Window -> ARPES Tools -> Crosshair
-```
-to enable the crosshair. Move the vertical line of the crosshair to the center of symmetry (i.e., K = 0), and then click on `ARPES Tools` and select `K-Convert (object)`.
+Plot the cut. Enable `Cursor` option to plot the crosshair. Move the vertical line of the crosshair to the center of symmetry (i.e., K = 0), and then click on `ARPES Tools` and select `K-Convert (object)`.
 ```
 Plot Window -> ARPES Tools -> K-Convert (object)
 ```
@@ -136,6 +146,10 @@ Plot Window -> ARPES Tools -> K-Convert (object)
 ```
 ![kconvert map](./pictures/kconvert_map.png)
 
+Then there will be a dialog box asking about the azimuth offset for the conversion process. Input the degree to offset and click on the OK button.
+
+![kconvert map 2](./pictures/kconvert_map2.png)
+
 ### KZ
 
 To convert a photon energy scan map to k-space, you can first plot it along either the z or x direction. If you plot it along the z direction, move the horizontal line of the crosshair to the vertical center of symmetry (i.e., Ky = 0). Alternatively, if you plot it along the x direction, move the vertical line to the horizontal center (i.e., Kx = 0).
@@ -147,6 +161,23 @@ Plot Window -> ARPES Tools -> K-Convert (object)
 When prompted, input the `inner energy (V0)` of the material. This will convert the data to k-space and add it to the main window's list.
 
 ![kconvert kz](./pictures/kconvert_kz.png)
+
+The constant energy cut of the converted data looks like this
+
+![kz type1](./pictures/kz_type1.png)
+
+### KZ (another type)
+We found that another way to convert the photon energy scan is useful in some cases. The x axis will still be the photon energy instead of $k_Z$.
+
+![kz type2](./pictures/kz_type2.png)
+
+To achieve this result, please follow the steps below:
+
+1. add the theta Y offset in degree to `[DATA_NAME].info.thetay_offset`
+2. call the k-conversion method by typing in the command window
+```
+[DATA_NAME]_khv = [DATA_NAME].kconvert_type2();
+```
 
 ---
 ## Data process
