@@ -1196,6 +1196,10 @@ classdef PlotSlices < handle
             catch
             end
 
+            if strcmp(obj.Direction,'z')
+                SGT = [SGT ' (ΔE=' get(obj.Width,'String') 'eV)'];
+            end
+
             sgtitle(Fig,SGT,'interpreter', 'none');
 
 
