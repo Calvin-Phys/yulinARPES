@@ -1268,6 +1268,7 @@ classdef PlotSlices < handle
         end    
         
         function cut(obj,varargin)
+
             [xlist,ylist]=getpts(obj.Axis);
             x0=xlist(1);
             y0=ylist(1);
@@ -1277,16 +1278,31 @@ classdef PlotSlices < handle
             [x_grid,y_grid,z_grid]=meshgrid(obj.Data.x,obj.Data.y,obj.Data.z);
             xx=repmat(x,max(size(obj.Data.z)),1);
             yy=repmat(y,max(size(obj.Data.z)),1);
-            zz=repmat(obj.Data.z',1,max(size(x)));
-% initial_plot
-            data.value=interp3(x_grid,y_grid,z_grid, permute(obj.Data.value,[2,1,3]),xx,yy,zz);
+            zz=repmat(squeeze(obj.Data.z),1,max(size(x)));
 
+            data=struct(obj.Data);
+
+            data=rmfield(data,'z');
+            try
+                data.y_unit = data.z_unit;
+                data.y_name = data.z_name;
+                data=rmfield(data,'z_unit');
+                data=rmfield(data,'z_unit');
+            catch
+            end
+            
+            
+            data.value=interp3(x_grid,y_grid,z_grid, permute(obj.Data.value,[2,1,3]),xx,yy,zz);
+%             % Temp for 3D visualization
+%             figure;
+%             surf(xx,yy,zz,data.value);
+%             %% Temp End
             data.value=data.value';
             data.x=r;
             data.y=obj.Data.z;
-%             figure;
-%             imagesc(data.x,data.y,data.value');
-%             set('YDir','normal');
+            figure;
+            imagesc(data.x,data.y,data.value');
+%             shading interp;
             % save 
             data.SliceInfo.Direction='nv';
             data.SliceInfo.pos=[xlist,ylist];
