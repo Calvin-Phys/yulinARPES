@@ -1287,7 +1287,7 @@ classdef PlotSlices < handle
                 data.y_unit = data.z_unit;
                 data.y_name = data.z_name;
                 data=rmfield(data,'z_unit');
-                data=rmfield(data,'z_unit');
+                data=rmfield(data,'z_name');
             catch
             end
             
