@@ -636,10 +636,10 @@ classdef RenderDataARPES < handle
             dataName=varNames{1};
             dataHighRes = evalin('base',dataName);
             % check input
-            xflag = ~isfield(dataHighRes,'x');
-            yflag = ~isfield(dataHighRes,'y');
-            zflag = ~isfield(dataHighRes,'z');
-            vflag = (~isfield(dataHighRes,'value'))||...
+            xflag = ~isfield(dataHighRes,'x') && ~isprop(dataHighRes,'x');
+            yflag = ~isfield(dataHighRes,'y') && ~isprop(dataHighRes,'y');
+            zflag = ~isfield(dataHighRes,'z') && ~isprop(dataHighRes,'z');
+            vflag = (~isfield(dataHighRes,'value') && ~isprop(dataHighRes,'value'))||...
                 (ndims(dataHighRes.value)~=3);
             if xflag||yflag||zflag||vflag
                 errordlg(['Target data set is not typical 3D ARPES data.',...
@@ -858,7 +858,7 @@ classdef RenderDataARPES < handle
                 set(figure(plotOption.FigNum),...
                     'Position',[0,0,2*sizeD+10,sizeD+10])
                 figure(plotOption.FigNum);
-                imagesc(valueCube(:,:,:,i));
+                imshow(valueCube(:,:,:,i));
                 axis equal;
                 axis off;
                 frame=getframe;
@@ -930,7 +930,7 @@ classdef RenderDataARPES < handle
         function renderAndPlot(obj,data,renderOption,plotOption)
             renderData=obj.getRenderData(data,renderOption);
             figure(plotOption.FigNum);
-            imagesc(renderData);
+            imshow(renderData);
             axis off;
             set(obj.StrStatus,'String','Ready.');
         end % end of renderAndPlot
