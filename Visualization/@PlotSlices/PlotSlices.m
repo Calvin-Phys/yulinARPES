@@ -1047,15 +1047,34 @@ classdef PlotSlices < handle
         end
 
         function quick_KConvert(obj,~,~)
+
             if obj.Data.x == 1 % cut
+
                 CUT = evalin("base",obj.DataName);
                 if class(CUT) ~= "OxA_CUT"
                     return
                 end
                 CUT.info.thetay_offset = obj.PosX;
+
+                prompt = {'Photon Energy (eV)','Work Function (eV)', 'Y offset (deg)'};
+                dlgtitle = 'Cut K-space Conversion';
+                definput = {num2str(CUT.info.photon_energy),num2str(CUT.info.workfunction), ...
+                    num2str(CUT.info.thetay_offset)};
+                dims = [1 60];
+                answer = inputdlg(prompt,dlgtitle,dims,definput);
+                if isempty(answer)
+                    return
+                end
+
+                CUT.info.photon_energy = str2num(answer{1});
+                CUT.info.workfunction = str2num(answer{2});
+                CUT.info.thetay_offset = str2num(answer{3});
+
                 KCUT = CUT.kconvert();
                 assignin("base",[obj.DataName '_ksp'],KCUT);
+
             elseif class(obj.Data) == "OxA_MAP"
+
                 MAP = evalin("base",obj.DataName);
                 if obj.Direction == 'z'
                     MAP.info.thetax_offset = obj.PosX;
@@ -1065,12 +1084,30 @@ classdef PlotSlices < handle
                     return
                 end
 
-                answer = inputdlg({'Enter azimuth offset (deg): + clockwise, - anticlockwise'},'Input',[1 60],{num2str(MAP.info.azimuth_offset)});
+                prompt = {'Enter azimuth offset (deg): + clockwise, - anticlockwise',...
+                    'Photon Energy (eV)','Work Function (eV)', 'X offset (deg)',...
+                    'Y offset (deg)'};
+                dlgtitle = 'Map K-space Conversion';
+                definput = {num2str(MAP.info.azimuth_offset),num2str(MAP.info.photon_energy),...
+                    num2str(MAP.info.workfunction), num2str(MAP.info.thetax_offset),...
+                    num2str(MAP.info.thetay_offset)};
+                dims = [1 60];
+                answer = inputdlg(prompt,dlgtitle,dims,definput);
+                if isempty(answer)
+                    return
+                end
+
                 MAP.info.azimuth_offset = str2num(answer{1});
+                MAP.info.photon_energy = str2num(answer{2});
+                MAP.info.workfunction = str2num(answer{3});
+                MAP.info.thetax_offset = str2num(answer{4});
+                MAP.info.thetay_offset = str2num(answer{5});
 
                 KMAP = MAP.kconvert();
                 assignin("base",[obj.DataName '_ksp'],KMAP);
+
             elseif class(obj.Data) == "OxA_KZ"
+
                 KZ = evalin("base",obj.DataName);
                 if obj.Direction == 'z'
                     KZ.info.thetay_offset = obj.PosY;
@@ -1080,6 +1117,26 @@ classdef PlotSlices < handle
                     disp("Unsupported direction!");
                     return
                 end
+
+                try 
+                    V0 = KZ.info.inner_energy;
+                catch
+                    V0 = 15;
+                end
+
+                prompt = {'Enter Inner Energy (eV)', 'Y offset (deg)'};
+                dlgtitle = 'hv Scan K-space Conversion';
+                definput = {num2str(V0),num2str(KZ.info.thetay_offset)};
+                dims = [1 60];
+                answer = inputdlg(prompt,dlgtitle,dims,definput);
+                if isempty(answer)
+                    return
+                end
+
+                KZ.info.inner_energy = str2num(answer{1});
+                KZ.info.thetay_offset = str2num(answer{2});
+
+
                 KKZ = KZ.kconvert();
                 assignin("base",[obj.DataName '_ksp'],KKZ);
             end
