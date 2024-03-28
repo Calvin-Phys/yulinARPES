@@ -983,13 +983,9 @@ function UpdateVarList(hObject)
     end
     
     data = evalin('base',varname);
-    % data=[];
-    % if ~isstruct(datav)
-    %     data.value=datav;
-    % elseif isfield(datav,'value') || isprop(datav,'value')
-    %     data=datav;
-    % end
-    
+    if ~isstruct(data) && ~isobject(data)
+        return
+    end
     if ~isfield(data,'value') && ~isprop(data,'value')
         return
     end
