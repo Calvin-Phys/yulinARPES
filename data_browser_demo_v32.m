@@ -443,7 +443,7 @@ function plotDos_CallbackFcn(hObject,~,Direction,NormaliseType)
         legend(TitleText{:});
     end
 
-function mapViewer_CallbackFcn(~,~)
+function mapViewer_CallbackFcn(hObject,~)
 
     UpdateVarList(hObject);
     handles=guidata(hObject);
