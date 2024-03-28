@@ -1335,7 +1335,7 @@ classdef PlotSlices < handle
             [x_grid,y_grid,z_grid]=meshgrid(obj.Data.x,obj.Data.y,obj.Data.z);
             xx=repmat(x,max(size(obj.Data.z)),1);
             yy=repmat(y,max(size(obj.Data.z)),1);
-            zz=repmat(squeeze(obj.Data.z),1,max(size(x)));
+            zz=repmat(reshape(obj.Data.z,[length(obj.Data.z) 1]),1,max(size(x)));
 
             data=struct(obj.Data);
 
@@ -1371,6 +1371,7 @@ classdef PlotSlices < handle
             if isempty(SaveName)
                 return;
             end
+
             assignin('base',SaveName{1},data);
         end
     end
