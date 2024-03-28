@@ -281,7 +281,7 @@ end
 %% ====================== 3d case ================================
 if ndims(datav.value)==3
 
-    if ~isfield(datav,'z')
+    if ~isfield(datav,'z')  && ~isprop(datav, 'x')
         errordlg('3D Data must also contains "data.z" field','error input');
         return;
     end
@@ -290,13 +290,13 @@ if ndims(datav.value)==3
     if flag_resa==1                %------ if resample data----
         datav_new=datav;
         datav_new.value=datav.value(1:xpix:data_size(1),1:ypix:data_size(2),1:zpix:data_size(3));
-        if isfield(datav, 'x')
+        if isfield(datav, 'x') || isprop(datav, 'x')
             datav_new.x=datav.x(1:xpix:data_size(1));
         end
-        if isfield(datav, 'y')
+        if isfield(datav, 'y') || isprop(datav, 'y')
             datav_new.y=datav.y(1:ypix:data_size(2));
         end
-        if isfield(datav, 'z')
+        if isfield(datav, 'z') || isprop(datav, 'z')
             datav_new.z=datav.z(1:zpix:data_size(3));
         end
 
@@ -312,21 +312,21 @@ if ndims(datav.value)==3
 %         datav_new=datav;
         for i=1:max_index(1)
             value1(i,:,:)=sum(datav.value((i-1)*xpix+1:i*xpix,:,:),1);
-            if isfield(datav, 'x')
+            if isfield(datav, 'x')  || isprop(datav, 'x')
                 datav_new.x(i)=mean(datav.x((i-1)*xpix+1:i*xpix));
             end
         end
         
         for i=1:max_index(2)
             value2(:,i,:)=sum(value1(:,(i-1)*ypix+1:i*ypix,:),2);
-            if isfield(datav, 'y')
+            if isfield(datav, 'y')  || isprop(datav, 'y')
                 datav_new.y(i)=mean(datav.y((i-1)*ypix+1:i*ypix));
             end
         end
         
         for i=1:max_index(3)
             value(:,:,i)=sum(value2(:,:,(i-1)*zpix+1:i*zpix),3);
-            if isfield(datav, 'z')
+            if isfield(datav, 'z')  || isprop(datav, 'z')
                 datav_new.z(i)=mean(datav.z((i-1)*zpix+1:i*zpix));
             end
         end
@@ -337,12 +337,12 @@ end
 %% ========================= 4d case ====================================
 if ndims(datav.value)==4
 
-    if ~isfield(datav,'z')
+    if ~isfield(datav,'z')  && ~isprop(datav, 'z')
         errordlg('4D Data must also contains "data.z" field','error input');
         return;
     end
-    if ~isfield(datav,'k')
-        errordlg('4D Data must also contains "data.z" field','error input');
+    if ~isfield(datav,'k')  && ~isprop(datav, 'k')
+        errordlg('4D Data must also contains "data.k" field','error input');
         return;
     end
     
@@ -350,16 +350,16 @@ if ndims(datav.value)==4
     if flag_resa==1                %------ if resample data----
         datav_new=datav;
         datav_new.value=datav.value(1:xpix:data_size(1),1:ypix:data_size(2),1:kpix:data_size(3),1:zpix:data_size(4));
-        if isfield(datav, 'x')
+        if isfield(datav, 'x') || isprop(datav, 'x')
             datav_new.x=datav.x(1:xpix:data_size(1));
         end
-        if isfield(datav, 'y')
+        if isfield(datav, 'y') || isprop(datav, 'y')
             datav_new.y=datav.y(1:ypix:data_size(2));
         end
-        if isfield(datav, 'k')
+        if isfield(datav, 'k') || isprop(datav, 'k')
             datav_new.k=datav.k(1:kpix:data_size(3));
         end
-        if isfield(datav, 'z')
+        if isfield(datav, 'z') || isprop(datav, 'z')
             datav_new.z=datav.z(1:zpix:data_size(4));
         end
 
@@ -377,27 +377,27 @@ if ndims(datav.value)==4
         clear value3;
         for i=1:max_index(1)
             value1(i,:,:,:)=sum(datav.value((i-1)*xpix+1:i*xpix,:,:,:),1);
-            if isfield(datav, 'x')
+            if isfield(datav, 'x')  || isprop(datav, 'x')
                 datav_new.x(i)=mean(datav.x((i-1)*xpix+1:i*xpix));
             end
         end
         
         for i=1:max_index(2)
             value2(:,i,:,:)=sum(value1(:,(i-1)*ypix+1:i*ypix,:,:),2);
-            if isfield(datav, 'y')
+            if isfield(datav, 'y')  || isprop(datav, 'y')
                 datav_new.y(i)=mean(datav.y((i-1)*ypix+1:i*ypix));
             end
         end
         
         for i=1:max_index(3)
             value3(:,:,i,:)=sum(value2(:,:,(i-1)*kpix+1:i*kpix,:),3);
-            if isfield(datav, 'k')
+            if isfield(datav, 'k') || isprop(datav, 'k')
                 datav_new.k(i)=mean(datav.k((i-1)*kpix+1:i*kpix));
             end
         end
         for i=1:max_index(4)
             value(:,:,:,i)=sum(value3(:,:,:,(i-1)*zpix+1:i*zpix),4);
-            if isfield(datav, 'z')
+            if isfield(datav, 'z') || isprop(datav, 'z')
                 datav_new.z(i)=mean(datav.z((i-1)*zpix+1:i*zpix));
             end
         end
