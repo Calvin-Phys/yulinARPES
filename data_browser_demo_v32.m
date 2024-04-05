@@ -469,7 +469,7 @@ function volumeViwer_Callback(hObject,~)
 
     rr = (max(data.z)-min(data.z)) / ((max(data.x)-min(data.x)+max(data.y)-min(data.y))/2);
 
-    volumeViewer(permute(data.value, [2 1 3]), ScaleFactors=[xx yy zz/rr]);
+    volumeViewer(permute(data.value, [2 1 3]), ScaleFactors=[xx/yy 1 zz/yy/rr]);
 
 
 
