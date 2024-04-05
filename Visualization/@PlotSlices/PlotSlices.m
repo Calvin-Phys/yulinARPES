@@ -145,11 +145,13 @@ classdef PlotSlices < handle
             data.x = 1;
             data.y = obj.Data.x;
             data.z = obj.Data.y;
-
-            data.y_name = obj.Data.x_name;
-            data.y_unit = obj.Data.x_unit;
-            data.z_name = obj.Data.y_name;
-            data.z_unit = obj.Data.y_unit;
+            try
+                data.y_name = obj.Data.x_name;
+                data.y_unit = obj.Data.x_unit;
+                data.z_name = obj.Data.y_name;
+                data.z_unit = obj.Data.y_unit;
+            catch
+            end
 
             data.value=valueNew;
             obj.Data=data;
