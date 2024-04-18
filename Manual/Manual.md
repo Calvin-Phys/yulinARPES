@@ -10,7 +10,7 @@ Please note that this manual does not cover the principles of ARPES. If you woul
 ---
 ## Preparetion
 
-To use the latest version of the software, please download the latest versions of `yulinARPES` and `OX_ARPES`, and add their folders to the Matlab path. Additionally, make sure that any necessary toolboxes (including the `GUI Layout Toolbox` in `\yulinARPES\Others_uncertain\`) are installed. Once the folders have been added and the toolboxes installed, restart Matlab to ensure the changes are properly registered.
+To use the latest version of the software, please download the latest versions of `yulinARPES` [->Link](https://github.com/Calvin-Phys/yulinARPES) and `OX_ARPES` [->Link](https://github.com/Calvin-Phys/OX_ARPES), and add their folders to the Matlab path. Additionally, make sure that any necessary toolboxes (including the `GUI Layout Toolbox` in `\yulinARPES\manual\`) are installed. Once the folders have been added and the toolboxes installed, restart Matlab to ensure the changes are properly registered.
 
 To launch the software, enter the following command into the Matlab command line:
 
@@ -73,7 +73,7 @@ The data plot window will look like this:
 
 You can:
 - adjust the color map range with the sliders to set the minimum and maximum percentages. `Fix Clim` option decides whether percentages are set only for current slice or the entire data. 
-- To change the contrast, adjust the `/gamma` slider.
+- To change the contrast, adjust the `/gamma` slider. When gamma is zero, the image has a log scale.
 - Change the color map by selecting a new option from the drop-down list. To flip the color map, check or uncheck the `Flip` checkbox.
 - Enable interpolation of the data by selecting the `Interp` option
 - Enable `Cursor` to plot a crosshair on the figure, and the position of the crosshair is shown in the field right to the checkbox.
