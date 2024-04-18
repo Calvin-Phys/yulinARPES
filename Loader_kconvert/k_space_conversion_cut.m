@@ -240,8 +240,10 @@ k_unit=pi/latt_constv;
 %    kkk=(sqrt(2*me*mesh_energy*ce)*2*pi/h)/k_unit.*sin(mesh_angle+theta_offsetv);
 
     %-----------make 1-D (kx,ky,E) serial for later interpolation--
-    ii=size(data.x,2);
-    jj=size(data.y,2);
+    % ii=size(data.x,2);
+    % jj=size(data.y,2);
+    ii = length(data.x);
+    jj = length(data.y);
     
     kxx=zeros(1,ii*jj);
     kyy=zeros(1,ii*jj);
