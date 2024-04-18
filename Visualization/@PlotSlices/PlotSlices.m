@@ -309,8 +309,8 @@ classdef PlotSlices < handle
             obj.SliderGamma=uicontrol(...
                 'Parent',       colorGammaHBox,...
                 'Style',        'Slider',...
-                'Min',          0.001,...
-                'Max',          5,...
+                'Min',          0,...
+                'Max',          3,...
                 'Value',        1);
             addlistener(obj.SliderGamma,'Value','PostSet',@obj.update_CData);
             obj.CrosshairCheckbox=uicontrol(...
@@ -493,7 +493,11 @@ classdef PlotSlices < handle
 
             gamma = get(obj.SliderGamma,'Value');
             if gamma~=1
-               sliceData = (sliceData/max(sliceData,[],"all")).^gamma .* sliceData;
+                if gamma==0
+                    obj.imag.CData = log(sliceData'+0.1);
+                else
+                    sliceData = (sliceData/max(sliceData,[],"all")).^gamma .* sliceData;
+                end
             end
 
             % Color Mapping
@@ -575,7 +579,12 @@ classdef PlotSlices < handle
             slice_data_max = max(sliceData,[],"all");
 
             if get(obj.ClimCheckbox,'Value')
-                clim(axPlot,[minPercent/100*slice_data_max maxPercent/100*slice_data_max]);
+                if minPercent/100*slice_data_max == maxPercent/100*slice_data_max
+                    clim(axPlot,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
+                else
+                    clim(axPlot,[minPercent/100*slice_data_max maxPercent/100*slice_data_max]);
+                end
+
             else
                 clim(axPlot,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
             end
@@ -664,6 +673,8 @@ classdef PlotSlices < handle
             gamma = get(obj.SliderGamma,'Value');
             if gamma==1
                 obj.imag.CData = sliceData';
+            elseif gamma==0
+                obj.imag.CData = log(sliceData'+0.1);
             else
                 obj.imag.CData = (sliceData'/max(sliceData,[],"all")).^gamma .* sliceData';
             end
@@ -818,7 +829,12 @@ classdef PlotSlices < handle
             slice_data_max = max(obj.imag.CData,[],"all");
 
             if get(obj.ClimCheckbox,'Value')
-                clim(obj.Axis,[minPercent/100*slice_data_max maxPercent/100*slice_data_max]);
+                if minPercent/100*slice_data_max == maxPercent/100*slice_data_max
+                    clim(obj.Axis,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
+                else
+                    clim(obj.Axis,[minPercent/100*slice_data_max maxPercent/100*slice_data_max]);
+                end
+                
             else
                 clim(obj.Axis,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
             end
@@ -850,10 +866,10 @@ classdef PlotSlices < handle
 
         function setGamma(obj,~,~)
             gamma = str2num(get(obj.GammaValue,'String'));
-            if gamma > 5
-                gamma = 5;
-            elseif gamma < 0.001
-                gamma = 0.001;
+            if gamma > 3
+                gamma = 3;
+            elseif gamma < 0
+                gamma = 0;
             end
             set(obj.SliderGamma,'Value',gamma);
             obj.update_CData();
