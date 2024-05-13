@@ -599,28 +599,28 @@ classdef PlotSlices < handle
             set(gca,'fontsize',12);
 
 %             % plot energy contour
-%             if obj.energy_contour_flag == 1
-%                 if axFlag == 0
-%                     for i = 1:length(obj.energy_contour_lines)
-%                         delete(obj.energy_contour_lines{i})
-%                     end
-%                     obj.energy_contour_lines = obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,axPlot);
-%                 elseif axFlag == 1 || axFlag == 3
-%                     obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,axPlot);
-%                 end
-%             end
+            if obj.energy_contour_flag == 1
+                if axFlag == 0
+                    for i = 1:length(obj.energy_contour_lines)
+                        delete(obj.energy_contour_lines{i})
+                    end
+                    obj.energy_contour_lines = obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,axPlot);
+                elseif axFlag == 1 || axFlag == 3
+                    obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,axPlot);
+                end
+            end
 %             % plot brillouin zone
-%             if obj.bz_line_flag == 1
-%                 if axFlag == 0
-%                     for i = 1:length(obj.bz_line_lines)
-%                         delete(obj.bz_line_lines{i});
-%                     end
-%                     obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(axPlot);
-% 
-%                 elseif axFlag == 1 || axFlag == 3
-%                     obj.Data.info.BZBS.plotBrillouinZoneOnAxes(axPlot);
-%                 end
-%             end
+            if obj.bz_line_flag == 1
+                if axFlag == 0
+                    for i = 1:length(obj.bz_line_lines)
+                        delete(obj.bz_line_lines{i});
+                    end
+                    obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(axPlot);
+
+                elseif axFlag == 1 || axFlag == 3
+                    obj.Data.info.BZBS.plotBrillouinZoneOnAxes(axPlot);
+                end
+            end
             
 %             % for crosshair
             obj.PosX = mean(xData);
@@ -687,23 +687,23 @@ classdef PlotSlices < handle
 
             obj.setClim();
 %             % plot energy contour
-%             if obj.energy_contour_flag == 1
-% 
-%                 for i = 1:length(obj.energy_contour_lines)
-%                     delete(obj.energy_contour_lines{i})
-%                 end
-% 
-%                 obj.energy_contour_lines = obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,obj.Axis);
-%             end
+            if obj.energy_contour_flag == 1
+
+                for i = 1:length(obj.energy_contour_lines)
+                    delete(obj.energy_contour_lines{i})
+                end
+
+                obj.energy_contour_lines = obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,obj.Axis);
+            end
 %              % plot brillouin zone
-%             if obj.bz_line_flag == 1
-% 
-%                 for i = 1:length(obj.bz_line_lines)
-%                     delete(obj.bz_line_lines{i})
-%                 end
-% 
-%                 obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(obj.Axis);
-%             end
+            if obj.bz_line_flag == 1
+
+                for i = 1:length(obj.bz_line_lines)
+                    delete(obj.bz_line_lines{i})
+                end
+
+                obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(obj.Axis);
+            end
 
 
         end
