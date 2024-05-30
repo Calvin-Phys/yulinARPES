@@ -25,7 +25,8 @@ VBoxHome = uiextras.VBox('Parent',handles.mObject);
 %% menu bar
 LoaderMenu = uimenu(handles.mObject,'Label','Loader');
 uimenu(LoaderMenu,'Label','Load ARPES Data','Callback',@LoadDataARPES.main);
-uimenu(LoaderMenu,'Label','Load ARPES Data (New)','Callback',@loader_UI);
+uimenu(LoaderMenu,'Label','Load ARPES Data (New)','Callback',@(~,~)loader_UI);
+uimenu(LoaderMenu,'Label','Auto Sync & Load','Callback',@(~,~)OxArpes_Sync);
 uimenu(LoaderMenu,'Label','Cut conversion','Callback',@k_space_conversion_cut,'Separator','On');
 uimenu(LoaderMenu,'Label','Map conversion 1','Callback',@k_space_conversion_demo);
 uimenu(LoaderMenu,'Label','Map conversion 2','Callback',@flash_k_space_conversion_v2);
@@ -60,7 +61,7 @@ FineStructureMenu = uimenu(ProcessMenu,'Label','Fine Structure','Separator','On'
 uimenu(FineStructureMenu,'Label','Curvature','Callback',@Curvature);
 uimenu(FineStructureMenu,'Label','Gradient','Callback',@Gradient);
 uimenu(FineStructureMenu,'Label','Smooth derivation','Callback',@smooth_derivation_v1);
-uimenu(FineStructureMenu,'Label','Mirror','Callback',@data_mirror_symmetrize);
+uimenu(FineStructureMenu,'Label','Mirror','Callback',@(~,~)data_mirror_symmetrize);
 uimenu(FineStructureMenu,'Label','Ridge detection','Callback',@ridge_detection);
 
 ToolsMenu = uimenu(handles.mObject,'Label','Tools');
@@ -70,6 +71,7 @@ uimenu(ToolsMenu,'Label','Tight Binding 2D','Callback',@GUI_for_2D,'Separator','
 uimenu(ToolsMenu,'Label','Tight Binding 3D','Callback',@GUI_for_3D);
 uimenu(ToolsMenu,'Label','Emass Fitting','Callback',@EmassFitting);
 uimenu(ToolsMenu,'Label','Wien2k','Callback',@quick_bxsf2mat);
+uimenu(ToolsMenu,'Label','Resolution Cal.','Callback',@(~,~)OxArpes_ResolutionCalculator,'Separator','On');
 
 
 %% Group Choice Panel
@@ -442,6 +444,7 @@ function plotDos_CallbackFcn(hObject,~,Direction,NormaliseType)
     else
         legend(TitleText{:});
     end
+
 
 function mapViewer_CallbackFcn(hObject,~)
 
@@ -893,7 +896,6 @@ function PlotData(hObject)
             case 2
                 if size(data.value,1)==1 || size(data.value,2)==1 % 1D DATA
 
-                    data=evalin('base',VarName);
                     if class(data) == "OxArpes_1D_Data"
                         data.show();
                     else
