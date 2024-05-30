@@ -586,7 +586,8 @@ classdef PlotSlices < handle
                 end
 
             else
-                clim(axPlot,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
+                valueRange = (obj.maxValue - obj.minValue);
+                clim(axPlot,[minPercent maxPercent]/100*valueRange + obj.minValue);
             end
 
             %set Axis equal or not
@@ -836,33 +837,35 @@ classdef PlotSlices < handle
                 end
                 
             else
-                clim(obj.Axis,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
+                valueRange = (obj.maxValue - obj.minValue);
+                clim(obj.Axis,[minPercent maxPercent]/100*valueRange + obj.minValue);
             end
 
             set(obj.MinValue,'String',num2str(round(minSlider,2)));
             set(obj.MaxValue,'String',num2str(round(maxSlider,2)));
-            
 
         end
 
-%         function setAutoClim(obj,~,~)
-%             % set Clim
-%             minSlider = 10^get(obj.SliderMin,'Value') -1;
-%             maxSlider = 10^get(obj.SliderMax,'Value') -1;
-%             minPercent = min(maxSlider,minSlider);
-%             maxPercent = max(maxSlider,minSlider);
-% 
-%             slice_data_max = max(obj.imag.CData,[],"all");
-% 
-%             if get(obj.ClimCheckbox,'Value')
-%                 clim(obj.Axis,[minPercent/100*slice_data_max maxPercent/100*slice_data_max]);
-%             else
-%                 clim(obj.Axis,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
-%             end
-% 
-%             set(obj.MinValue,'String',num2str(minSlider));
-%             set(obj.MaxValue,'String',num2str(maxSlider));
-%         end
+        %% remove
+        %         function setAutoClim(obj,~,~)
+        %             % set Clim
+        %             minSlider = 10^get(obj.SliderMin,'Value') -1;
+        %             maxSlider = 10^get(obj.SliderMax,'Value') -1;
+        %             minPercent = min(maxSlider,minSlider);
+        %             maxPercent = max(maxSlider,minSlider);
+        % 
+        %             slice_data_max = max(obj.imag.CData,[],"all");
+        % 
+        %             if get(obj.ClimCheckbox,'Value')
+        %                 clim(obj.Axis,[minPercent/100*slice_data_max maxPercent/100*slice_data_max]);
+        %             else
+        %                 clim(obj.Axis,[minPercent/100*obj.maxValue maxPercent/100*obj.maxValue]);
+        %             end
+        % 
+        %             set(obj.MinValue,'String',num2str(minSlider));
+        %             set(obj.MaxValue,'String',num2str(maxSlider));
+        %         end
+
 
         function setGamma(obj,~,~)
             gamma = str2num(get(obj.GammaValue,'String'));
