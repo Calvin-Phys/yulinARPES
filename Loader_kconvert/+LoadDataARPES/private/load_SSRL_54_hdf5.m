@@ -47,19 +47,20 @@ end
 
 %----------manipulator--------------------
 try
-data.info.Xpos = h5readatt(varargin{1},'/endstation','x');
-data.info.Ypos = h5readatt(varargin{1},'/endstation','y');
-data.info.Zpos = h5readatt(varargin{1},'/endstation','z');
-data.info.Saazimuth = h5readatt(varargin{1},'/endstation','a');
-data.info.Sapolar = h5readatt(varargin{1},'/endstation','f');
-data.info.Satilt = h5readatt(varargin{1},'/endstation','t');
+data.info.Xpos = h5readatt(varargin{1},'/Endstation','X');
+data.info.Ypos = h5readatt(varargin{1},'/Endstation','y');
+data.info.Zpos = h5readatt(varargin{1},'/Endstation','Z');
+data.info.Saazimuth = h5readatt(varargin{1},'/Endstation','A');
+data.info.Sapolar = h5readatt(varargin{1},'/Endstation','F');
+data.info.Satilt = h5readatt(varargin{1},'/Endstation','T');
 catch
 end
 %---------Sample------------------
 try
-data.info.PhotonEnergy = h5readatt(varargin{1},'/beamline','photon_energy'); 
-data.info.Temperature = h5readatt(varargin{1},'/endstation','sample_stage_temperature');
-data.info.Cold_head_temperature = h5readatt(varargin{1},'/endstation','cold_head_temperature');
+data.info.PhotonEnergy = h5readatt(varargin{1},'/Beamline','energy'); 
+data.info.Temperature = h5readatt(varargin{1},'/Temperature','TB');
+%data.info.Cold_head_temperature = h5readatt(varargin{1},'/Endstation','TA');
+data.info.polarization = h5readatt(varargin{1},'/Beamline','polarization');
 %data.info.Shield_temperature = h5readatt(varargin{1},'/Endstation','radiation_shield_temperature');
 %data.info.Cryostat_temperature = h5readatt(varargin{1},'/Endstation','cryo_temperature');
 %data.info.Heater_range_sample = h5readatt(varargin{1},'/Endstation','heater_range_sample');
@@ -79,19 +80,19 @@ catch
 end
 
 % ---------------Load Data----------------------
-data_dims = h5readatt(varargin{1},'/data','data_dims');
+data_dims = h5readatt(varargin{1},'/Data','Dimension');
 
 %-------------------2D data-------------------
-if data_dims == 2;
-    data_counts = h5read(varargin{1},'/data/counts');
-    data_exposure = h5read(varargin{1},'/data/exposure');
+if data_dims == 2
+    data_counts = h5read(varargin{1},'/Data/Count');
+    data_exposure = h5read(varargin{1},'/Data/Time');
     data.value = data_counts./data_exposure;
 %    data.value = transpose(data.value);
     data.value = double(data.value);
-    data_x_offset = h5readatt(varargin{1},'/data/axis1','offset');
-    data_x_delta = h5readatt(varargin{1},'/data/axis1','delta');
-    data_y_offset = h5readatt(varargin{1},'/data/axis0','offset');
-    data_y_delta = h5readatt(varargin{1},'/data/axis0','delta');
+    data_x_offset = h5readatt(varargin{1},'/Data/Axes1','Offset');
+    data_x_delta = h5readatt(varargin{1},'/Data/Axes1','Delta');
+    data_y_offset = h5readatt(varargin{1},'/Data/Axes0','Offset');
+    data_y_delta = h5readatt(varargin{1},'/Data/Axes0','Delta');
         data.x = zeros(size(data.value,1),1);
         data.y = zeros(size(data.value,2),1);
         for i=1:size(data.value,1)
@@ -105,34 +106,55 @@ end
     
 
 %-------------------3D data-------------------
-if data_dims == 3;
-    data_counts = h5read(varargin{1},'/data/counts');
-    data_exposure = h5read(varargin{1},'/data/exposure');
+if data_dims == 3
+    data_counts = h5read(varargin{1},'/Data/Count');
+    data_exposure = h5read(varargin{1},'/Data/Time');
     data.value = data_counts./data_exposure;
-   % data.value = data_counts;
     data.value = double(data.value);
-    data.value = permute(data.value,[3 2 1]);
-    data_x_offset = h5readatt(varargin{1},'/data/axis0','offset');
-    data_x_delta = h5readatt(varargin{1},'/data/axis0','delta');
-    data_y_offset = h5readatt(varargin{1},'/data/axis1','offset');
-    data_y_delta = h5readatt(varargin{1},'/data/axis1','delta');
-    data_z_offset = h5readatt(varargin{1},'/data/axis2','offset');
-    data_z_delta = h5readatt(varargin{1},'/data/axis2','delta');
+    %data.value = permute(data.value,[3 2 1]);
+    data_x_offset = h5readatt(varargin{1},'/Data/Axes2','Offset');
+    data_x_delta = h5readatt(varargin{1},'/Data/Axes2','Delta');
+    data_y_offset = h5readatt(varargin{1},'/Data/Axes1','Offset');
+    data_y_delta = h5readatt(varargin{1},'/Data/Axes1','Delta');
+    data_z_offset = h5readatt(varargin{1},'/Data/Axes0','Offset');
+    data_z_delta = h5readatt(varargin{1},'/Data/Axes0','Delta');
+    if not(isnumeric(data_z_offset))
+        data_z_offset=h5read(varargin{1},'/MapInfo/Data:Axes0:Offset');
+        data_z_offset=data_z_offset(1);
+        data_z_delta = 0.0015453886;
+    end
+    
+    if not(isnumeric(data_x_offset))
+        data_x_offset=h5read(varargin{1},'/MapInfo/Data:Axes0:Offset');
+        data_x_offset=data_z_offset(1);
+        data_x_delta = -2;
+    end
+    
         data.x = zeros(size(data.value,1),1);
         data.y = zeros(size(data.value,2),1);
         data.z = zeros(size(data.value,3),1);
-        for i=1:size(data.value,1)
-            data.x(i) = data_x_offset + data_x_delta*(i-1);
+        
+            for i=1:size(data.value,1)
+                data.x(i) = data_x_offset + data_x_delta*(i-1);
+            end
+        if data.x(1)==0
+            data.x=h5read(varargin{1},'/MapInfo/Temperature:TB');
         end
         
         for i=1:size(data.value,2)
             data.y(i) = data_y_offset + data_y_delta*(i-1);
         end
         
+
         for i=1:size(data.value,3)
             data.z(i) = data_z_offset + data_z_delta*(i-1);
         end
+        
 end
+
+
+%data.x=h5read(varargin{1},'/MapInfo/Temperature:TB'); %for T-dep timescan
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(data,'x')

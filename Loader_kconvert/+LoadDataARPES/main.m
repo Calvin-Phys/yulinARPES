@@ -295,6 +295,8 @@ function pb_load_data_Callback(hObject, eventdata)
                 disp('load_scienta_general_txt_BZ');
             elseif load_APE_zip(fullfile(cd, name))
                 disp('load_APE_zip');
+            elseif load_SSRL_54_hdf5(fullfile(cd,name))
+                disp('load_SSRL_54_hdf5');
             elseif load_Diamond_hdf5_nano(fullfile(cd, name))
                 disp('load_Diamond_hdf5_nano');
             elseif load_Diamond_hdf5_xmas(fullfile(cd, name))
@@ -307,8 +309,7 @@ function pb_load_data_Callback(hObject, eventdata)
 %                 disp('loadMAESTRO_fits');
             elseif load_Elettra_hdf5_BZ(fullfile(cd, name))
                 disp('load_Elettra_hdf5_BZ');
-            elseif load_SSRL_54_hdf5(fullfile(cd,name))
-                disp('load_SSRL_54_hdf5');
+            
 
 
             elseif load_CASTEP(fullfile(cd, name))
@@ -321,6 +322,8 @@ function pb_load_data_Callback(hObject, eventdata)
                 %     elseif load_fits_file_fun_BZ(fullfile(cd,name))
                 %     elseif load_fits_file_fun_BL7_BZ(fullfile(cd,name))
             elseif load_soleil_nxs(fullfile(cd, name))
+            elseif loadIBW_MAXIV(fullfile(cd, name))
+                disp('load_IBW_MAXIV');
             elseif loadIBW(fullfile(cd, name))
                 disp('load_IBW');
             end
