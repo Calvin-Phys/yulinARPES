@@ -473,7 +473,8 @@ function volumeViwer_Callback(hObject,~)
     rr = (max(data.z)-min(data.z)) / ((max(data.x)-min(data.x)+max(data.y)-min(data.y))/2);
 
     try
-        volumeViewer(permute(data.value, [2 1 3]), ScaleFactors=[xx/yy 1 zz/yy/rr]);
+        evalin('caller','volumeViewer(permute(data.value, [2 1 3]), ScaleFactors=[xx/yy 1 zz/yy/rr])');
+        % volumeviewer is not supported well by early versions of Matlab
     catch
     end
 
@@ -956,7 +957,8 @@ function UpdateVarList(hObject)
                 set(handles.VarList,'Value',length(VarNames),'ListboxTop',1);      
             end
         end
-        set(handles.VarList,'String',VarNames);
+        ss = get(handles.VarList,'ListboxTop');
+        set(handles.VarList,'String',VarNames,'ListboxTop',ss);
     end
     
     index=get(handles.VarList,'Value');
