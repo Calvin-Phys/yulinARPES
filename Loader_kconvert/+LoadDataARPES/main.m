@@ -293,6 +293,8 @@ function pb_load_data_Callback(hObject, eventdata)
 
             if load_scienta_general_txt_BZ(fullfile(cd, name))
                 disp('load_scienta_general_txt_BZ');
+            elseif load_ADRESS(fullfile(cd, name))
+                disp('load_ADRESS');
             elseif load_APE_zip(fullfile(cd, name))
                 disp('load_APE_zip');
             elseif load_SSRL_54_hdf5(fullfile(cd,name))
@@ -303,8 +305,7 @@ function pb_load_data_Callback(hObject, eventdata)
                 disp('load_Diamond_hdf5_xmas');
             elseif load_SIS(fullfile(cd,name))
                 disp('load_SIS');
-            elseif load_ADRESS(fullfile(cd, name))
-                disp('load_ADRESS');
+
 %             elseif loadMAESTRO_fits(fullfile(cd,name))
 %                 disp('loadMAESTRO_fits');
             elseif load_Elettra_hdf5_BZ(fullfile(cd, name))

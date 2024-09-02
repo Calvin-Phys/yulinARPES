@@ -175,7 +175,7 @@ Data_smooth=smooth_2d_xy(Data,k);
 Data_smooth_curvature=curvature_2d_xy(Data_smooth,a);
 obj.Data=Data_smooth_curvature;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -217,7 +217,7 @@ Data_smooth=smooth_2d_xy(Data,k);
 Data_smooth_curvature=curvature_2d_xy(Data_smooth,a);
 obj.Data=Data_smooth_curvature;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -271,7 +271,7 @@ Data_smooth=smooth_2d_xy(Data,k);
 Data_smooth_curvature=curvature_2d_xy(Data_smooth,a);
 obj.Data=Data_smooth_curvature;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 % --- Executes during object creation, after setting all properties.
 function edit_Smoothing_Parameter_EC_CreateFcn(hObject, eventdata, handles)
@@ -325,7 +325,7 @@ Data_smooth=smooth_2d_xy(Data,k);
 Data_smooth_curvature=curvature_2d_xy(Data_smooth,a);
 obj.Data=Data_smooth_curvature;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -363,7 +363,7 @@ Data_smooth=smooth_2d_xy(Data,k);
 Data_smooth_curvature=curvature_2d_xy(Data_smooth,a);
 obj.Data=Data_smooth_curvature;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 function Data_new=curvature_2d_xy(Data,a0)
 
@@ -507,7 +507,7 @@ Data_smooth=smooth_2d_xy(Data,k);
 Data_smooth_curvature=curvature_2d_yz(Data_smooth,a,Res);
 obj.Data=Data_smooth_curvature;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -550,7 +550,7 @@ Data_smooth=smooth_2d_xy(Data,k);
 Data_smooth_curvature=curvature_2d_yz(Data_smooth,a,Res);
 obj.Data=Data_smooth_curvature;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 % --- Executes during object creation, after setting all properties.
 function slider_a_D_CreateFcn(hObject, eventdata, handles)
@@ -604,7 +604,7 @@ Data_smooth=smooth_2d_xy(Data,k);
 Data_smooth_curvature=curvature_2d_yz(Data_smooth,a,Res);
 obj.Data=Data_smooth_curvature;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -660,7 +660,7 @@ Data_smooth=smooth_2d_xy(Data,k);
 Data_smooth_curvature=curvature_2d_yz(Data_smooth,a,Res);
 obj.Data=Data_smooth_curvature;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -698,7 +698,7 @@ Data_smooth=smooth_2d_xy(Data,k);
 Data_smooth_curvature=curvature_2d_yz(Data_smooth,a,Res);
 obj.Data=Data_smooth_curvature;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 
 % --- Executes on slider movement.
@@ -729,7 +729,7 @@ Data_smooth=smooth_2d_xy(Data,k);
 Data_smooth_curvature=curvature_2d_yz(Data_smooth,a,Res);
 obj.Data=Data_smooth_curvature;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -784,7 +784,7 @@ Data_smooth=smooth_2d_xy(Data,k);
 Data_smooth_curvature=curvature_2d_yz(Data_smooth,a,Res);
 obj.Data=Data_smooth_curvature;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 % --- Executes during object creation, after setting all properties.
 function edit_Res_CreateFcn(hObject, eventdata, handles)

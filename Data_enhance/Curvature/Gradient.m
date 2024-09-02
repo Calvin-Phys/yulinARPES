@@ -132,7 +132,7 @@ data_smooth=smooth_2d_xy(data,k);
 data_smooth_grad=grad_2d(data_smooth,delta_k,delta_E);
 obj.Data=data_smooth_grad;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 
 
@@ -176,7 +176,7 @@ data_smooth=smooth_2d_xy(data,k);
 data_smooth_grad=grad_2d(data_smooth,delta_k,delta_E);
 obj.Data=data_smooth_grad;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 
 
@@ -220,7 +220,7 @@ data_smooth=smooth_2d_xy(data,k);
 data_smooth_grad=grad_2d(data_smooth,delta_k,delta_E);
 obj.Data=data_smooth_grad;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 
 
@@ -273,7 +273,7 @@ data_smooth=smooth_2d_xy(data,k);
 data_smooth_grad=grad_2d(data_smooth,delta_k,delta_E);
 obj.Data=data_smooth_grad;
 obj.data2Dto3D;
-obj.plot;
+obj.initial_plot;
 
 % --- Smooth function
 function data_new=smooth_2d_xy(data,k)

@@ -87,6 +87,7 @@ classdef PlotSlices < handle
             end
             if ndims(obj.Data.value) == 2
                 obj.data2Dto3D();
+%                 obj.Direction = 'x';
             elseif ndims(obj.Data.value) == 4
                 return
             end
@@ -102,7 +103,7 @@ classdef PlotSlices < handle
             obj.setUIMenu();
 
             % some improvement - default settings
-            if Direction == 'z' && ndims(obj.Data.value) == 3 && length(obj.Data.x) ~= 1
+            if obj.Direction == 'z' && ndims(obj.Data.value) == 3 && length(obj.Data.x) ~= 1
                 obj.FlipCheckbox.Value = 1;
                 obj.Width.String = '0.05';
                 
@@ -113,6 +114,15 @@ classdef PlotSlices < handle
                 catch
                 end
 
+            end
+
+            if obj.Direction == 'x'
+                try
+                    if strcmp(obj.Data.y_unit,obj.Data.z_unit)
+                        obj.Checkbox.Value = 1;
+                    end
+                catch
+                end
             end
 
             % plot figure & set menu
