@@ -199,7 +199,7 @@ elseif n_regions==1 && n_loops1>1
             end
             data.value=reshape(vdata{n_subdevices+2}(1+n_loops1*(i-1):n_loops1*i,:),[n_loops1 nx{n_subdevices+2} ny{n_subdevices+2}]);
             if n_loops2==1
-                assignin('base',filename,data)
+                assignin('base',['A' filename],data)
             else
                 assignin('base',[filename '_' num2str(i)],data)
             end

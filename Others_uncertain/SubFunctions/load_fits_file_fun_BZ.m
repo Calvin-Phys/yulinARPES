@@ -25,7 +25,7 @@ end
 
 [~, filename, ext] = fileparts(varargin{1});
 if ~isempty(str2double( filename(1) ))
-    filename=['A' filename];
+    filename=append('A',filename);
 end
 
 if ~strcmpi(ext,'.fits')
