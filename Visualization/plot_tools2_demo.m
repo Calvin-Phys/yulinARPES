@@ -22,7 +22,7 @@ function varargout = plot_tools2_demo(varargin)
 
 % Edit the above text to modify the response to help plot_tools2_demo
 
-% Last Modified by GUIDE v2.5 04-Apr-2017 20:13:08
+% Last Modified by GUIDE v2.5 04-Feb-2025 15:37:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2981,3 +2981,11 @@ function pushbutton69_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 HistHan([],[],[])
 figure(findall(0,'type','figure','name','HistHan'))
+
+
+% --- Executes on button press in pushbutton70.
+function pushbutton70_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton70 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    inspect(gca);
