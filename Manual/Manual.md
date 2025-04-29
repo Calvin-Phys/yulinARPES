@@ -40,7 +40,7 @@ You can select and load multiple files at once by using the file selection dialo
 > 1. The new loader differs from the old loader in that it loads raw data into pre-defined class objects (The data structure is defined in project `OX_ARPES`), whereas the old loader only produces raw Matlab structs. By using pre-defined class objects, the new loader can integrate more information (photon energy, polarisation, pass energy, scan mod, temperature ...) and provide processing methods (truncate, k-convert, normalise ...) for the data.
 > 2. The new loader has enhanced compatibility with Dropbox. It can now access online Dropbox folders without any disruptions and selectively download desired data files.
 > 3. The new loader can remember the last path it opened, which can save users time and effort when accessing frequently-used directories.
-> 4. The new loader is being actively maintained and upgraded, and it usually has better compitablity and speed.
+> 4. The new loader is being actively maintained and upgraded, and it usually has better compatiblity and speed.
 > 
 > It is recommended to use the new loader due to its added functionality, but the old loader remains available within the software.
 >
