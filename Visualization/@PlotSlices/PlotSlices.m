@@ -130,10 +130,10 @@ classdef PlotSlices < handle
             
 
             % hide menubar/toolbar
-            ss = allchild(obj.Figure);
-            for i = [4,5,6,7,10,11]
-                ss(i).Visible = 'off';
-            end
+%             ss = allchild(obj.Figure);
+%             for i = [4,5,6,7,10,11]
+%                 ss(i).Visible = 'off';
+%             end
 
             % draw crosshair/guideline
             obj.Crosshair = drawcrosshair('Parent',obj.Axis,'Position',[obj.PosX obj.PosY],'LineWidth',1,'Color',"c",'Visible','off');
@@ -1164,9 +1164,9 @@ classdef PlotSlices < handle
                     V0 = 15;
                 end
 
-                prompt = {'Enter Inner Energy (eV)', 'Y offset (deg)'};
+                prompt = {'Enter Inner Energy (eV)', 'Y offset (deg)','Work Function (eV)',};
                 dlgtitle = 'hv Scan K-space Conversion';
-                definput = {num2str(V0),num2str(KZ.info.thetay_offset)};
+                definput = {num2str(V0),num2str(KZ.info.thetay_offset),num2str(KZ.info.workfunction)};
                 dims = [1 60];
                 answer = inputdlg(prompt,dlgtitle,dims,definput);
                 if isempty(answer)
@@ -1175,6 +1175,7 @@ classdef PlotSlices < handle
 
                 KZ.info.inner_energy = str2num(answer{1});
                 KZ.info.thetay_offset = str2num(answer{2});
+                KZ.info.workfunction = str2num(answer{3});
 
 
                 KKZ = KZ.kconvert();
