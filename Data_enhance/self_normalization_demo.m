@@ -310,17 +310,32 @@ if direz==1
 end
 
 if direyz==1
+    if isempty(nor_from) || isempty(nor_to)
+        n_start=1; 
+        n_end=size(data_nor.value,3);
+    else if scale_index==1
+            n_start=nor_from;
+            n_end=nor_to;
+        else
+            n_start=round( (nor_from-data_nor.z(1))/(data_nor.z(2)-data_nor.z(1))+1);
+            n_end=round( (nor_to-data_nor.z(1))/(data_nor.z(2)-data_nor.z(1))+1);
+        end
+    end
+
     [sizeX,sizeY,sizeZ]=size(data.value);
+
+    norm_curv = sum(data.value(:,:,n_start:n_end),[2 3]);
+    norm_curv = norm_curv / mean(norm_curv);
+
+
     for i=1:sizeX
         dataCutYZ=data.value(i,:,:);
-        
         
         if nor_to_peak==1
             maxCutYZ=max(max(dataCutYZ));
             data_nor.value(i,:,:)=dataCutYZ/maxCutYZ;
         else
-            sumCutYZ=sum(sum(dataCutYZ));
-            data_nor.value(i,:,:)=dataCutYZ/sumCutYZ;
+            data_nor.value(i,:,:)=dataCutYZ./norm_curv(i);
         end
     end
 end % end of direyz
