@@ -72,6 +72,9 @@ uimenu(ToolsMenu,'Label','Tight Binding 3D','Callback',@GUI_for_3D);
 uimenu(ToolsMenu,'Label','Emass Fitting','Callback',@EmassFitting);
 uimenu(ToolsMenu,'Label','Wien2k','Callback',@quick_bxsf2mat);
 uimenu(ToolsMenu,'Label','Resolution Cal.','Callback',@(~,~)OxArpes_ResolutionCalculator,'Separator','On');
+uimenu(ToolsMenu,'Label','Fine Structure','Callback',@(~,~)OxArpes_FineStructure);
+uimenu(ToolsMenu,'Label','Normalise','Callback',@(~,~)OxArpes_Normalise);
+uimenu(ToolsMenu,'Label','Data Process All','Callback',@(~,~)OxArpes_DataProcess);
 
 
 %% Group Choice Panel
@@ -141,6 +144,7 @@ uimenu(DOSM2,'Label','Normalise to Peak','Callback',{@plotDos_CallbackFcn,'H','p
 
 
 uimenu(plotMenu,'Label','3D Map Viewer','Separator','On','Callback',@mapViewer_CallbackFcn);
+uimenu(plotMenu,'Label','Map Viewer (new)','Callback',@mapViewerNew_CallbackFcn);
 uimenu(plotMenu,'Label','Volume Viewer','Callback',@volumeViwer_Callback);
 
 uimenu(ListBoxMenu,'Label','Rename','Callback',@ListboxItemRename,'Separator','on');
@@ -457,6 +461,22 @@ function mapViewer_CallbackFcn(hObject,~)
         data.name = DataNames{1};
     end
     OxArpes_DataViewer(data);
+
+function mapViewerNew_CallbackFcn(hObject,~)
+
+    UpdateVarList(hObject);
+    handles=guidata(hObject);
+    DataNames=handles.VarNames';
+
+    data = evalin('base',DataNames{1});
+    if isstruct(data)
+        data.name = DataNames{1};
+    end
+    if ndims(data.value) == 3
+        OxArpes_DataViewer_3D(data);
+    elseif ndims(data.value) == 2
+        OxArpes_DataViewer_2D(data);
+    end
 
 function volumeViwer_Callback(hObject,~)
 
