@@ -10,7 +10,7 @@ Please note that this manual does not cover the principles of ARPES. If you woul
 ---
 ## Preparetion
 
-To use the latest version of the software, please download the latest versions of `yulinARPES` [->Link](https://github.com/Calvin-Phys/yulinARPES) and `OX_ARPES` [->Link](https://github.com/Calvin-Phys/OX_ARPES), and add their folders to the Matlab path. Additionally, make sure that any necessary toolboxes (including the `GUI Layout Toolbox` in `\yulinARPES\manual\`) are installed. Once the folders have been added and the toolboxes installed, restart Matlab to ensure the changes are properly registered.
+To use the latest version of the software, please download the latest versions of `yulinARPES` [->Link](https://github.com/Calvin-Phys/yulinARPES) and `OX_ARPES` [->Link](https://github.com/Calvin-Phys/OX_ARPES), and add their folders to the Matlab path. Additionally, make sure that any necessary toolboxes (including the `GUI Layout Toolbox 2.3.5` in `\yulinARPES\manual\`, please use this version specifically) are installed. The recommanded version of Matlab is **from MATLAB 2022a to 2024a**.  Once the folders have been added and the toolboxes installed, restart Matlab to ensure the changes are properly registered.
 
 To launch the software, enter the following command into the Matlab command line:
 
@@ -94,6 +94,16 @@ This will open the EDC and MDC windows alongside the plot window, as shown below
 ![EDCMDC](./pictures/EDCMDC.png)
 
 You can move the solid-line crosshair to change the integration area, and move the dashed-line crosshair to change the integration range.
+
+### A New Data Viewer (2D and 3D)
+
+A new data viewer for 2D and 3D ARPES data is being developped. It inlcudes a more intuitive visulizations of the data and its EDC/MDCs. You can open it by right-click on the data name on the list and select
+
+```
+plot -> Map Viewer (New).
+```
+
+![data_vewer](./pictures/new_data_viewer_3D.png)
 
 ### Image Interpolation
 
