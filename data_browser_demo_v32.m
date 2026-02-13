@@ -133,19 +133,20 @@ uimenu(plotMenu,'Label','Along y','Callback',{@plot_CallbackFcn,'y'})
 uimenu(plotMenu,'Label','Along z','Callback',{@plot_CallbackFcn,'z'})
 uimenu(plotMenu,'Label','All directions','Callback',{@plot_CallbackFcn,'all'})
 
-DOSM1 = uimenu(plotMenu,'Label','DOS, Vertical','Separator','on');
-uimenu(DOSM1,'Label','Raw','Callback',{@plotDos_CallbackFcn,'V','raw'})
-uimenu(DOSM1,'Label','Normalise to Mean','Callback',{@plotDos_CallbackFcn,'V','mean'})
-uimenu(DOSM1,'Label','Normalise to Peak','Callback',{@plotDos_CallbackFcn,'V','peak'})
-DOSM2 = uimenu(plotMenu,'Label','DOS, Horizontal');
-uimenu(DOSM2,'Label','Raw','Callback',{@plotDos_CallbackFcn,'H','raw'})
-uimenu(DOSM2,'Label','Normalise to Mean','Callback',{@plotDos_CallbackFcn,'H','mean'})
-uimenu(DOSM2,'Label','Normalise to Peak','Callback',{@plotDos_CallbackFcn,'H','peak'})
+plotDOSMenu=uimenu(ListBoxMenu,'Label','Plot DOS');
 
+uimenu(plotDOSMenu,'Label','(V) Raw','Callback',{@plotDos_CallbackFcn,'V','raw'})
+uimenu(plotDOSMenu,'Label','(V) Normalise to Mean','Callback',{@plotDos_CallbackFcn,'V','mean'})
+uimenu(plotDOSMenu,'Label','(V) Normalise to Peak','Callback',{@plotDos_CallbackFcn,'V','peak'})
+uimenu(plotDOSMenu,'Label','(H) Raw','Callback',{@plotDos_CallbackFcn,'H','raw'},'Separator','on')
+uimenu(plotDOSMenu,'Label','(H) Normalise to Mean','Callback',{@plotDos_CallbackFcn,'H','mean'})
+uimenu(plotDOSMenu,'Label','(H) Normalise to Peak','Callback',{@plotDos_CallbackFcn,'H','peak'})
 
-uimenu(plotMenu,'Label','3D Map Viewer','Separator','On','Callback',@mapViewer_CallbackFcn);
-uimenu(plotMenu,'Label','Map Viewer (new)','Callback',@mapViewerNew_CallbackFcn);
-uimenu(plotMenu,'Label','Volume Viewer','Callback',@volumeViwer_Callback);
+uimenu(ListBoxMenu,'Label','Data Viewer (new)','Callback',@mapViewerNew_CallbackFcn);
+% uimenu(plotMenu,'Label','3D Map Viewer','Separator','On','Callback',@mapViewer_CallbackFcn);
+
+uimenu(plotMenu,'Label','Volume Viewer','Callback',@volumeViwer_Callback,'Separator','on');
+
 
 uimenu(ListBoxMenu,'Label','Rename','Callback',@ListboxItemRename,'Separator','on');
 uimenu(ListBoxMenu,'Label','Edit Variable','Callback',@Listbox_openvar);
@@ -450,17 +451,17 @@ function plotDos_CallbackFcn(hObject,~,Direction,NormaliseType)
     end
 
 
-function mapViewer_CallbackFcn(hObject,~)
-
-    UpdateVarList(hObject);
-    handles=guidata(hObject);
-    DataNames=handles.VarNames';
-
-    data = evalin('base',DataNames{1});
-    if isstruct(data)
-        data.name = DataNames{1};
-    end
-    OxArpes_DataViewer(data);
+% function mapViewer_CallbackFcn(hObject,~)
+% 
+%     UpdateVarList(hObject);
+%     handles=guidata(hObject);
+%     DataNames=handles.VarNames';
+% 
+%     data = evalin('base',DataNames{1});
+%     if isstruct(data)
+%         data.name = DataNames{1};
+%     end
+%     OxArpes_DataViewer(data);
 
 function mapViewerNew_CallbackFcn(hObject,~)
 
