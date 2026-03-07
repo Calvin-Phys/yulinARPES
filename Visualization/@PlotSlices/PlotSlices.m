@@ -515,7 +515,7 @@ classdef PlotSlices < handle
                 if gamma==0
                     obj.imag.CData = log(sliceData'+0.1);
                 else
-                    sliceData = (sliceData/max(sliceData,[],"all")).^gamma .* sliceData;
+                    sliceData = (sliceData/max(sliceData,[],"all")).^gamma .* max(sliceData,[],"all");
                 end
             end
 
@@ -696,7 +696,7 @@ classdef PlotSlices < handle
             elseif gamma==0
                 obj.imag.CData = log(sliceData'+0.1);
             else
-                obj.imag.CData = (sliceData'/max(sliceData,[],"all")).^gamma .* sliceData';
+                obj.imag.CData = (sliceData'/max(sliceData,[],"all")).^gamma .* max(sliceData,[],"all");
             end
 
             %% set value
