@@ -1113,7 +1113,7 @@ classdef PlotSlices < handle
                 KCUT = CUT.kconvert();
                 assignin("base",[obj.DataName '_ksp'],KCUT);
 
-            elseif class(obj.Data) == "OxA_MAP"
+            elseif class(obj.Data) == "OxA_MAP" || class(obj.Data) == "OxA_MAP_ToF"
 
                 MAP = evalin("base",obj.DataName);
                 if obj.Direction == 'z'
