@@ -477,6 +477,8 @@ function mapViewerNew_CallbackFcn(hObject,~)
         OxArpes_DataViewer_3D(data);
     elseif ndims(data.value) == 2
         OxArpes_DataViewer_2D(data);
+    elseif ndims(data.value) == 4
+        OxArpes_DataViewer_4D(data);
     end
 
 function volumeViwer_Callback(hObject,~)
