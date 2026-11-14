@@ -81,16 +81,49 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 h=findobj('Tag','DataBrowser');
 if isempty(h)
     errordlg('Please open Data Browser');
+    return
 end
 handles_h = guidata(h);
 var_name = handles_h.VarNames;
+if numel(var_name) ~= 2
+    errordlg('Select exactly two datasets to add.');
+    return
+end
 
 data1=evalin('base',var_name{1});
 data2=evalin('base',var_name{2});
+
+if ~hasDataMember(data1,'value') || ~hasDataMember(data2,'value') || ...
+        ~isequal(size(data1.value),size(data2.value))
+    errordlg('The selected datasets must have matching value-array dimensions.');
+    return
+end
+axis_names = {'x','y','z','k'};
+for axis_index = 1:numel(axis_names)
+    axis_name = axis_names{axis_index};
+    has_axis1 = hasDataMember(data1,axis_name);
+    has_axis2 = hasDataMember(data2,axis_name);
+    if xor(has_axis1,has_axis2) || ...
+            (has_axis1 && ~isequal(data1.(axis_name),data2.(axis_name)))
+        errordlg(sprintf('The datasets do not share the same %s coordinate axis.',axis_name));
+        return
+    end
+end
 
 data1.value=data1.value+data2.value;
 % data1.info1=data1.info;
 % data1.info2=data2.info;
 
 var_name_out= inputdlg('enter combined file name','file name',1,{[var_name{1} '_add']});
+if isempty(var_name_out) || isempty(strtrim(var_name_out{1}))
+    return
+end
+if ~isvarname(var_name_out{1})
+    errordlg('The output name must be a valid MATLAB variable name.');
+    return
+end
 assignin('base',var_name_out{1},data1);    
+
+function tf = hasDataMember(data,name)
+tf = (isstruct(data) && isfield(data,name)) || ...
+    (isobject(data) && isprop(data,name));

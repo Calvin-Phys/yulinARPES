@@ -105,10 +105,6 @@ dataout.kx1 = kx1;
 
 display('kz conv done')
 
-load chirp;
-sound(y, Fs);
-
-
 end
 
 

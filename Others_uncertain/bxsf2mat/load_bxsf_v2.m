@@ -3,6 +3,7 @@
 function [Rawdata]=load_bxsf_v2(convert_Ry_to_eV_switch)
 %This function loads bxsf files according to Teng's conventions
 % This file was copied from Teng's original program
+Rawdata = [];
 [filename,pathname]=uigetfile('*.bxsf');
 if isequal(filename,0)
     return;
@@ -18,26 +19,41 @@ end
 
 %% pre-processing
 %%%%%remove empty lines
-% Read the file as cell string line by line:
-fid = fopen(fullpath, 'r');
-if fid < 0, error('Cannot open file: %s', FileName); end
+% Read and filter in memory. Never rewrite the user's source measurement.
+fid = fopen(fullpath, 'rt');
+if fid < 0
+    error('yulinARPES:CannotOpenBXSF', 'Cannot open file: %s', fullpath);
+end
+inputCleanup = onCleanup(@() fclose(fid));
 Data = textscan(fid, '%s', 'delimiter', '\n', 'whitespace', '');
-fclose(fid);
+clear inputCleanup
 
 % Remove empty lines:
 C    = deblank(Data{1});   % [EDITED]: deblank added
 C(cellfun('isempty', C)) = [];
 
-% Write the cell string:
-fid = fopen(fullpath, 'w');
-if fid < 0, error('Cannot open file: %s', FileName); end
+% The legacy parser uses sequential file reads. Feed it a cleaned temporary
+% copy so blank-line handling cannot alter the input BXSF file.
+tempFile = [tempname, '.bxsf'];
+tempCleanup = onCleanup(@() deleteTemporaryFile(tempFile));
+fid = fopen(tempFile, 'wt');
+if fid < 0
+    error('yulinARPES:CannotCreateTemporaryFile', ...
+        'Cannot create temporary BXSF file: %s', tempFile);
+end
+tempFileCleanup = onCleanup(@() fclose(fid));
 fprintf(fid, '%s\n', C{:});
-fclose(fid);
+clear tempFileCleanup
 %%% end remove empty lines
 
 
 %% reading the header
-fid=fopen(fullpath,'r');
+fid=fopen(tempFile,'rt');
+if fid < 0
+    error('yulinARPES:CannotReadTemporaryFile', ...
+        'Cannot read temporary BXSF file: %s', tempFile);
+end
+fidCleanup = onCleanup(@() fclose(fid));
 tline='t'; %sets tline to arbitrary char
 Ef=[];
 bandgrid_counter=0;
@@ -133,7 +149,7 @@ for j=1:N_band
     display(['loaded band number ',num2str(j)])
 end
 
-fclose(fid);
+clear fidCleanup
 
 %% transferring the data to the output
 
@@ -150,4 +166,9 @@ Rawdata.v2=v2;
 Rawdata.v3=v3;
 end
 
+function deleteTemporaryFile(fileName)
+if isfile(fileName)
+    delete(fileName);
+end
+end
 

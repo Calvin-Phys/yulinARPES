@@ -10,7 +10,7 @@ Please note that this manual does not cover the principles of ARPES. If you woul
 ---
 ## Preparetion
 
-To use the latest version of the software, please download the latest versions of `yulinARPES` [->Link](https://github.com/Calvin-Phys/yulinARPES) and `OX_ARPES` [->Link](https://github.com/Calvin-Phys/OX_ARPES), and add their folders to the Matlab path. Additionally, make sure that any necessary toolboxes (including the `GUI Layout Toolbox 2.3.5` in `\yulinARPES\manual\`, please use this version specifically) are installed. The recommanded version of Matlab is **from MATLAB 2022a to 2024a**.  Once the folders have been added and the toolboxes installed, restart Matlab to ensure the changes are properly registered.
+To use the software, download `yulinARPES` [from GitHub](https://github.com/Calvin-Phys/yulinARPES) and the separate `OX_ARPES` [from GitHub](https://github.com/Calvin-Phys/OX_ARPES), then add both checkouts to the MATLAB path. For yulinARPES, add the repository root and run `setup_yulinARPES` to add the supported code and dependency folders while leaving the archive off the path. Install the required toolboxes, including GUI Layout Toolbox 2.3.5 (provided under `Manual`). The recommended MATLAB version is **2022a to 2024a**. Restart MATLAB after installing toolboxes if MATLAB does not detect them.
 
 To launch the software, enter the following command into the Matlab command line:
 

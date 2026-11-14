@@ -513,9 +513,12 @@ function SaveVarsSeparate_CallbackFcn(hObject,varargin)
         return;
     end
     selpath = uigetdir;
+    if isequal(selpath,0)
+        return;
+    end
 
     for i =1:length(DataNames)
-        evalin('base',['save(''',fullfile(selpath,DataNames{i}),''',''',DataNames{i},''')']);
+        saveBaseVariables(fullfile(selpath,DataNames{i}),DataNames(i),false);
         disp(['Save ',DataNames{i}]);
     end
 
@@ -527,35 +530,30 @@ function SaveVars_CallbackFcn(hObject,eventdata)
     if isempty(DataNames)
         return;
     end
-    DataNamesString=['''',DataNames{1}];
-    for i = 2:length(DataNames)
-        DataNamesString=[DataNamesString,''',''',DataNames{i}];
-    end
-    DataNamesString=[DataNamesString,''''];
     [filename,pathname]=uiputfile('NewDataFile.mat',...
         'Select an existed file or input a new file name');
     % 'uisave' is more convenient, but it does not allow you to append vars,
     % thus I use uiputfile here.
-    if filename==0
+    if isequal(filename,0)
         return;
     end
-    fullfilename=[pathname,filename];
+    fullfilename=fullfile(pathname,filename);
     if exist(fullfilename,'file')
         AppendFlag=questdlg([filename,...
             ' already exists. Would you like to append to it or overwrite it?'],...
             'Append or Overwrite','Append','Overwrite','Cancel','Append');
         switch AppendFlag
             case 'Append'
-                evalin('base',['save(''',fullfilename,''',',DataNamesString,',''-append'')']);
+                saveBaseVariables(fullfilename,DataNames,true);
                 disp(['Append to ',fullfilename]);
             case 'Overwrite'
-                evalin('base',['save(''',fullfilename,''',',DataNamesString,')']);
+                saveBaseVariables(fullfilename,DataNames,false);
                 disp(['Overwrite ',fullfilename]);
             case 'Cancel'
                 return;
         end            
     else
-        evalin('base',['save(''',fullfilename,''',',DataNamesString,')']);
+        saveBaseVariables(fullfilename,DataNames,false);
         disp(['Save ',fullfilename]);
     end
 
@@ -1097,3 +1095,22 @@ function replace_nans_Callback(hObject, ~)
         assignin('base',[varname '_onan'],data)
     end
     UpdateVarList(hObject);
+
+function saveBaseVariables(fileName,variableNames,appendToFile)
+    if ischar(variableNames)
+        variableNames={variableNames};
+    end
+    baseVariables=struct();
+    for variableIndex=1:numel(variableNames)
+        variableName=variableNames{variableIndex};
+        if ~isvarname(variableName) || ~evalin('base',sprintf('exist(''%s'',''var'')',variableName))
+            error('yulinARPES:MissingWorkspaceVariable', ...
+                'Workspace variable ''%s'' is no longer available.',variableName);
+        end
+        baseVariables.(variableName)=evalin('base',variableName);
+    end
+    if appendToFile
+        save(fileName,'-struct','baseVariables','-append');
+    else
+        save(fileName,'-struct','baseVariables');
+    end

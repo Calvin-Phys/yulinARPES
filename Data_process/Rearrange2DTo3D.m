@@ -3,7 +3,22 @@ function data_new=Rearrange2DTo3D(data_list,mapping_by)
 %   Detailed explanation goes here
 % data_list: cell array
 % mapping_by: 'theta' or 'phi'
+if isstring(mapping_by) && isscalar(mapping_by)
+    mapping_by = char(mapping_by);
+end
+if ~ischar(mapping_by) || ~isrow(mapping_by)
+    error('yulinARPES:InvalidMappingMode', ...
+        'mapping_by must be ''index'', ''theta'', or ''phi''.');
+end
+mapping_by = lower(strtrim(mapping_by));
+if ~any(strcmp(mapping_by, {'index', 'theta', 'phi'}))
+    error('yulinARPES:InvalidMappingMode', ...
+        'Unsupported mapping_by value ''%s''. Use ''index'', ''theta'', or ''phi''.', mapping_by);
+end
 n_data=length(data_list);
+if n_data == 0
+    error('yulinARPES:EmptyDataList', 'data_list must contain at least one dataset.');
+end
 % check validity
 theta=NaN(1,n_data);
 theta_offset=zeros(1,n_data);
@@ -94,6 +109,9 @@ else
             y_shifts=phi-mean(phi);
             data_new.info.theta=sort(theta);
             data_new.info.phi=mean(phi);
+        otherwise
+            error('yulinARPES:InvalidMappingMode', ...
+                'Unsupported mapping_by value ''%s''.', mapping_by);
     end
     % in case the angle other than the mapping angle doesn't keep constant
     % (moved in a small range due to motor)

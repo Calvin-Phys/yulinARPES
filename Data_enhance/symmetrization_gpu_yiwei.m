@@ -291,14 +291,14 @@ sector_mask_flag=get(handles.radiobutton_Rotation_sector_mask,'Value');
 Symmetry_Fold_index=get(handles.popupmenu_Rotation_Symmetry_Fold,'Value');
 Symmetry_Fold_string=get(handles.popupmenu_Rotation_Symmetry_Fold,'String');
 Symmetry_Fold=str2double(Symmetry_Fold_string{Symmetry_Fold_index});
-x0=eval(get(handles.edit_Rotation_x,'String'));
-y0=eval(get(handles.edit_Rotation_y,'String'));
-x_from=eval(get(handles.edit_Rotation_x_from,'String'));
-x_to=eval(get(handles.edit_Rotation_x_to,'String'));
-y_from=eval(get(handles.edit_Rotation_y_from,'String'));
-y_to=eval(get(handles.edit_Rotation_y_to,'String'));
-phi_from=eval(get(handles.edit_Rotation_phi_from,'String'));
-phi_to=eval(get(handles.edit_Rotation_phi_to,'String'));
+x0=parse_numeric_scalar(get(handles.edit_Rotation_x,'String'));
+y0=parse_numeric_scalar(get(handles.edit_Rotation_y,'String'));
+x_from=parse_numeric_scalar(get(handles.edit_Rotation_x_from,'String'));
+x_to=parse_numeric_scalar(get(handles.edit_Rotation_x_to,'String'));
+y_from=parse_numeric_scalar(get(handles.edit_Rotation_y_from,'String'));
+y_to=parse_numeric_scalar(get(handles.edit_Rotation_y_to,'String'));
+phi_from=parse_numeric_scalar(get(handles.edit_Rotation_phi_from,'String'));
+phi_to=parse_numeric_scalar(get(handles.edit_Rotation_phi_to,'String'));
 
 %--------------------------------------------------------------%
 
@@ -824,7 +824,7 @@ function edit_Translation_Ga_x_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit_Translation_Ga_x as text
 %        str2double(get(hObject,'String')) returns contents of edit_Translation_Ga_x as a double
 str=get(hObject,'String');
-num=eval(str);
+num=parse_numeric_scalar(str);
 set(hObject,'String',num2str(num));
 
 
@@ -850,7 +850,7 @@ function edit_Translation_Gb_x_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit_Translation_Gb_x as text
 %        str2double(get(hObject,'String')) returns contents of edit_Translation_Gb_x as a double
 str=get(hObject,'String');
-num=eval(str);
+num=parse_numeric_scalar(str);
 set(hObject,'String',num2str(num));
 
 
@@ -876,7 +876,7 @@ function edit_Translation_Ga_y_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit_Translation_Ga_y as text
 %        str2double(get(hObject,'String')) returns contents of edit_Translation_Ga_y as a double
 str=get(hObject,'String');
-num=eval(str);
+num=parse_numeric_scalar(str);
 set(hObject,'String',num2str(num));
 
 
@@ -902,7 +902,7 @@ function edit_Translation_Gb_y_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit_Translation_Gb_y as text
 %        str2double(get(hObject,'String')) returns contents of edit_Translation_Gb_y as a double
 str=get(hObject,'String');
-num=eval(str);
+num=parse_numeric_scalar(str);
 set(hObject,'String',num2str(num));
 
 
@@ -926,12 +926,12 @@ function pushbutton_Translation_Symmetrize_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 %--- collect information-----%
-x0=eval(get(handles.edit_Translation_x,'String'));
-y0=eval(get(handles.edit_Translation_y,'String'));
-Ga_x=eval(get(handles.edit_Translation_Ga_x,'String'));
-Ga_y=eval(get(handles.edit_Translation_Ga_y,'String'));
-Gb_x=eval(get(handles.edit_Translation_Gb_x,'String'));
-Gb_y=eval(get(handles.edit_Translation_Gb_y,'String'));
+x0=parse_numeric_scalar(get(handles.edit_Translation_x,'String'));
+y0=parse_numeric_scalar(get(handles.edit_Translation_y,'String'));
+Ga_x=parse_numeric_scalar(get(handles.edit_Translation_Ga_x,'String'));
+Ga_y=parse_numeric_scalar(get(handles.edit_Translation_Ga_y,'String'));
+Gb_x=parse_numeric_scalar(get(handles.edit_Translation_Gb_x,'String'));
+Gb_y=parse_numeric_scalar(get(handles.edit_Translation_Gb_y,'String'));
 
 %-------------%
 var_list=get(handles.listbox_Translation,'String');
@@ -1060,8 +1060,8 @@ function pushbutton_Mirror_Symmetrize_Callback(hObject, eventdata, handles)
 %-----collect information------%
 x_flag=get(handles.radiobutton_Mirror_x,'Value');
 y_flag=get(handles.radiobutton_Mirror_y,'Value');
-x_axis=eval(get(handles.edit_Mirror_x,'String'));
-y_axis=eval(get(handles.edit_Mirror_y,'String'));
+x_axis=parse_numeric_scalar(get(handles.edit_Mirror_x,'String'));
+y_axis=parse_numeric_scalar(get(handles.edit_Mirror_y,'String'));
 x_mask=get(handles.popupmenu_Mirror_x_mask,'Value');
 y_mask=get(handles.popupmenu_Mirror_y_mask,'Value');
 
@@ -1381,7 +1381,7 @@ function edit_Mirror_x_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit_Mirror_x as text
 %        str2double(get(hObject,'String')) returns contents of edit_Mirror_x as a double
 str=get(hObject,'String');
-set(hObject,'String',num2str(eval(str)));
+set(hObject,'String',num2str(parse_numeric_scalar(str)));
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1406,7 +1406,7 @@ function edit_Mirror_y_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit_Mirror_y as text
 %        str2double(get(hObject,'String')) returns contents of edit_Mirror_y as a double
 str=get(hObject,'String');
-set(hObject,'String',num2str(eval(str)));
+set(hObject,'String',num2str(parse_numeric_scalar(str)));
 
 
 % --- Executes during object creation, after setting all properties.

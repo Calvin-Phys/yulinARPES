@@ -4,7 +4,7 @@ The GUI was written with GUIDE and is therefore a bit messy. Future releases sho
 
 INSTALLATION
 1. Download the repo and add it to your MATLAB path
-2. Download matGeom library https://github.com/mattools/matGeom and add it to your MATLAB path
+2. This checkout includes matGeom under `../../third_party/matGeom/matGeom`; run `setup_yulinARPES` from the repository root to add the optional dependency. If you use bxsf2mat outside this checkout, install matGeom from https://github.com/mattools/matGeom and add its `matGeom` source folder to your MATLAB path.
 
 USAGE
 This is a quick and dirty description, please extend it if you find the tool useful.

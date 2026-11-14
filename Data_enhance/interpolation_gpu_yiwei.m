@@ -185,10 +185,10 @@ function edit_x_1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_x_1 as text
 %        str2double(get(hObject,'String')) returns contents of edit_x_1 as a double
-x_1=eval(get(handles.edit_x_1,'String'));
-x_end=eval(get(handles.edit_x_end,'String'));
-delta_x=eval(get(handles.edit_delta_x,'String'));
-xnum=eval(get(handles.edit_xnum,'String'));
+x_1=parse_numeric_scalar(get(handles.edit_x_1,'String'));
+x_end=parse_numeric_scalar(get(handles.edit_x_end,'String'));
+delta_x=parse_numeric_scalar(get(handles.edit_delta_x,'String'));
+xnum=parse_numeric_scalar(get(handles.edit_xnum,'String'));
 if get(handles.radiobutton_delta_x,'Value')==1
     xnum=round((x_end-x_1)/delta_x);
     delta_x=(x_end-x_1)/xnum;
@@ -226,10 +226,10 @@ function edit_x_end_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_x_end as text
 %        str2double(get(hObject,'String')) returns contents of edit_x_end as a double
-x_1=eval(get(handles.edit_x_1,'String'));
-x_end=eval(get(handles.edit_x_end,'String'));
-delta_x=eval(get(handles.edit_delta_x,'String'));
-xnum=eval(get(handles.edit_xnum,'String'));
+x_1=parse_numeric_scalar(get(handles.edit_x_1,'String'));
+x_end=parse_numeric_scalar(get(handles.edit_x_end,'String'));
+delta_x=parse_numeric_scalar(get(handles.edit_delta_x,'String'));
+xnum=parse_numeric_scalar(get(handles.edit_xnum,'String'));
 if get(handles.radiobutton_delta_x,'Value')==1
     xnum=round((x_end-x_1)/delta_x);
     delta_x=(x_end-x_1)/xnum;
@@ -268,10 +268,10 @@ function edit_y_1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_y_1 as text
 %        str2double(get(hObject,'String')) returns contents of edit_y_1 as a double
-y_1=eval(get(handles.edit_y_1,'String'));
-y_end=eval(get(handles.edit_y_end,'String'));
-delta_y=eval(get(handles.edit_delta_y,'String'));
-ynum=eval(get(handles.edit_ynum,'String'));
+y_1=parse_numeric_scalar(get(handles.edit_y_1,'String'));
+y_end=parse_numeric_scalar(get(handles.edit_y_end,'String'));
+delta_y=parse_numeric_scalar(get(handles.edit_delta_y,'String'));
+ynum=parse_numeric_scalar(get(handles.edit_ynum,'String'));
 if get(handles.radiobutton_delta_y,'Value')==1
     ynum=round((y_end-y_1)/delta_y);
     delta_y=(y_end-y_1)/ynum;
@@ -309,10 +309,10 @@ function edit_y_end_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_y_end as text
 %        str2double(get(hObject,'String')) returns contents of edit_y_end as a double
-y_1=eval(get(handles.edit_y_1,'String'));
-y_end=eval(get(handles.edit_y_end,'String'));
-delta_y=eval(get(handles.edit_delta_y,'String'));
-ynum=eval(get(handles.edit_ynum,'String'));
+y_1=parse_numeric_scalar(get(handles.edit_y_1,'String'));
+y_end=parse_numeric_scalar(get(handles.edit_y_end,'String'));
+delta_y=parse_numeric_scalar(get(handles.edit_delta_y,'String'));
+ynum=parse_numeric_scalar(get(handles.edit_ynum,'String'));
 if get(handles.radiobutton_delta_y,'Value')==1
     ynum=round((y_end-y_1)/delta_y);
     delta_y=(y_end-y_1)/ynum;
@@ -350,10 +350,10 @@ function edit_z_1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_z_1 as text
 %        str2double(get(hObject,'String')) returns contents of edit_z_1 as a double
-z_1=eval(get(handles.edit_z_1,'String'));
-z_end=eval(get(handles.edit_z_end,'String'));
-delta_z=eval(get(handles.edit_delta_z,'String'));
-znum=eval(get(handles.edit_znum,'String'));
+z_1=parse_numeric_scalar(get(handles.edit_z_1,'String'));
+z_end=parse_numeric_scalar(get(handles.edit_z_end,'String'));
+delta_z=parse_numeric_scalar(get(handles.edit_delta_z,'String'));
+znum=parse_numeric_scalar(get(handles.edit_znum,'String'));
 if get(handles.radiobutton_delta_z,'Value')==1
     znum=round((z_end-z_1)/delta_z);
     delta_z=(z_end-z_1)/znum;
@@ -391,10 +391,10 @@ function edit_z_end_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_z_end as text
 %        str2double(get(hObject,'String')) returns contents of edit_z_end as a double
-z_1=eval(get(handles.edit_z_1,'String'));
-z_end=eval(get(handles.edit_z_end,'String'));
-delta_z=eval(get(handles.edit_delta_z,'String'));
-znum=eval(get(handles.edit_znum,'String'));
+z_1=parse_numeric_scalar(get(handles.edit_z_1,'String'));
+z_end=parse_numeric_scalar(get(handles.edit_z_end,'String'));
+delta_z=parse_numeric_scalar(get(handles.edit_delta_z,'String'));
+znum=parse_numeric_scalar(get(handles.edit_znum,'String'));
 if get(handles.radiobutton_delta_z,'Value')==1
     znum=((z_end-z_1)/delta_z);
     delta_z=(z_end-z_1)/znum;
@@ -431,10 +431,10 @@ function edit_delta_x_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_delta_x as text
 %        str2double(get(hObject,'String')) returns contents of edit_delta_x as a double
-x_1=eval(get(handles.edit_x_1,'String'));
-x_end=eval(get(handles.edit_x_end,'String'));
-delta_x=eval(get(handles.edit_delta_x,'String'));
-xnum=eval(get(handles.edit_delta_x,'String'));
+x_1=parse_numeric_scalar(get(handles.edit_x_1,'String'));
+x_end=parse_numeric_scalar(get(handles.edit_x_end,'String'));
+delta_x=parse_numeric_scalar(get(handles.edit_delta_x,'String'));
+xnum=parse_numeric_scalar(get(handles.edit_xnum,'String'));
 if get(handles.radiobutton_delta_x,'Value')==1
     xnum=round((x_end-x_1)/delta_x);
     delta_x=(x_end-x_1)/xnum;
@@ -472,10 +472,10 @@ function edit_delta_y_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_delta_y as text
 %        str2double(get(hObject,'String')) returns contents of edit_delta_y as a double
-y_1=eval(get(handles.edit_y_1,'String'));
-y_end=eval(get(handles.edit_y_end,'String'));
-delta_y=eval(get(handles.edit_delta_y,'String'));
-ynum=eval(get(handles.edit_ynum,'String'));
+y_1=parse_numeric_scalar(get(handles.edit_y_1,'String'));
+y_end=parse_numeric_scalar(get(handles.edit_y_end,'String'));
+delta_y=parse_numeric_scalar(get(handles.edit_delta_y,'String'));
+ynum=parse_numeric_scalar(get(handles.edit_ynum,'String'));
 if get(handles.radiobutton_delta_y,'Value')==1
     ynum=round((y_end-y_1)/delta_y);
     delta_y=(y_end-y_1)/ynum;
@@ -513,10 +513,10 @@ function edit_delta_z_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_delta_z as text
 %        str2double(get(hObject,'String')) returns contents of edit_delta_z as a double
-z_1=eval(get(handles.edit_z_1,'String'));
-z_end=eval(get(handles.edit_z_end,'String'));
-delta_z=eval(get(handles.edit_delta_z,'String'));
-znum=eval(get(handles.edit_znum,'String'));
+z_1=parse_numeric_scalar(get(handles.edit_z_1,'String'));
+z_end=parse_numeric_scalar(get(handles.edit_z_end,'String'));
+delta_z=parse_numeric_scalar(get(handles.edit_delta_z,'String'));
+znum=parse_numeric_scalar(get(handles.edit_znum,'String'));
 if get(handles.radiobutton_delta_z,'Value')==1
     znum=round((z_end-z_1)/delta_z);
     delta_z=(z_end-z_1)/znum;
@@ -554,10 +554,10 @@ function edit_xnum_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_xnum as text
 %        str2double(get(hObject,'String')) returns contents of edit_xnum as a double
-x_1=eval(get(handles.edit_x_1,'String'));
-x_end=eval(get(handles.edit_x_end,'String'));
-delta_x=eval(get(handles.edit_delta_x,'String'));
-xnum=round(eval(get(handles.edit_xnum,'String')));
+x_1=parse_numeric_scalar(get(handles.edit_x_1,'String'));
+x_end=parse_numeric_scalar(get(handles.edit_x_end,'String'));
+delta_x=parse_numeric_scalar(get(handles.edit_delta_x,'String'));
+xnum=round(parse_numeric_scalar(get(handles.edit_xnum,'String')));
 if get(handles.radiobutton_delta_x,'Value')==1
     xnum=round((x_end-x_1)/delta_x);
     delta_x=(x_end-x_1)/xnum;
@@ -595,10 +595,10 @@ function edit_ynum_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_ynum as text
 %        str2double(get(hObject,'String')) returns contents of edit_ynum as a double
-y_1=eval(get(handles.edit_y_1,'String'));
-y_end=eval(get(handles.edit_y_end,'String'));
-delta_y=eval(get(handles.edit_delta_y,'String'));
-ynum=round(eval(get(handles.edit_ynum,'String')));
+y_1=parse_numeric_scalar(get(handles.edit_y_1,'String'));
+y_end=parse_numeric_scalar(get(handles.edit_y_end,'String'));
+delta_y=parse_numeric_scalar(get(handles.edit_delta_y,'String'));
+ynum=round(parse_numeric_scalar(get(handles.edit_ynum,'String')));
 if get(handles.radiobutton_delta_y,'Value')==1
     ynum=round((y_end-y_1)/delta_y);
     delta_y=(y_end-y_1)/ynum;
@@ -636,10 +636,10 @@ function edit_znum_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_znum as text
 %        str2double(get(handles.edit_delta_z,'String')) returns contents of edit_znum as a double
-z_1=eval(get(handles.edit_z_1,'String'));
-z_end=eval(get(handles.edit_z_end,'String'));
-delta_z=eval(get(handles.edit_delta_z,'String'));
-znum=round(eval(get(handles.edit_znum,'String')));
+z_1=parse_numeric_scalar(get(handles.edit_z_1,'String'));
+z_end=parse_numeric_scalar(get(handles.edit_z_end,'String'));
+delta_z=parse_numeric_scalar(get(handles.edit_delta_z,'String'));
+znum=round(parse_numeric_scalar(get(handles.edit_znum,'String')));
 if get(handles.radiobutton_delta_z,'Value')==1
     znum=round((z_end-z_1)/delta_z);
     delta_z=(z_end-z_1)/znum;
