@@ -1,8 +1,18 @@
-% To plot an ARPES data, use PlotSlices(DataName,Direction)
-% DataName is the string of the data name. Direction is 'x', 'y' or 'z';
+%PLOTSLICES Interactive viewer for ARPES data slices.
+%   PlotSlices(DataName, Direction) reads the named variable from the MATLAB
+%   base workspace and opens a GUI for viewing slices along x, y, or z.
+%   The selected variable is expected to provide a numeric VALUE array and
+%   coordinate vectors for the requested direction. A 2-D value array is
+%   promoted to a single-slice 3-D array for the viewer.
+%
+%   The GUI provides slice position and width controls, colour limits and
+%   gamma controls, interpolation, crosshairs, EDC/MDC plots, and ARPES tools
+%   such as k-space conversion and saving the displayed slice. Layout and
+%   colormap resources must be available on the MATLAB path.
 classdef PlotSlices < handle
 
     properties
+        % Source data and coordinate used to select the displayed slice.
         Direction % plotting direction: 'x', 'y', 'z' 
         Data % store the data object/struct
         minValue % min value of all Data.value
@@ -11,7 +21,7 @@ classdef PlotSlices < handle
         AxisData % Store the axis that the plot is along with
         CorrData % ?
 
-        
+        % Main figure, axes, controls, and graphics objects owned by the GUI.
         Figure % whole figure handle
         homeVBox % box alignment
         Axis % plot axis
@@ -42,9 +52,13 @@ classdef PlotSlices < handle
         SliderMax
         SliderGamma
         FigureEDC
+        AxisEDC
         EDC_line
         MDC_line
+        EDCRegionLines = gobjects(0)
+        MDCRegionLines = gobjects(0)
         FigureMDC
+        AxisMDC
         MenuMDCEDC
         MenuSaveMDCEDC
         ColorMap
@@ -72,38 +86,81 @@ classdef PlotSlices < handle
     methods
 
         function obj = PlotSlices(DataName,Direction)
-
-            % plot the first variable of the list
+            % Accept either one variable name or a list and use the first item.
             if iscell(DataName)
                 DataName=DataName{1};
             end
-            % initialize
+            if isstring(DataName) && isscalar(DataName)
+                DataName = char(DataName);
+            end
+            if ~ischar(DataName) || ~isrow(DataName) || ~isvarname(DataName)
+                error('PlotSlices:InvalidVariableName', ...
+                    'DataName must be a valid MATLAB base-workspace variable name.');
+            end
+            if isstring(Direction) && isscalar(Direction)
+                Direction = char(Direction);
+            end
+            if ~ischar(Direction) || ~isrow(Direction) || ...
+                    ~any(strcmp(Direction, {'x', 'y', 'z'}))
+                error('PlotSlices:InvalidDirection', ...
+                    'Direction must be ''x'', ''y'', or ''z''.');
+            end
+
+            % Load the selected variable from the base workspace and verify
+            % that it has the value array required by the slicing routines.
             obj.DataName = DataName;
             obj.Direction = Direction;
-            obj.Data = evalin('base',DataName);
-            if ~isfield(obj.Data,'value') && ~isprop(obj.Data,'value')
-                errordlg('Check data.value');
-                return
+            workspaceNames = evalin('base', 'who');
+            if ~any(strcmp(workspaceNames, DataName))
+                error('PlotSlices:MissingWorkspaceVariable', ...
+                    'The base workspace does not contain variable "%s".', DataName);
             end
-            if ndims(obj.Data.value) == 2
+            obj.Data = evalin('base', DataName);
+            if ~PlotSlices.hasDataMember(obj.Data, 'value')
+                error('PlotSlices:InvalidData', ...
+                    'The selected variable must contain a value array.');
+            end
+            if ~isnumeric(obj.Data.value) && ~islogical(obj.Data.value)
+                error('PlotSlices:InvalidData', ...
+                    'The value array must be numeric or logical.');
+            end
+            if isa(obj.Data, 'OxArpes_1D_Data')
+                error('PlotSlices:UnsupportedDataDimension', ...
+                    'PlotSlices requires 2-D or 3-D data; use the 1-D data viewer.');
+            end
+
+            % Promote 2-D values for the common slicing implementation.
+            valueDimensions = ndims(obj.Data.value);
+            if isa(obj.Data, 'OxArpes_2D_Data')
+                valueDimensions = 2;
+            elseif PlotSlices.hasDataMember(obj.Data, 'z') && ...
+                    isscalar(obj.Data.z) && valueDimensions == 2
+                % MATLAB omits trailing singleton dimensions from ndims.
+                valueDimensions = 3;
+            end
+            if valueDimensions == 2
                 obj.data2Dto3D();
-%                 obj.Direction = 'x';
-            elseif ndims(obj.Data.value) == 4
-                return
+            elseif valueDimensions ~= 3
+                error('PlotSlices:UnsupportedDataDimension', ...
+                    'PlotSlices supports 2-D or 3-D value arrays, not %d-D arrays.', ...
+                    valueDimensions);
             end
+            obj.normalizeLegacyMetadata();
+            obj.validatePlotData();
 
             obj.minValue = min(obj.Data.value(:));
             obj.maxValue = max(obj.Data.value(:));
 
-            % slider direction
+            % The slider moves along the coordinate selected by Direction.
             obj.AxisData = obj.Data.(obj.Direction);
 
             % construct figure UI / menu
             obj.figureConstruct(DataName);
             obj.setUIMenu();
 
-            % some improvement - default settings
-            if obj.Direction == 'z' && ndims(obj.Data.value) == 3 && length(obj.Data.x) ~= 1
+            % Choose useful default orientation and aspect settings when the
+            % stored axis units indicate that two displayed axes are related.
+            if obj.Direction == 'z' && numel(obj.Data.x) ~= 1
                 obj.FlipCheckbox.Value = 1;
                 obj.Width.String = '0.05';
                 
@@ -125,7 +182,7 @@ classdef PlotSlices < handle
                 end
             end
 
-            % plot figure & set menu
+            % Draw the initial slice before adding interactive crosshairs.
             obj.initial_plot();
             
 
@@ -135,37 +192,96 @@ classdef PlotSlices < handle
 %                 ss(i).Visible = 'off';
 %             end
 
-            % draw crosshair/guideline
-            obj.Crosshair = drawcrosshair('Parent',obj.Axis,'Position',[obj.PosX obj.PosY],'LineWidth',1,'Color',"c",'Visible','off');
-            addlistener(obj.Crosshair,'ROIMoved',@(src,data) obj.update_Crosshair_Positions(data.CurrentPosition(1),data.CurrentPosition(2)));
+            % The first crosshair selects one point; moving it refreshes the
+            % displayed coordinates and any linked EDC/MDC traces.
+            obj.Crosshair = drawcrosshair('Parent', obj.Axis, ...
+                'Position', [obj.PosX obj.PosY], 'LineWidth', 1, ...
+                'Color', "c", 'Visible', 'off');
+            addlistener(obj.Crosshair, 'ROIMoved', ...
+                @(src, data) obj.update_Crosshair_Positions( ...
+                data.CurrentPosition(1), data.CurrentPosition(2)));
 
-            % draw MDCEDC crosshair
-            obj.Crosshair2 = drawcrosshair('Parent',obj.Axis,'Position',[obj.PosX+obj.DX obj.PosY+obj.DY],'LineWidth',1,'Color','w','Visible','off');
+            % The second crosshair defines the integration span for the EDC
+            % and MDC plots.
+            obj.Crosshair2 = drawcrosshair('Parent', obj.Axis, ...
+                'Position', [obj.PosX + obj.DX obj.PosY + obj.DY], ...
+                'LineWidth', 1, 'Color', 'w', 'Visible', 'off');
             obj.Crosshair2.StripeColor = "c";
-            addlistener(obj.Crosshair2,'ROIMoved',@(src,data) obj.update_Crosshair2_Positions(data.CurrentPosition(1),data.CurrentPosition(2)));
+            addlistener(obj.Crosshair2, 'ROIMoved', ...
+                @(src, data) obj.update_Crosshair2_Positions( ...
+                data.CurrentPosition(1), data.CurrentPosition(2)));
         end
         
         function data2Dto3D(obj)
-            obj.Direction='x';
-            [sizeY,sizeZ]=size(obj.Data.value);
-            valueNew=zeros(1,sizeY,sizeZ);
-            valueNew(1,:,:)=obj.Data.value;
-            
-%             data=obj.Data;
-            data.x = 1;
-            data.y = obj.Data.x;
-            data.z = obj.Data.y;
-            try
-                data.y_name = obj.Data.x_name;
-                data.y_unit = obj.Data.x_unit;
-                data.z_name = obj.Data.y_name;
-                data.z_unit = obj.Data.y_unit;
-            catch
+            % Represent a 2-D dataset as a one-element x dimension. The
+            % original x/y coordinates become the viewer's y/z coordinates.
+            sourceData = obj.Data;
+            if ~PlotSlices.hasDataMember(sourceData, 'x') || ...
+                    ~PlotSlices.hasDataMember(sourceData, 'y')
+                error('PlotSlices:InvalidAxes', ...
+                    'Two-dimensional data must provide x and y coordinates.');
+            end
+            oldX = sourceData.x(:).';
+            oldY = sourceData.y(:).';
+            if ~isnumeric(oldX) || ~isnumeric(oldY) || ...
+                    numel(oldX) ~= size(sourceData.value, 1) || ...
+                    numel(oldY) ~= size(sourceData.value, 2)
+                error('PlotSlices:InvalidAxes', ...
+                    'The 2-D value dimensions must match the x and y coordinates.');
+            end
+            value3D = reshape(sourceData.value, 1, numel(oldX), numel(oldY));
+            oldXName = '';
+            oldXUnit = '';
+            oldYName = '';
+            oldYUnit = '';
+            if PlotSlices.hasDataMember(sourceData, 'x_name')
+                oldXName = sourceData.x_name;
+            end
+            if PlotSlices.hasDataMember(sourceData, 'x_unit')
+                oldXUnit = sourceData.x_unit;
+            end
+            if PlotSlices.hasDataMember(sourceData, 'y_name')
+                oldYName = sourceData.y_name;
+            end
+            if PlotSlices.hasDataMember(sourceData, 'y_unit')
+                oldYUnit = sourceData.y_unit;
             end
 
-            data.value=valueNew;
-            obj.Data=data;
-            
+            if isa(sourceData, 'OxArpes_2D_Data')
+                data = OxArpes_3D_Data(1, oldX, oldY, value3D);
+                data.name = sourceData.name;
+                data.info = sourceData.info;
+                data.x_name = 'Index';
+                data.x_unit = 'index';
+                data.y_name = oldXName;
+                data.y_unit = oldXUnit;
+                data.z_name = oldYName;
+                data.z_unit = oldYUnit;
+            else
+                % Copy legacy structs (or other public-property objects) so
+                % acquisition metadata and repository-specific fields survive.
+                if isstruct(sourceData)
+                    data = sourceData;
+                else
+                    data = struct(sourceData);
+                end
+                data.x = 1;
+                data.y = oldX;
+                data.z = oldY;
+                data.value = value3D;
+                data.x_name = 'Index';
+                data.x_unit = 'index';
+                data.y_name = oldXName;
+                data.y_unit = oldXUnit;
+                data.z_name = oldYName;
+                data.z_unit = oldYUnit;
+                if ~isfield(data, 'info')
+                    data.info = struct();
+                end
+            end
+
+            obj.Data = data;
+            obj.Direction = 'x';
         end
         
 %         function data4Dto3D(obj)
@@ -173,8 +289,11 @@ classdef PlotSlices < handle
 %         end
         
         function figureConstruct(obj,DataName)
-            %% Frames
-            obj.Figure = figure('Name',DataName);
+            % Build the main figure, slice controls, and colour controls.
+            %% Figure layout
+            obj.Figure = figure('Name', DataName, 'MenuBar', 'none', ...
+                'ToolBar', 'none', ...
+                'CloseRequestFcn', @obj.closeMainFigure);
 
             obj.homeVBox=uiextras.VBox('Parent',obj.Figure,'BackgroundColor','w');
 
@@ -191,7 +310,7 @@ classdef PlotSlices < handle
             colormapHBox=uiextras.HBox('Parent',colorrightVBox);
 
             
-            if obj.Data.x == 1
+            if isscalar(obj.Data.x)
                 set(obj.homeVBox,'Sizes',[0,40,-1]);
             else
                 set(obj.homeVBox,'Sizes',[20,40,-1]);
@@ -202,9 +321,9 @@ classdef PlotSlices < handle
 
             axisMin=min(obj.AxisData);
             axisMax=max(obj.AxisData);
-            step=1/length(obj.AxisData);
+            step=1/numel(obj.AxisData);
             
-            %% uicontrols for slice control
+            %% Controls for slice position and averaging width
             uicontrol(...
                 'Parent',       infoHBox,...
                 'Style',        'Text',...
@@ -257,7 +376,7 @@ classdef PlotSlices < handle
             obj.PositionIndex=uicontrol(...
                 'Parent',       infoHBox,...
                 'Style',        'Edit',...
-                'String',       num2str(round((1+length(obj.AxisData)/2))),...
+                'String',       num2str(round((1+numel(obj.AxisData)/2))),...
                 'BackgroundColor','w',...
                 'Callback',     {@obj.setInd,'='});
             uicontrol(...
@@ -267,7 +386,7 @@ classdef PlotSlices < handle
                 'Callback',     {@obj.setInd,'+'});
             set(infoHBox,'Sizes',[45,70,-1,20,50,30,30,20,15,30,15]);
             
-            %% uicontrols for color correction
+            %% Controls for colour limits, gamma, and colormap
             uicontrol(...
                 'Parent',       colorMinHBox,...
                 'Style',        'Text',...
@@ -381,7 +500,8 @@ classdef PlotSlices < handle
         end
         
         function setUIMenu(obj)
-
+            % Add commands for saving/cutting slices, toggling overlays, and
+            % opening alternate plot layouts. Some commands are direction-only.
             hmenu=uimenu(obj.Figure,'Label','ARPES Tools');
 
             cutMenu=uimenu(hmenu,'Label','Cut','Callback',@obj.cut);
@@ -438,8 +558,6 @@ classdef PlotSlices < handle
                 'Callback',{@obj.newFigure,3});
             uimenu(plotMenu,'Label','2D Plot: Interpolate',...
                 'Callback',{@obj.newFigure,4});
-            uimenu(plotMenu,'Label','copy axis test','Separator','On',...
-                'Callback',@obj.copy_axis);
             uimenu(plotMenu,'Label','Mass Plot',...
                 'Callback',@obj.mass_plot);
 %             uimenu(plotMenu,'Label','Copy to Clipboard',...
@@ -451,13 +569,12 @@ classdef PlotSlices < handle
 
        
  
-            %% get sliced data
-            % get position and width
+             % Select the initial slab around the current slider position.
+             % If the width contains no samples, use the nearest axis point.
             pos = get(obj.Slider,'Value');
             width = str2double(get(obj.Width, 'String'));
 
             % slice data
-            sliceData = [];
             switch obj.Direction
                 case 'x'
                     xData = obj.Data.y;
@@ -500,10 +617,8 @@ classdef PlotSlices < handle
                     sliceData = squeeze(mean(obj.Data.value(:,:,cond),3));
             end
 
-            %% sliced data operation, enhance
-
-            %% data enhance
-            % interpolate
+             % Optional interpolation and gamma correction prepare the slice
+             % before it is drawn. Plot-type arguments can target a new axes.
 %             if obj.interpolate_K ~= 1
 % %                 sliceData = interp2(sliceData,obj.interpolate_K,'spline');
 %                 sliceData = interp2(sliceData,obj.interpolate_K,'makima');
@@ -513,7 +628,7 @@ classdef PlotSlices < handle
             gamma = get(obj.SliderGamma,'Value');
             if gamma~=1
                 if gamma==0
-                    obj.imag.CData = log(sliceData'+0.1);
+                    sliceData = log(sliceData+0.1);
                 else
                     sliceData = (sliceData/max(sliceData,[],"all")).^gamma .* max(sliceData,[],"all");
                 end
@@ -522,7 +637,8 @@ classdef PlotSlices < handle
             % Color Mapping
 
 
-            %% set plot axes, get plot options
+             % Select the main axes or the alternate axes requested by the
+             % New Plot menu (2-D, 3-D mesh, or interpolated 2-D plot).
             axPlot=obj.Axis;
             axFlag=0;
             if ~isempty(varargin)
@@ -578,18 +694,18 @@ classdef PlotSlices < handle
 
             end
 
-            % set colormap
-            cmapvar=get(obj.ColorMap,'Value');
-            cmap=get(obj.ColorMap,'String');
-            load('Colormap.mat');
-            cmapData=eval(cmap{cmapvar});
+             % Load the selected named colormap and optionally reverse it.
+            colorMapNames = get(obj.ColorMap, 'String');
+            colorMapName = colorMapNames{get(obj.ColorMap, 'Value')};
+            cmapData = obj.loadColormap(colorMapName);
             if get(obj.FlipCheckbox,'Value')
                 colormap(axPlot,flipud(cmapData));
             else
                 colormap(axPlot,cmapData);
             end
 
-            % set Clim
+             % Map the percentage controls to colour limits for either the
+             % current slice or the full source dataset.
             minSlider = 10^get(obj.SliderMin,'Value') -1;
             maxSlider = 10^get(obj.SliderMax,'Value') -1;
             minPercent = min(maxSlider,minSlider);
@@ -613,13 +729,14 @@ classdef PlotSlices < handle
             if get(obj.Checkbox,'Value') && axFlag~=2
                 set(axPlot,'DataAspectRatio',[1 1 1]);
             else
-                axis normal;
+                axis(axPlot,'normal');
             end
-            set(gca,'linewidth',1.5);
-            set(gca,'fontsize',12);
+            set(axPlot, 'LineWidth', 1.5, 'FontSize', 12, ...
+                'FontName', 'Arial', 'Box', 'on', 'Layer', 'top');
 
 %             % plot energy contour
-            if obj.energy_contour_flag == 1
+            if obj.energy_contour_flag == 1 && ...
+                    isfield(obj.Data.info, 'BZBS')
                 if axFlag == 0
                     for i = 1:length(obj.energy_contour_lines)
                         delete(obj.energy_contour_lines{i})
@@ -630,7 +747,7 @@ classdef PlotSlices < handle
                 end
             end
 %             % plot brillouin zone
-            if obj.bz_line_flag == 1
+            if obj.bz_line_flag == 1 && isfield(obj.Data.info, 'BZBS')
                 if axFlag == 0
                     for i = 1:length(obj.bz_line_lines)
                         delete(obj.bz_line_lines{i});
@@ -656,7 +773,8 @@ classdef PlotSlices < handle
         end
 
         function update_CData(obj,varargin)
-
+            % Recompute the slab after a slider, width, interpolation, or
+            % gamma change, then refresh overlays and linked axis controls.
             %% get sliced data
             pos = get(obj.Slider,'Value');
             width = str2double(get(obj.Width, 'String'));
@@ -707,7 +825,8 @@ classdef PlotSlices < handle
 
             obj.setClim();
 %             % plot energy contour
-            if obj.energy_contour_flag == 1
+            if obj.energy_contour_flag == 1 && ...
+                    isfield(obj.Data.info, 'BZBS')
 
                 for i = 1:length(obj.energy_contour_lines)
                     delete(obj.energy_contour_lines{i})
@@ -716,7 +835,7 @@ classdef PlotSlices < handle
                 obj.energy_contour_lines = obj.Data.info.BZBS.plotEnergyContourOnAxes(pos,width,obj.Axis);
             end
 %              % plot brillouin zone
-            if obj.bz_line_flag == 1
+            if obj.bz_line_flag == 1 && isfield(obj.Data.info, 'BZBS')
 
                 for i = 1:length(obj.bz_line_lines)
                     delete(obj.bz_line_lines{i})
@@ -725,11 +844,15 @@ classdef PlotSlices < handle
                 obj.bz_line_lines = obj.Data.info.BZBS.plotBrillouinZoneOnAxes(obj.Axis);
             end
 
-
+            if strcmp(get(obj.MDCEDC_Menu, 'Checked'), 'on')
+                obj.updateEDCMDCPlots();
+            end
         end
 
         %% menu callback function
         function newFigure(obj,varargin)
+            % Reuse the current slice to create a separate 2-D, 3-D, or
+            % interpolated figure without changing the main viewer axes.
             plotType=varargin{3};
             pos=get(obj.Position,'String');
             posInd=get(obj.PositionIndex,'String');
@@ -748,51 +871,8 @@ classdef PlotSlices < handle
 
         end
         
-%         function newFigureSubPlot(obj,varargin)
-%             inputText=inputdlg('Input Positions');
-%             plotArray=inputText{1};
-%             plotArray=str2num(plotArray);
-%             sliderMin=get(obj.Slider,'Min');           
-%             sliderMax=get(obj.Slider,'Max');
-%             if isnan(plotArray)
-%                 errordlg('Input Array should not be NaN');
-%                 return;
-%             end
-%             if sum(plotArray<sliderMin)
-%                 errordlg('Exeeds Min');
-%                 return;
-%             end
-%             if sum(plotArray>sliderMax)
-%                 errordlg('Exeeds Max');
-%                 return;
-%             end
-%             n=length(plotArray);
-%             for i = 1:ceil(n/9)
-%                 figure('Name',[obj.DataName,' ',obj.Direction],...
-%                     'Color','w');
-%                 for j=1:9
-%                     k=(i-1)*9+j;
-%                     if k<=n
-%                         set(obj.Slider,'Value',plotArray(k));
-%                         hAx=subplot(3,3,j);
-%                         obj.plot('new',hAx);
-%                         title([obj.Direction,'=',num2str(plotArray(k))]);
-%                     end
-%                 end
-%             end
-%         end
-        
-%         function ButtonMotionFcn(obj,~,~)
-%             obj.plotCrossHair;
-%         end
-%         
-%         function ButtonUpFcn(obj,~,~)
-%             set(obj.Figure,...
-%                 'WindowButtonMotionFcn',[],...
-%                 'WindowButtonUpFcn',[]);
-%         end
-        
         function setInd(obj,~,~,SetMethod)
+            % Move the slice index by one, or use the edited index directly.
             switch SetMethod
                 case '+'
                     posInd = str2double(get(obj.PositionIndex,'String'))+1;                    
@@ -801,8 +881,8 @@ classdef PlotSlices < handle
                 case '='
                     posInd = str2double(get(obj.PositionIndex,'String'));
             end
-            if posInd > length(obj.AxisData)
-                posInd = length(obj.AxisData);
+            if posInd > numel(obj.AxisData)
+                posInd = numel(obj.AxisData);
             end
             if posInd < 1
                 posInd = 1;
@@ -813,12 +893,14 @@ classdef PlotSlices < handle
         end
         
         function setPos(obj,~,~)
+            % Apply the numeric position entered in the slice-position field.
             pos = str2double(get(obj.Position,'String'));
             set(obj.Slider,'Value',pos);
             obj.update_CData();
         end
         
         function setAx(obj,~,~)
+            % Toggle equal data-unit scaling on the main viewer axes.
             if get(obj.Checkbox,'Value')
                 set(obj.Axis,'DataAspectRatio',[1 1 1]);
             else
@@ -827,10 +909,10 @@ classdef PlotSlices < handle
         end
 
         function setColor(obj,~,~)
-            cmapvar=get(obj.ColorMap,'Value');
-            cmap=get(obj.ColorMap,'String');
-            load('Colormap.mat');
-            cmapData=eval(cmap{cmapvar});
+            % Apply the selected colormap to the main axes, optionally flipped.
+            colorMapNames = get(obj.ColorMap, 'String');
+            colorMapName = colorMapNames{get(obj.ColorMap, 'Value')};
+            cmapData = obj.loadColormap(colorMapName);
             if get(obj.FlipCheckbox,'Value')
                 colormap(obj.Axis,flipud(cmapData));
             else
@@ -839,7 +921,8 @@ classdef PlotSlices < handle
         end
 
         function setClim(obj,~,~)
-
+            % Convert the logarithmic slider values into colour limits and
+            % synchronize the editable percentage fields.
             % set Clim
             minSlider = 10^get(obj.SliderMin,'Value') -1;
             maxSlider = 10^get(obj.SliderMax,'Value') -1;
@@ -887,7 +970,13 @@ classdef PlotSlices < handle
 
 
         function setGamma(obj,~,~)
-            gamma = str2num(get(obj.GammaValue,'String'));
+            % Clamp the entered gamma value to the slider's supported range.
+            gamma = str2double(get(obj.GammaValue,'String'));
+            if ~isscalar(gamma) || ~isfinite(gamma)
+                errordlg('Gamma must be a finite numeric scalar.', 'Invalid Gamma');
+                set(obj.GammaValue, 'String', num2str(get(obj.SliderGamma, 'Value')));
+                return
+            end
             if gamma > 3
                 gamma = 3;
             elseif gamma < 0
@@ -898,6 +987,8 @@ classdef PlotSlices < handle
         end
 
         function sliderinput(obj,varargin)
+            % Convert the editable min/max percentages to the logarithmic
+            % scale used by their sliders, then refresh the colour limits.
             minInput=str2double(get(obj.MinValue,'String'));
             if minInput<0
                 minInput=0;
@@ -928,49 +1019,73 @@ classdef PlotSlices < handle
 
         %% convert cut
         function update_Crosshair_Positions(obj,x,y)
+            % Store the primary cursor position and move the linked span cursor.
             obj.PosX = x;
             obj.PosY = y;
 
             set(obj.XYpos_Editfield,'String', [num2str(round(x,3)) ', ' num2str(round(y,3))]);
             obj.Crosshair2.Position = [obj.PosX + obj.DX, obj.PosY + obj.DY];
 
-            if get(obj.MDCEDC_Menu,'Checked')
-                obj.updata_EDCMDC_lines();
+            if strcmp(get(obj.MDCEDC_Menu, 'Checked'), 'on')
+                obj.updateEDCMDCPlots();
             end
 
         end
 
         function update_Crosshair2_Positions(obj,x,y)
+            % Store the second cursor offset and recompute EDC/MDC integrations.
             obj.DX = x - obj.PosX;
             obj.DY = y - obj.PosY;
 
-            obj.updata_EDCMDC_lines();
+            if strcmp(get(obj.MDCEDC_Menu, 'Checked'), 'on')
+                obj.updateEDCMDCPlots();
+            end
         end
 
-        function updata_EDCMDC_lines(obj)
-            % updata MDC EDC figure
+        function updateEDCMDCPlots(obj)
+            % Average the image inside the cursor rectangle and refresh both traces.
+            if ~isgraphics(obj.EDC_line) || ~isgraphics(obj.MDC_line)
+                return
+            end
             xl = min(obj.PosX,obj.PosX+obj.DX);
             xr = max(obj.PosX,obj.PosX+obj.DX);
             [~,xn1] = min(abs(obj.imag.XData-xl));
             [~,xn2] = min(abs(obj.imag.XData-xr));
-            x = mean(obj.imag.CData(:,xn1:xn2),2);
-            obj.EDC_line.XData = x;
+            xIndices = sort([xn1, xn2]);
+            edcValues = mean(obj.imag.CData(:, xIndices(1):xIndices(2)), 2);
+            obj.EDC_line.XData = edcValues(:).';
+            obj.EDC_line.YData = obj.imag.YData(:).';
 
             yd = min(obj.PosY,obj.PosY+obj.DY);
             yu = max(obj.PosY,obj.PosY+obj.DY);
             [~,yn1] = min(abs(obj.imag.YData-yd));
             [~,yn2] = min(abs(obj.imag.YData-yu));
-            y = mean(obj.imag.CData(yn1:yn2,:),1);
-            obj.MDC_line.YData = y;
+            yIndices = sort([yn1, yn2]);
+            mdcValues = mean(obj.imag.CData(yIndices(1):yIndices(2), :), 1);
+            obj.MDC_line.XData = obj.imag.XData(:).';
+            obj.MDC_line.YData = mdcValues;
+
+            if numel(obj.EDCRegionLines) == 2 && all(isgraphics(obj.EDCRegionLines))
+                regionY = [obj.PosY, obj.PosY + obj.DY];
+                for lineIndex = 1:2
+                    obj.EDCRegionLines(lineIndex).Value = regionY(lineIndex);
+                end
+            end
+            if numel(obj.MDCRegionLines) == 2 && all(isgraphics(obj.MDCRegionLines))
+                regionX = [obj.PosX, obj.PosX + obj.DX];
+                for lineIndex = 1:2
+                    obj.MDCRegionLines(lineIndex).Value = regionX(lineIndex);
+                end
+            end
         end
 
         function crosshair_menu_callback(obj,~,~)
-            if obj.Crosshair.Visible == 1
-                if get(obj.MDCEDC_Menu,'Checked')
+            % Toggle the primary cursor. Turning it off also closes linked
+            % EDC/MDC figures because those plots require a cursor position.
+            if strcmp(obj.Crosshair.Visible, 'on')
+                if strcmp(get(obj.MDCEDC_Menu, 'Checked'), 'on')
                     obj.Crosshair2.Visible = 'off';
-                    set(obj.MDCEDC_Menu,'Checked','off');
-                    close(obj.FigureEDC);
-                    close(obj.FigureMDC);
+                    obj.closeEDCMDCFigures();
                 end
                 obj.Crosshair.Visible = 'off';
                 set(obj.CrosshairMenu,'Checked','off');
@@ -983,54 +1098,33 @@ classdef PlotSlices < handle
         end
 
         function MDCEDC_menu_callback(obj,~,~)
-            if get(obj.MDCEDC_Menu,'Checked')
+            % Create or close EDC and MDC figures based on the span cursor.
+            if strcmp(get(obj.MDCEDC_Menu, 'Checked'), 'on')
                 obj.Crosshair2.Visible = 'off';
-                set(obj.MDCEDC_Menu,'Checked','off');
-                close(obj.FigureEDC);
-                close(obj.FigureMDC);
+                obj.closeEDCMDCFigures();
             else
-                if ~get(obj.CrosshairMenu,'Checked')
+                if ~strcmp(get(obj.CrosshairMenu, 'Checked'), 'on')
                     obj.Crosshair.Visible = 'on';
                     set(obj.CrosshairMenu,'Checked','on');
+                    set(obj.CrosshairCheckbox, 'Value', 1);
                 end
 
                 obj.Crosshair2.Visible = 'on';
                 set(obj.MDCEDC_Menu,'Checked','on');
-
-                FigPos = get(obj.Figure,'Position');
-
-                obj.FigureEDC = figure('name','EDC','Position',[FigPos(1)+FigPos(3),FigPos(2),200,FigPos(4)-40]);
-
-                y = obj.imag.YData;
-                xl = min(obj.PosX,obj.PosX+obj.DX);
-                xr = max(obj.PosX,obj.PosX+obj.DX);
-                [~,xn1] = min(abs(obj.imag.XData-xl));
-                [~,xn2] = min(abs(obj.imag.XData-xr));
-                x = mean(obj.imag.CData(:,xn1:xn2),2);
-                obj.EDC_line = plot(x,y,'LineWidth',1.5);
-
-                obj.FigureMDC = figure('name','MDC','Position',[FigPos(1),FigPos(2)-150,FigPos(3),150]);
-
-                x = obj.imag.XData;
-                yd = min(obj.PosY,obj.PosY+obj.DY);
-                yu = max(obj.PosY,obj.PosY+obj.DY);
-                [~,yn1] = min(abs(obj.imag.YData-yd));
-                [~,yn2] = min(abs(obj.imag.YData-yu));
-                y = mean(obj.imag.CData(yn1:yn2,:),1);
-                obj.MDC_line = plot(x,y,'LineWidth',1.5);
-
-                figure(obj.Figure);
-
-
+                obj.createEDCMDCFigures();
+                obj.updateEDCMDCPlots();
             end
         end
 
         function histogram_menu_callback(obj,~,~)
+            % Show the intensity distribution of the currently displayed slice.
             figure;
             histogram(obj.imag.CData,'EdgeColor','none');
         end
 
         function perp_DC_menu_callback(obj,~,~)
+            % Toggle the perpendicular-distribution window. Its plotting body
+            % is currently a placeholder for a future implementation.
             if get(obj.PerpDistributionMenu,'Checked')
                 close(obj.PerpDistributionFigure);
                 set(obj.PerpDistributionMenu,'Checked','off');
@@ -1043,6 +1137,7 @@ classdef PlotSlices < handle
         end
 
         function interpolate_menu_callback(obj,~,~)
+            % Toggle the interpolation factor used when each slice is redrawn.
             if obj.interpolate_K == 1
                  obj.interpolate_K = 3;
                  set(obj.InterpolateMenu,'Checked','on');
@@ -1057,6 +1152,8 @@ classdef PlotSlices < handle
         end
 
         function energy_contour_menu_callback(obj,~,~)
+            % Toggle energy-contour overlays supplied by the dataset's BZBS
+            % metadata object.
             if get(obj.energy_contour_menu,'Checked')
                 set(obj.energy_contour_menu,'Checked','off');
                 obj.energy_contour_flag = 0;
@@ -1072,6 +1169,8 @@ classdef PlotSlices < handle
         end
 
         function bz_line_menu_callback(obj,~,~)
+            % Toggle Brillouin-zone overlays supplied by the dataset's BZBS
+            % metadata object.
             if get(obj.bz_line_menu,'Checked')
                 set(obj.bz_line_menu,'Checked','off');
                 obj.bz_line_flag = 0;
@@ -1087,242 +1186,692 @@ classdef PlotSlices < handle
         end
 
         function quick_KConvert(obj,~,~)
-
-            if obj.Data.x == 1 % cut
-
-                CUT = evalin("base",obj.DataName);
-                if class(CUT) ~= "OxA_CUT"
-                    return
-                end
-                CUT.info.thetay_offset = obj.PosX;
-
-                prompt = {'Photon Energy (eV)','Work Function (eV)', 'Y offset (deg)'};
-                dlgtitle = 'Cut K-space Conversion';
-                definput = {num2str(CUT.info.photon_energy),num2str(CUT.info.workfunction), ...
-                    num2str(CUT.info.thetay_offset)};
-                dims = [1 60];
-                answer = inputdlg(prompt,dlgtitle,dims,definput);
-                if isempty(answer)
-                    return
-                end
-
-                CUT.info.photon_energy = str2num(answer{1});
-                CUT.info.workfunction = str2num(answer{2});
-                CUT.info.thetay_offset = str2num(answer{3});
-
-                KCUT = CUT.kconvert();
-                assignin("base",[obj.DataName '_ksp'],KCUT);
-
-            elseif class(obj.Data) == "OxA_MAP" || class(obj.Data) == "OxA_MAP_ToF"
-
-                MAP = evalin("base",obj.DataName);
-                if obj.Direction == 'z'
-                    MAP.info.thetax_offset = obj.PosX;
-                    MAP.info.thetay_offset = obj.PosY;
-                else
-                    disp("Unsupported direction!");
-                    return
-                end
-
-                prompt = {'Enter azimuth offset (deg): + clockwise, - anticlockwise',...
-                    'Photon Energy (eV)','Work Function (eV)', 'X offset (deg)',...
-                    'Y offset (deg)'};
-                dlgtitle = 'Map K-space Conversion';
-                definput = {num2str(MAP.info.azimuth_offset),num2str(MAP.info.photon_energy),...
-                    num2str(MAP.info.workfunction), num2str(MAP.info.thetax_offset),...
-                    num2str(MAP.info.thetay_offset)};
-                dims = [1 60];
-                answer = inputdlg(prompt,dlgtitle,dims,definput);
-                if isempty(answer)
-                    return
-                end
-
-                MAP.info.azimuth_offset = str2num(answer{1});
-                MAP.info.photon_energy = str2num(answer{2});
-                MAP.info.workfunction = str2num(answer{3});
-                MAP.info.thetax_offset = str2num(answer{4});
-                MAP.info.thetay_offset = str2num(answer{5});
-
-                KMAP = MAP.kconvert();
-                assignin("base",[obj.DataName '_ksp'],KMAP);
-
-            elseif class(obj.Data) == "OxA_KZ"
-
-                KZ = evalin("base",obj.DataName);
-                if obj.Direction == 'z'
-                    KZ.info.thetay_offset = obj.PosY;
-                elseif obj.Direction == 'x'
-                    KZ.info.thetay_offset = obj.PosX;
-                else
-                    disp("Unsupported direction!");
-                    return
-                end
-
-                try 
-                    V0 = KZ.info.inner_energy;
-                catch
-                    V0 = 15;
-                end
-
-                prompt = {'Enter Inner Energy (eV)', 'Y offset (deg)','Work Function (eV)',};
-                dlgtitle = 'hv Scan K-space Conversion';
-                definput = {num2str(V0),num2str(KZ.info.thetay_offset),num2str(KZ.info.workfunction)};
-                dims = [1 60];
-                answer = inputdlg(prompt,dlgtitle,dims,definput);
-                if isempty(answer)
-                    return
-                end
-
-                KZ.info.inner_energy = str2num(answer{1});
-                KZ.info.thetay_offset = str2num(answer{2});
-                KZ.info.workfunction = str2num(answer{3});
-
-
-                KKZ = KZ.kconvert();
-                assignin("base",[obj.DataName '_ksp'],KKZ);
-            end
-        end
-
-        %% mass plot
-        function copy_axis(obj,~,~)
-%             ax1Chil = obj.Axis.Children;
-            ax1Chil = obj.Axis;
-            f2 = figure();
-            ha2 = axes('parent',f2);
-            copyobj(ax1Chil,ha2);
-        end
-
-        function mass_plot(obj,~,~)
-
-            % create input dialog window and get parameters
-            Erng = '(0:-0.1:-1.9)';
-            def_cmd = Erng;
-
-            prompt = {'Enter number of columns:','Enter number of rows:','Enter position array:','Save figure:'};
-            dlgtitle = 'Input';
-            dims = [1 35];
-            definput = {'5','4',def_cmd,'0'};
-            answer = inputdlg(prompt,dlgtitle,dims,definput);
-            if isempty(answer)
+            % Accept native OX_ARPES conversion objects and legacy structs.
+            sourceData = evalin('base', obj.DataName);
+            [conversionData, conversionKind] = obj.prepareConversionData(sourceData);
+            if isempty(conversionKind)
+                errordlg('K-space conversion is available for CUT, MAP, and KZ data.', ...
+                    'Unsupported Data');
                 return
             end
 
-            column = str2num(answer{1});
-            row = str2num(answer{2});
-            posi = str2num(answer{3});
-            sf = str2num(answer{4});
-
-            % plot 
-
-            pos0 = get(obj.Slider,'Value');
-            
-            % create the figure
-            if sf == 0 % whether save the figure
-                Fig = figure('Name',obj.Data.name);
-                Fig.Position = [0 0 1200 800];
-                set(Fig, 'color', 'white');
+            if strcmp(conversionKind, 'cut')
+                conversionData.info.thetay_offset = obj.PosX;
+                prompts = {'Photon Energy (eV)', 'Work Function (eV)', 'Y offset (deg)'};
+                defaults = {num2str(obj.infoValue(conversionData.info, 'photon_energy', 21.2)), ...
+                    num2str(obj.infoValue(conversionData.info, 'workfunction', 4.5)), ...
+                    num2str(obj.infoValue(conversionData.info, 'thetay_offset', obj.PosX))};
+                titleText = 'Cut K-space Conversion';
+                infoFields = {'photon_energy', 'workfunction', 'thetay_offset'};
+            elseif strcmp(conversionKind, 'map')
+                if obj.Direction ~= 'z'
+                    errordlg('Map conversion requires the z direction.', 'Unsupported Direction');
+                    return
+                end
+                conversionData.info.thetax_offset = obj.PosX;
+                conversionData.info.thetay_offset = obj.PosY;
+                prompts = {'Azimuth offset (deg): + clockwise, - anticlockwise', ...
+                    'Photon Energy (eV)', 'Work Function (eV)', ...
+                    'X offset (deg)', 'Y offset (deg)'};
+                defaults = {num2str(obj.infoValue(conversionData.info, 'azimuth_offset', 0)), ...
+                    num2str(obj.infoValue(conversionData.info, 'photon_energy', 21.2)), ...
+                    num2str(obj.infoValue(conversionData.info, 'workfunction', 4.5)), ...
+                    num2str(obj.infoValue(conversionData.info, 'thetax_offset', obj.PosX)), ...
+                    num2str(obj.infoValue(conversionData.info, 'thetay_offset', obj.PosY))};
+                titleText = 'Map K-space Conversion';
+                infoFields = {'azimuth_offset', 'photon_energy', 'workfunction', ...
+                    'thetax_offset', 'thetay_offset'};
             else
-                Fig = figure('Name',obj.Data.name,'visible','off');
-                Fig.Position = [0 0 1600 1000];
+                if obj.Direction == 'z'
+                    defaultOffset = obj.PosY;
+                elseif obj.Direction == 'x'
+                    defaultOffset = obj.PosX;
+                else
+                    errordlg('KZ conversion supports the x or z direction.', ...
+                        'Unsupported Direction');
+                    return
+                end
+                conversionData.info.thetay_offset = defaultOffset;
+                prompts = {'Inner Energy (eV)', 'Y offset (deg)', 'Work Function (eV)'};
+                defaults = {num2str(obj.infoValue(conversionData.info, 'inner_energy', 15)), ...
+                    num2str(obj.infoValue(conversionData.info, 'thetay_offset', defaultOffset)), ...
+                    num2str(obj.infoValue(conversionData.info, 'workfunction', 4.5))};
+                titleText = 'Photon-energy Scan K-space Conversion';
+                infoFields = {'inner_energy', 'thetay_offset', 'workfunction'};
             end
 
-            for i = 1:length(posi)
-                obj.Slider.Value = posi(i);
-%                 pause(0.1)
-                ha1 = subplot(row,column,i,'parent',Fig);
-                
-                if get(obj.InterpolateMenu,'Checked')
-                    obj.initial_plot('new2intp',ha1);
-                else
-                    obj.initial_plot('new2',ha1);
-                end
-
-                set(ha1,'xlabel',[]);
-                set(ha1,'ylabel',[]);
-                % set(ha1, 'XTickLabel', {}, 'YTickLabel', {});
-
-                posi_i = num2str(posi(i));
-                switch obj.Direction
-                    case 'x'
-                        nn = obj.Data.x_name;
-                        uu = obj.Data.x_unit;
-
-                        if strcmp(nn,'Photon Energy')
-                            nn = 'hv';
-                        end
-                    case 'y'
-                        nn = obj.Data.y_name;
-                        uu = obj.Data.y_unit;
-                    case 'z'
-                        nn = obj.Data.z_name;
-                        uu = obj.Data.z_unit;
-
-                        if strcmp(nn,'{\it E}-{\it E}_F')
-                            nn = 'BE';
-                            posi_i = num2str(-posi(i));
-                        elseif strcmp(nn,'Kinetic Energy')
-                            nn = 'KE';
-                        end
-                end
-                title(ha1,[nn '= ' posi_i ' ' uu]);
-
-                % copy line objects
-                lines = findall(obj.Axis,'Type','line');
-                copyobj(lines,ha1);
-
+            answer = inputdlg(prompts, titleText, [1 60], defaults);
+            if isempty(answer)
+                return
             end
-
-            % generate group title
-            SGT = obj.DataName;
-
-            try 
-                [r,c] = size(obj.Data.info.photon_energy);
-                if r*c>1
-                    hv_max = max(obj.Data.info.photon_energy);
-                    hv_min = min(obj.Data.info.photon_energy);
-                    hv_step = (hv_max - hv_min)/(r*c-1);
-                    HV_str = [num2str(round(hv_min,1)) '/' num2str(hv_step) '/' num2str(round(hv_max,1))];
-                else
-                    HV_str = num2str(round(obj.Data.info.photon_energy,1));
-                end
-
-                SGT = [SGT ': ' HV_str ' eV '];
-            catch
+            values = cellfun(@str2double, answer);
+            if any(~isfinite(values))
+                errordlg('Conversion parameters must be finite numeric scalars.', ...
+                    'Invalid Conversion Parameters');
+                return
+            end
+            for parameterIndex = 1:numel(infoFields)
+                conversionData.info.(infoFields{parameterIndex}) = values(parameterIndex);
             end
 
             try
-                SGT = [SGT char(obj.Data.info.polarization)];
-            catch
+                convertedData = conversionData.kconvert();
+                obj.saveWorkspaceVariable([obj.DataName '_ksp'], convertedData, ...
+                    'Save K-space Conversion');
+            catch exception
+                errordlg(exception.message, 'K-space Conversion Failed');
+            end
+        end
+
+        function mass_plot(obj, ~, ~, varargin)
+            % Plot energy slices below E_F or distribute other slices across
+            % the selected axis in an editable grid.
+            axisMin = min(obj.AxisData);
+            axisMax = max(obj.AxisData);
+            [startReference, referenceLabel, isFermiRelative, isKinetic] = ...
+                obj.massPlotReference(axisMin, axisMax);
+
+            tolerance = 64 * eps(max(1, max(abs(obj.AxisData))));
+            axisUnit = char(obj.Data.([obj.Direction '_unit']));
+            if strcmp(obj.Direction, 'z')
+                stepQuantum = 0.05;
+                defaultStep = '0.1';
+                shiftPrompt = sprintf('Start shift from %s (%.10g %s):', ...
+                    referenceLabel, startReference, axisUnit);
+                stepPrompt = 'Step size (positive multiple of 0.05):';
+            else
+                stepQuantum = 0.5;
+                defaultStep = num2str(obj.massPlotSuggestedStep(axisMin, axisMax));
+                shiftPrompt = sprintf('Series center shift (%s; zero retained):', axisUnit);
+                stepPrompt = 'Fixed step between panels (positive multiple of 0.5):';
+            end
+            prompt = {'Number of columns:', 'Number of rows:', ...
+                stepPrompt, shiftPrompt};
+            defaultInput = {'4', '3', defaultStep, '0'};
+            if isempty(varargin)
+                answer = inputdlg(prompt, 'Mass Plot', [1 48], defaultInput);
+            else
+                answer = varargin{1};
+            end
+            if isempty(answer)
+                return
+            end
+            if numel(answer) ~= 4
+                errordlg('Enter columns, rows, step size, and start shift.', ...
+                    'Invalid Mass Plot Settings');
+                return
             end
 
-            if strcmp(obj.Direction,'z')
-                SGT = [SGT ' (ΔE=' get(obj.Width,'String') 'eV)'];
+            columns = str2double(answer{1});
+            rows = str2double(answer{2});
+            step = str2double(answer{3});
+            shift = str2double(answer{4});
+            stepUnits = step / stepQuantum;
+            if ~isfinite(columns) || columns < 1 || columns ~= fix(columns) || ...
+                    ~isfinite(rows) || rows < 1 || rows ~= fix(rows) || ...
+                    columns * rows > 100 || ~isfinite(stepUnits) || ...
+                    stepUnits <= 0 || abs(stepUnits - round(stepUnits)) > 1e-8 || ...
+                    ~isfinite(shift)
+                errordlg(sprintf(['Enter positive integer rows/columns (at most 100 panels), ' ...
+                    'a positive multiple of %g for the step, and a finite shift.'], ...
+                    stepQuantum), ...
+                    'Invalid Mass Plot Settings');
+                return
             end
 
-            sgtitle(Fig,SGT,'interpreter', 'none');
-
-
-%             try
-%                 sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV ' char(obj.Data.info.polarization)],'interpreter', 'none');
-%             catch
-%                 try
-%                     sgtitle(Fig,[obj.Data.name ': ' num2str(round(obj.Data.info.photon_energy,1)) 'eV '],'interpreter', 'none');
-%                 catch
-%                     sgtitle(Fig,obj.Data.name,'interpreter', 'none');
-%                 end
-%             end
-
-            obj.Slider.Value = pos0;
-
-            if sf == 1
-
-                exportgraphics(Fig,[obj.Data.name,'.jpg'],'Resolution',300);
-                close(Fig);
+            if strcmp(obj.Direction, 'z')
+                startPosition = startReference + shift;
+                if startPosition < axisMin || startPosition > axisMax
+                    errordlg('The shifted start must lie within the selected axis range.', ...
+                        'Invalid Mass Plot Settings');
+                    return
+                end
+                availableCount = 1 + floor((startPosition - axisMin + tolerance) / step);
+                availableSamples = nnz(obj.AxisData <= startPosition + tolerance);
+                plotCount = min([rows * columns, availableSamples, availableCount]);
+                positions = max(axisMin, startPosition - (0:plotCount-1) * step);
+            else
+                plotCount = min(rows * columns, numel(obj.AxisData));
+                positions = obj.massPlotPositions( ...
+                    plotCount, step, shift, axisMin, axisMax);
+                plotCount = numel(positions);
             end
 
+            axisLabel = char(obj.Data.([obj.Direction '_name']));
+            if strcmp(obj.Direction, 'x') && strcmp(axisLabel, 'Photon Energy')
+                axisLabel = 'hv';
+            elseif strcmp(obj.Direction, 'z') && isFermiRelative
+                axisLabel = 'BE';
+            elseif strcmp(obj.Direction, 'z') && isKinetic
+                axisLabel = 'KE';
+            end
+
+            originalPosition = obj.Slider.Value;
+            restorePosition = onCleanup(@() set(obj.Slider, 'Value', originalPosition));
+            rootUnits = get(groot, 'Units');
+            set(groot, 'Units', 'pixels');
+            restoreRootUnits = onCleanup(@() set(groot, 'Units', rootUnits));
+            screenSize = get(groot, 'ScreenSize');
+            clear restoreRootUnits
+            figureWidth = min(900, floor(0.8 * screenSize(3)));
+            figureHeight = min(600, floor(0.8 * screenSize(4)));
+            figurePosition = [screenSize(1) + floor((screenSize(3) - figureWidth) / 2), ...
+                screenSize(2) + floor((screenSize(4) - figureHeight) / 2), ...
+                figureWidth, figureHeight];
+            plotFigure = figure('Name', obj.Data.name, 'Color', 'white', ...
+                'Units', 'pixels', ...
+                'Position', figurePosition);
+            layout = tiledlayout(plotFigure, rows, columns, ...
+                'TileSpacing', 'compact', 'Padding', 'compact');
+            useInterpolation = strcmp(obj.InterpolateMenu.Checked, 'on');
+
+            for plotIndex = 1:plotCount
+                obj.Slider.Value = positions(plotIndex);
+                plotAxis = nexttile(layout, plotIndex);
+                if useInterpolation
+                    obj.initial_plot('new2intp', plotAxis);
+                else
+                    obj.initial_plot('new2', plotAxis);
+                end
+                xlabel(plotAxis, '');
+                ylabel(plotAxis, '');
+
+                displayPosition = positions(plotIndex);
+                if strcmp(obj.Direction, 'z') && isFermiRelative
+                    displayPosition = -displayPosition;
+                end
+                title(plotAxis, sprintf('%s= %s %s', ...
+                    axisLabel, num2str(displayPosition), axisUnit));
+
+                % Overlays on the main viewer can change with each position.
+                lineObjects = findall(obj.Axis, 'Type', 'line');
+                if ~isempty(lineObjects)
+                    copyobj(lineObjects, plotAxis);
+                end
+            end
+
+            sgtitle(plotFigure, obj.massPlotTitle(), 'Interpreter', 'none');
         end
     end
-    
+
+    methods (Access = private)
+        function step = massPlotSuggestedStep(obj, axisMin, axisMax)
+            % Balance range coverage against unused slots in the 4-by-3 grid.
+            targetCount = min(12, numel(obj.AxisData));
+            step = 0.5;
+            if targetCount <= 1 || axisMin == axisMax
+                return
+            end
+
+            targetSpacing = (axisMax - axisMin) / (targetCount - 1);
+            targetUnits = targetSpacing / 0.5;
+            candidateUnits = max(1, floor(targetUnits) - 3):ceil(targetUnits) + 3;
+            bestScore = Inf;
+            for units = candidateUnits
+                candidateStep = units * 0.5;
+                positions = obj.massPlotPositions( ...
+                    targetCount, candidateStep, 0, axisMin, axisMax);
+                uncoveredRange = (axisMax - axisMin) - ...
+                    (max(positions) - min(positions));
+                unusedSlots = targetCount - numel(positions);
+                score = uncoveredRange + unusedSlots * targetSpacing / 2;
+                if score < bestScore
+                    bestScore = score;
+                    step = candidateStep;
+                end
+            end
+        end
+
+        function positions = massPlotPositions(~, count, step, shift, axisMin, axisMax)
+            % Use one contiguous step lattice; keep zero when it lies in range.
+            zeroInRange = axisMin <= 0 && axisMax >= 0;
+            if axisMin == axisMax || (count == 1 && zeroInRange)
+                if zeroInRange
+                    positions = 0;
+                else
+                    positions = (axisMin + axisMax) / 2;
+                end
+                return
+            end
+
+            tolerance = 64 * eps(max(1, max(abs([axisMin, axisMax]))));
+            firstGridIndex = ceil((axisMin - tolerance) / step);
+            lastGridIndex = floor((axisMax + tolerance) / step);
+            gridCount = lastGridIndex - firstGridIndex + 1;
+            if gridCount < 1
+                positions = (axisMin + axisMax) / 2;
+                return
+            end
+
+            plotCount = min(count, gridCount);
+            desiredCenter = axisMin + (axisMax - axisMin) / 2 + shift;
+            desiredFirstIndex = round(desiredCenter / step - (plotCount - 1) / 2);
+            if zeroInRange
+                minimumFirstIndex = max(firstGridIndex, 1 - plotCount);
+                maximumFirstIndex = min(lastGridIndex - plotCount + 1, 0);
+            else
+                minimumFirstIndex = firstGridIndex;
+                maximumFirstIndex = lastGridIndex - plotCount + 1;
+            end
+            firstIndex = min(maximumFirstIndex, ...
+                max(minimumFirstIndex, desiredFirstIndex));
+            positions = fliplr((firstIndex:firstIndex + plotCount - 1) * step);
+        end
+
+        function [reference, label, isFermiRelative, isKinetic] = ...
+                massPlotReference(obj, axisMin, axisMax)
+            % Identify the energy convention and a usable starting position.
+            energyAxisName = lower(char(obj.Data.z_name));
+            energyAxisName = strrep(energyAxisName, '\it', '');
+            energyAxisName = regexprep(energyAxisName, '[^a-z]', '');
+            isFermiRelative = strcmp(energyAxisName, 'eef');
+            isKinetic = contains(energyAxisName, 'kinetic');
+
+            reference = axisMax;
+            label = 'axis maximum';
+            if ~strcmp(obj.Direction, 'z')
+                return
+            end
+            if isFermiRelative
+                reference = 0;
+                label = 'E_F';
+            elseif isKinetic && PlotSlices.hasDataMember(obj.Data, 'info') && ...
+                    isstruct(obj.Data.info) && ...
+                    all(isfield(obj.Data.info, {'photon_energy', 'workfunction'}))
+                photonEnergy = obj.Data.info.photon_energy;
+                workfunction = obj.Data.info.workfunction;
+                if isnumeric(photonEnergy) && isreal(photonEnergy) && ...
+                        ~isempty(photonEnergy) && all(isfinite(photonEnergy(:))) && ...
+                        isnumeric(workfunction) && isreal(workfunction) && ...
+                        ~isempty(workfunction) && all(isfinite(workfunction(:)))
+                    reference = median(photonEnergy(:)) - median(workfunction(:));
+                    label = 'estimated E_F';
+                end
+            end
+            if reference < axisMin || reference > axisMax
+                reference = axisMax;
+                label = 'axis maximum (E_F outside range)';
+            end
+        end
+
+        function groupTitle = massPlotTitle(obj)
+            % Add available acquisition metadata to the figure title.
+            groupTitle = obj.DataName;
+            if PlotSlices.hasDataMember(obj.Data, 'info') && isstruct(obj.Data.info)
+                info = obj.Data.info;
+                if isfield(info, 'photon_energy')
+                    photonEnergy = info.photon_energy;
+                    if isnumeric(photonEnergy) && isreal(photonEnergy) && ...
+                            ~isempty(photonEnergy) && all(isfinite(photonEnergy(:)))
+                        if isscalar(photonEnergy)
+                            energyText = sprintf('%.1f', photonEnergy);
+                        else
+                            energyMin = min(photonEnergy(:));
+                            energyMax = max(photonEnergy(:));
+                            meanStep = (energyMax - energyMin) / (numel(photonEnergy) - 1);
+                            energyText = sprintf('%g/%g/%g', ...
+                                round(energyMin, 1), meanStep, round(energyMax, 1));
+                        end
+                        groupTitle = sprintf('%s: %s eV', groupTitle, energyText);
+                    end
+                end
+                if isfield(info, 'polarization') && ...
+                        (ischar(info.polarization) || ...
+                        (isstring(info.polarization) && isscalar(info.polarization)))
+                    groupTitle = sprintf('%s %s', groupTitle, char(info.polarization));
+                end
+            end
+            if strcmp(obj.Direction, 'z')
+                groupTitle = sprintf('%s (ΔE=%s eV)', ...
+                    groupTitle, get(obj.Width, 'String'));
+            end
+        end
+
+        function createEDCMDCFigures(obj)
+            % Size linked plot boxes to the main axes' effective data plot box.
+            figurePosition = get(obj.Figure, 'Position');
+            plotBox = obj.getEffectivePlotBox();
+            plotBoxWidth = max(1, round(plotBox(3)));
+            plotBoxHeight = max(1, round(plotBox(4)));
+            linkedFont = get(obj.Axis, 'FontName');
+            linkedFontSize = get(obj.Axis, 'FontSize');
+            linkedLineWidth = get(obj.Axis, 'LineWidth');
+
+            mdcPlotHeight = 180;
+            edcPlotWidth = mdcPlotHeight;
+            edcWidth = edcPlotWidth + 100;
+            edcHeight = plotBoxHeight + 75;
+            edcPosition = [figurePosition(1) + figurePosition(3) + 10, ...
+                figurePosition(2) + plotBox(2) - 45, edcWidth, edcHeight];
+            obj.FigureEDC = figure('Name', 'EDC', 'NumberTitle', 'off', ...
+                'Color', 'w', 'Position', edcPosition, ...
+                'CloseRequestFcn', @obj.closeLinkedFigure);
+            obj.AxisEDC = axes('Parent', obj.FigureEDC, 'Units', 'pixels', ...
+                'Position', [75, 45, edcPlotWidth, plotBoxHeight]);
+            obj.EDC_line = plot(obj.AxisEDC, nan(size(obj.imag.YData)), ...
+                obj.imag.YData, 'LineWidth', linkedLineWidth);
+            xlabel(obj.AxisEDC, 'Mean intensity');
+            ylabel(obj.AxisEDC, obj.Axis.YLabel.String);
+            obj.styleLinkedAxes(obj.AxisEDC, linkedFont, linkedFontSize, linkedLineWidth);
+            ylim(obj.AxisEDC, ylim(obj.Axis));
+            obj.EDCRegionLines(1) = yline(obj.AxisEDC, obj.PosY, '--', ...
+                'Color', [0 0.6 0.6], 'LineWidth', linkedLineWidth);
+            obj.EDCRegionLines(2) = yline(obj.AxisEDC, obj.PosY + obj.DY, '--', ...
+                'Color', [0.35 0.35 0.35], 'LineWidth', linkedLineWidth);
+
+            mdcFigureHeight = mdcPlotHeight + 90;
+            mdcWidth = plotBoxWidth + 90;
+            mdcAxesBottom = 55;
+            mdcGap = 24;
+            mdcPosition = [figurePosition(1) + plotBox(1) - 70, ...
+                figurePosition(2) - mdcGap - mdcAxesBottom - mdcPlotHeight, ...
+                mdcWidth, mdcFigureHeight];
+            obj.FigureMDC = figure('Name', 'MDC', 'NumberTitle', 'off', ...
+                'Color', 'w', 'Position', mdcPosition, ...
+                'CloseRequestFcn', @obj.closeLinkedFigure);
+            obj.AxisMDC = axes('Parent', obj.FigureMDC, 'Units', 'pixels', ...
+                'Position', [70, mdcAxesBottom, plotBoxWidth, mdcPlotHeight]);
+            obj.MDC_line = plot(obj.AxisMDC, obj.imag.XData, ...
+                nan(size(obj.imag.XData)), 'LineWidth', linkedLineWidth);
+            xlabel(obj.AxisMDC, obj.Axis.XLabel.String);
+            ylabel(obj.AxisMDC, 'Mean intensity');
+            obj.styleLinkedAxes(obj.AxisMDC, linkedFont, linkedFontSize, linkedLineWidth);
+            xlim(obj.AxisMDC, xlim(obj.Axis));
+            obj.MDCRegionLines(1) = xline(obj.AxisMDC, obj.PosX, '--', ...
+                'Color', [0 0.6 0.6], 'LineWidth', linkedLineWidth);
+            obj.MDCRegionLines(2) = xline(obj.AxisMDC, obj.PosX + obj.DX, '--', ...
+                'Color', [0.35 0.35 0.35], 'LineWidth', linkedLineWidth);
+            figure(obj.Figure);
+        end
+
+        function plotBox = getEffectivePlotBox(obj)
+            % Account for data-aspect constraints such as axis equal.
+            plotBox = getpixelposition(obj.Axis, true);
+            if strcmp(get(obj.Axis, 'DataAspectRatioMode'), 'manual')
+                xLimits = xlim(obj.Axis);
+                yLimits = ylim(obj.Axis);
+                dataAspect = get(obj.Axis, 'DataAspectRatio');
+                xSpan = abs(diff(xLimits));
+                ySpan = abs(diff(yLimits));
+                if xSpan == 0 || ySpan == 0
+                    return
+                end
+                targetRatio = (xSpan * dataAspect(1)) / ...
+                    (ySpan * dataAspect(2));
+            elseif strcmp(get(obj.Axis, 'PlotBoxAspectRatioMode'), 'manual')
+                plotAspect = get(obj.Axis, 'PlotBoxAspectRatio');
+                targetRatio = plotAspect(1) / plotAspect(2);
+            else
+                return
+            end
+            if ~isfinite(targetRatio) || targetRatio <= 0 || ...
+                    plotBox(3) <= 0 || plotBox(4) <= 0
+                return
+            end
+            availableRatio = plotBox(3) / plotBox(4);
+            if targetRatio < availableRatio
+                adjustedWidth = plotBox(4) * targetRatio;
+                plotBox(1) = plotBox(1) + (plotBox(3) - adjustedWidth) / 2;
+                plotBox(3) = adjustedWidth;
+            else
+                adjustedHeight = plotBox(3) / targetRatio;
+                plotBox(2) = plotBox(2) + (plotBox(4) - adjustedHeight) / 2;
+                plotBox(4) = adjustedHeight;
+            end
+        end
+
+        function styleLinkedAxes(~, axesHandle, fontName, fontSize, lineWidth)
+            % Match linked plots to the main viewer axes typography and weight.
+            set(axesHandle, 'FontName', fontName, 'FontSize', fontSize, ...
+                'LineWidth', lineWidth, 'Box', 'on', 'Layer', 'top');
+            set([axesHandle.XLabel, axesHandle.YLabel], ...
+                'FontName', fontName, 'FontSize', fontSize);
+            grid(axesHandle, 'off');
+        end
+
+        function closeLinkedFigure(obj, sourceFigure, ~)
+            % Closing either linked window closes the pair and clears the mode.
+            if isgraphics(sourceFigure)
+                delete(sourceFigure);
+            end
+            obj.closeEDCMDCFigures();
+        end
+
+        function closeEDCMDCFigures(obj)
+            % Delete linked figures without recursively invoking close callbacks.
+            figureHandles = {obj.FigureEDC, obj.FigureMDC};
+            for figureIndex = 1:numel(figureHandles)
+                figureHandle = figureHandles{figureIndex};
+                if isgraphics(figureHandle)
+                    delete(figureHandle);
+                end
+            end
+            obj.FigureEDC = [];
+            obj.AxisEDC = [];
+            obj.EDC_line = [];
+            obj.EDCRegionLines = gobjects(0);
+            obj.FigureMDC = [];
+            obj.AxisMDC = [];
+            obj.MDC_line = [];
+            obj.MDCRegionLines = gobjects(0);
+            if isgraphics(obj.Crosshair2)
+                obj.Crosshair2.Visible = 'off';
+            end
+            if isgraphics(obj.MDCEDC_Menu)
+                set(obj.MDCEDC_Menu, 'Checked', 'off');
+            end
+        end
+
+        function closeMainFigure(obj, sourceFigure, ~)
+            % Close linked windows and overlays when the main viewer closes.
+            obj.closeEDCMDCFigures();
+            if isgraphics(obj.PerpDistributionFigure)
+                delete(obj.PerpDistributionFigure);
+                obj.PerpDistributionFigure = [];
+            end
+            if isgraphics(sourceFigure)
+                delete(sourceFigure);
+            end
+            obj.Figure = [];
+        end
+
+        function normalizeLegacyMetadata(obj)
+            % Supply optional display metadata missing from older bare structs.
+            if ~isstruct(obj.Data) || ~isscalar(obj.Data)
+                return
+            end
+            defaults = struct('name', obj.DataName, ...
+                'x_name', 'x', 'x_unit', '', ...
+                'y_name', 'y', 'y_unit', '', ...
+                'z_name', 'z', 'z_unit', '');
+            defaultFields = fieldnames(defaults);
+            for fieldIndex = 1:numel(defaultFields)
+                fieldName = defaultFields{fieldIndex};
+                if ~isfield(obj.Data, fieldName) || isempty(obj.Data.(fieldName))
+                    obj.Data.(fieldName) = defaults.(fieldName);
+                end
+            end
+            if ~isfield(obj.Data, 'info') || ~isstruct(obj.Data.info)
+                obj.Data.info = struct();
+            end
+        end
+
+        function validatePlotData(obj)
+            % Validate the common three-axis representation used by the GUI.
+            axesNames = {'x', 'y', 'z'};
+            valueSize = size(obj.Data.value);
+            for axisIndex = 1:numel(axesNames)
+                axisName = axesNames{axisIndex};
+                if ~PlotSlices.hasDataMember(obj.Data, axisName)
+                    error('PlotSlices:InvalidAxes', ...
+                        'The selected data must provide x, y, and z coordinates.');
+                end
+                axisValues = obj.Data.(axisName);
+                if ~isnumeric(axisValues) || ~isreal(axisValues) || ...
+                        ~isvector(axisValues) || isempty(axisValues) || ...
+                        any(~isfinite(axisValues(:)))
+                    error('PlotSlices:InvalidAxes', ...
+                        'Coordinate %s must be a nonempty finite numeric vector.', axisName);
+                end
+                if numel(axisValues) ~= valueSize(axisIndex)
+                    error('PlotSlices:InvalidAxes', ...
+                        'The %s coordinate length must match value dimension %d.', ...
+                        axisName, axisIndex);
+                end
+            end
+            if ~any(strcmp(obj.Direction, axesNames))
+                error('PlotSlices:InvalidDirection', ...
+                    'Direction must be ''x'', ''y'', or ''z''.');
+            end
+        end
+
+        function cmapData = loadColormap(~, colorMapName)
+            % Load custom maps beside this class; use MATLAB maps as fallback.
+            visualizationFolder = fileparts(fileparts(mfilename('fullpath')));
+            colorMapFile = fullfile(visualizationFolder, 'Colormap.mat');
+            if isfile(colorMapFile)
+                savedVariables = whos('-file', colorMapFile);
+                savedMapNames = {savedVariables.name};
+                if any(strcmp(savedMapNames, colorMapName))
+                    savedMaps = load(colorMapFile, colorMapName);
+                    cmapData = savedMaps.(colorMapName);
+                    return
+                end
+            end
+            try
+                cmapData = feval(colorMapName, 256);
+            catch
+                error('PlotSlices:MissingColormap', ...
+                    'Colormap "%s" is not available in Colormap.mat or MATLAB.', ...
+                    colorMapName);
+            end
+        end
+
+        function saveWorkspaceVariable(~, variableName, value, dialogTitle)
+            % Validate a requested variable name and confirm replacements.
+            variableName = strtrim(variableName);
+            if ~isvarname(variableName)
+                errordlg('Enter a valid MATLAB variable name.', 'Invalid Data Name');
+                return
+            end
+            workspaceNames = evalin('base', 'who');
+            if any(strcmp(workspaceNames, variableName))
+                choice = questdlg(sprintf('Variable "%s" already exists. Overwrite it?', ...
+                    variableName), dialogTitle, 'Overwrite', 'Cancel', 'Cancel');
+                if ~strcmp(choice, 'Overwrite')
+                    return
+                end
+            end
+            assignin('base', variableName, value);
+        end
+
+        function [conversionData, conversionKind] = prepareConversionData(~, sourceData)
+            % Return native conversion objects for OX_ARPES objects or old structs.
+            conversionData = [];
+            conversionKind = '';
+            if isa(sourceData, 'OxA_CUT')
+                conversionData = sourceData;
+                conversionKind = 'cut';
+                return
+            elseif isa(sourceData, 'OxA_MAP_ToF') || isa(sourceData, 'OxA_MAP')
+                conversionData = sourceData;
+                conversionKind = 'map';
+                return
+            elseif isa(sourceData, 'OxA_KZ')
+                conversionData = sourceData;
+                conversionKind = 'kz';
+                return
+            end
+            if ~isstruct(sourceData) || ~isscalar(sourceData) || ...
+                    ~all(isfield(sourceData, {'x', 'y', 'value'}))
+                return
+            end
+
+            sourceInfo = struct();
+            if isfield(sourceData, 'info') && isstruct(sourceData.info)
+                sourceInfo = sourceData.info;
+            end
+            if ismatrix(sourceData.value)
+                conversionKind = 'cut';
+                conversionData = OxA_CUT(sourceData.x, sourceData.y, sourceData.value);
+            elseif ndims(sourceData.value) == 3 && isfield(sourceData, 'z')
+                if isfield(sourceInfo, 'inner_energy') || ...
+                        (isfield(sourceData, 'x_name') && ...
+                        contains(lower(char(sourceData.x_name)), 'photon'))
+                    conversionKind = 'kz';
+                    conversionData = OxA_KZ(sourceData.x, sourceData.y, ...
+                        sourceData.z, sourceData.value);
+                elseif isfield(sourceInfo, 'azimuth_offset') || ...
+                        PlotSlices.hasAngleAxisName(sourceData)
+                    conversionKind = 'map';
+                    conversionData = OxA_MAP(sourceData.x, sourceData.y, ...
+                        sourceData.z, sourceData.value);
+                end
+            end
+            if isempty(conversionKind)
+                return
+            end
+
+            % Carry the source's naming, units, and acquisition metadata over
+            % while retaining defaults required by the OX_ARPES converter.
+            if isfield(sourceData, 'name')
+                conversionData.name = sourceData.name;
+            end
+            axisFields = {'x_name', 'x_unit', 'y_name', 'y_unit', ...
+                'z_name', 'z_unit'};
+            for fieldIndex = 1:numel(axisFields)
+                fieldName = axisFields{fieldIndex};
+                if isfield(sourceData, fieldName)
+                    conversionData.(fieldName) = sourceData.(fieldName);
+                end
+            end
+            sourceInfoFields = fieldnames(sourceInfo);
+            for fieldIndex = 1:numel(sourceInfoFields)
+                fieldName = sourceInfoFields{fieldIndex};
+                conversionData.info.(fieldName) = sourceInfo.(fieldName);
+            end
+        end
+
+        function value = infoValue(~, info, fieldName, defaultValue)
+            % Read a scalar conversion setting while tolerating old metadata.
+            value = defaultValue;
+            if isstruct(info) && isfield(info, fieldName)
+                candidate = info.(fieldName);
+                if isnumeric(candidate) && isscalar(candidate) && isfinite(candidate)
+                    value = candidate;
+                end
+            end
+        end
+    end
+
+    methods (Static, Access = private)
+        function hasMember = hasDataMember(data, memberName)
+            % Test struct fields and object properties through one interface.
+            if isstruct(data)
+                hasMember = isscalar(data) && isfield(data, memberName);
+            elseif isobject(data)
+                hasMember = isscalar(data) && isprop(data, memberName);
+            else
+                hasMember = false;
+            end
+        end
+
+        function hasAngleName = hasAngleAxisName(data)
+            % Recognize legacy maps from coordinate labels when metadata is sparse.
+            hasAngleName = false;
+            nameFields = {'x_name', 'y_name'};
+            for fieldIndex = 1:numel(nameFields)
+                fieldName = nameFields{fieldIndex};
+                if isfield(data, fieldName) && ...
+                        contains(lower(char(data.(fieldName))), 'angle')
+                    hasAngleName = true;
+                    return
+                end
+            end
+        end
+
+    end
+
     methods % separate files
         correction(obj,varargin) % Fermi surface correction
         plotCrossHair(obj,~,~) % plotCrossHair and EDC/MDC plot drawing
@@ -1331,12 +1880,15 @@ classdef PlotSlices < handle
         sqCorrection(obj,varargin) % Square Correction for data set
 
         function save_slice(obj,varargin)
-            
+            % Package the displayed image data and axes into an OxA_CUT object,
+            % then save it to the base workspace under a user-entered name.
             x = obj.imag.XData;
             y = obj.imag.YData;
             value = obj.imag.CData';
             data = OxA_CUT(x,y,value);
-            data.info = obj.Data.info;
+            if PlotSlices.hasDataMember(obj.Data, 'info') && isstruct(obj.Data.info)
+                data.info = obj.Data.info;
+            end
 
             try
                 switch obj.Direction
@@ -1363,12 +1915,17 @@ classdef PlotSlices < handle
             if isempty(SaveName)
                 return;
             end
-            assignin('base',SaveName{1},data);
+            obj.saveWorkspaceVariable(SaveName{1}, data, 'Save Slice');
         end    
         
         function cut(obj,varargin)
-
+            % Ask the user to define a line in the main 2-D plane, interpolate
+            % the 3-D volume along that line, and save the resulting cut data.
             [xlist,ylist]=getpts(obj.Axis);
+            if numel(xlist) ~= 2 || numel(ylist) ~= 2
+                errordlg('Select exactly two points to define the cut.', 'Invalid Cut');
+                return
+            end
             x0=xlist(1);
             y0=ylist(1);
             x1=xlist(2);
@@ -1414,7 +1971,7 @@ classdef PlotSlices < handle
                 return;
             end
 
-            assignin('base',SaveName{1},data);
+            obj.saveWorkspaceVariable(SaveName{1}, data, 'Save Cut');
         end
     end
 end

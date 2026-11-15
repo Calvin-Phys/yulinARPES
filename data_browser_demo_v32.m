@@ -1,10 +1,24 @@
 function data_browser_demo_v32
-% Main Window of data browser
+%DATA_BROWSER_DEMO_V32 Open the GUI for browsing ARPES data in the base workspace.
+%   The browser does not load measurements itself. Use the Loader menu to call
+%   the repository's loading and conversion tools; loaded variables then appear
+%   in the list and can be plotted, grouped, combined, saved, or edited here.
+%
+%   The GUI expects ARPES variables to expose a numeric VALUE array and, when
+%   available, matching X/Y/Z coordinate vectors and an INFO metadata field.
+%   It also supports ordinary base-workspace variables in the unfiltered list.
+%   Several menus depend on helper functions and GUI Layout Toolbox (uiextras)
+%   being available on the MATLAB path.
+%
+%   The figure is a singleton: calling this function again raises the existing
+%   Data Browser window instead of creating another copy.
 % Bug report: han.peng@physics.ox.ac.uk
 % cheng.peng@physics.ox.ac.uk
 %
 
 %% Create main window
+% Reuse the tagged figure if it is already open. All callbacks retrieve their
+% shared control handles from this figure with GUIDATA.
 h=findobj('Tag','DataBrowser');
 if ~isempty(h)
     h=h(1);
@@ -23,6 +37,8 @@ handles.mObject = figure('Position',[500 200 300 450],...
 VBoxHome = uiextras.VBox('Parent',handles.mObject);
 
 %% menu bar
+% These menus are dispatch points to the wider yulinARPES tool collection;
+% most loading, fitting, and visualization work is implemented elsewhere.
 LoaderMenu = uimenu(handles.mObject,'Label','Loader');
 uimenu(LoaderMenu,'Label','Load ARPES Data','Callback',@LoadDataARPES.main);
 uimenu(LoaderMenu,'Label','Load ARPES Data (New)','Callback',@(~,~)loader_UI);
@@ -78,7 +94,9 @@ uimenu(ToolsMenu,'Label','Data Process All','Callback',@(~,~)OxArpes_DataProcess
 
 
 %% Group Choice Panel
-% Panel: Group Choice
+% Group membership is stored on each ARPES variable in data.info.GroupInfo.
+% The five buttons select either the unfiltered workspace list or one of four
+% groups; the context menus rename the four user-defined group labels.
 
 GroupMenu0=uicontextmenu();
 %uimenu('Parent',GroupMenu0,'Label','Rename',...
@@ -125,6 +143,9 @@ handles.GroupName=uicontrol('Parent',VBoxHome,...
 
 
 %% VarList Right-click Menu 
+% Context actions use the selected list entries. Several actions read or write
+% those variables in MATLAB's base workspace, so the browser remains coupled to
+% the interactive workspace rather than owning a separate data model.
 ListBoxMenu = uicontextmenu;
 
 plotMenu=uimenu(ListBoxMenu,'Label','Plot');
@@ -145,7 +166,8 @@ uimenu(plotDOSMenu,'Label','(H) Normalise to Peak','Callback',{@plotDos_Callback
 uimenu(ListBoxMenu,'Label','Data Viewer (new)','Callback',@mapViewerNew_CallbackFcn);
 % uimenu(plotMenu,'Label','3D Map Viewer','Separator','On','Callback',@mapViewer_CallbackFcn);
 
-uimenu(plotMenu,'Label','Volume Viewer','Callback',@volumeViwer_Callback,'Separator','on');
+uimenu(plotMenu,'Label','Volume Viewer','Callback',@volumeViewerCallback, ...
+    'Separator','on');
 
 
 uimenu(ListBoxMenu,'Label','Rename','Callback',@ListboxItemRename,'Separator','on');
@@ -183,6 +205,7 @@ uimenu(SVM1,'Label','Save to Separate Files','Callback',@SaveVarsSeparate_Callba
 uimenu(ListBoxMenu,'Label','Delete','Separator','on','Callback',@Delete_CallbackFcn);
 
 %% Variable Listbox: Varlist
+% The list is refreshed from BASE WORKSPACE variables by UpdateVarList.
 handles.VarList=uicontrol('Parent',VBoxHome,...
     'Style','ListBox','BackgroundColor','w',...
     'Value',1,'Max',100,...
@@ -191,6 +214,8 @@ handles.VarList=uicontrol('Parent',VBoxHome,...
     'Tag','VarList');
 
 %% Panel: Data Information
+% This panel displays basic coordinate ranges and sample counts for the
+% currently selected ARPES variable when its VALUE and axis fields are present.
 panel_DataInfo=uiextras.Panel('Parent',VBoxHome,'Title','Data Information',...
     'Padding',2,'ForegroundColor','blue','BorderType', 'etchedout');
 grid1_panel_datainfo=uiextras.Grid('Parent',panel_DataInfo,'Spacing',3);
@@ -378,6 +403,7 @@ guidata(handles.mObject,handles);
 
 %%  ==================== Varlist Menu ==================================
 function plot_CallbackFcn(hObject,~,Direction)
+    % Plot the first selected variable along the requested coordinate axis.
     UpdateVarList(hObject);
     handles=guidata(hObject);
     DataNames=handles.VarNames';
@@ -396,36 +422,47 @@ function plot_CallbackFcn(hObject,~,Direction)
     end
 
 function plotDos_CallbackFcn(hObject,~,Direction,NormaliseType)
-    % Direction: H, V
-    % NormaliseType: raw, mean, peak
+    % Plot an integrated spectrum for each selected variable. Direction sets
+    % whether counts or energy are on the horizontal axis; normalization is
+    % applied to the integrated trace, not to the source workspace variable.
+    % Direction: H or V. NormaliseType: raw, mean, or peak.
     UpdateVarList(hObject);
     handles=guidata(hObject);
     dataName=handles.VarNames';
+    titleText = cell(numel(dataName), 1);
 
     figure;
     hold on
 
-    for i = 1:length(dataName)
+    for i = 1:numel(dataName)
         data = evalin('base',dataName{i});
 
-        if ndims(data.value) == 2 && min(size(data.value)) ~= 1
+        if ismatrix(data.value) && ~isvector(data.value)
             x = data.y;
             y = squeeze(sum(data.value,1))';
         elseif ndims(data.value) == 3
             x = data.z;
             data.value(isnan(data.value)) = 0;
             y = squeeze(sum(data.value,[1 2]))';
-        elseif ndims(data.value) == 2 && min(size(data.value)) == 1
+        elseif isvector(data.value)
             x = data.x;
             y = data.value;
+        else
+            errordlg('DOS plots support one-, two-, or three-dimensional data.', ...
+                'Density of States');
+            return;
         end
 
         switch NormaliseType
-            case 'raw'
+            case 'raw' % Keep the integrated values unchanged.
             case 'mean'
                 y = y/mean(y,"all");
             case 'peak'
                 y = y/max(y,[],"all");
+            otherwise
+                errordlg('Select a supported DOS normalization option.', ...
+                    'Density of States');
+                return;
         end
             
         switch Direction
@@ -437,17 +474,21 @@ function plotDos_CallbackFcn(hObject,~,Direction,NormaliseType)
                 plot(y,x);
                 ylabel('Energy (eV)');
                 xlabel('Counts (a.u.)');
+            otherwise
+                errordlg('Select a horizontal or vertical DOS plot.', ...
+                    'Density of States');
+                return;
         end
 
-        TitleText{i} = strrep(dataName{i},'_','\_');
+        titleText{i} = strrep(dataName{i}, '_', '\_');
     end
     
     hold off
 
-    if length(dataName)==1
-        title(TitleText{1});
+    if isscalar(dataName)
+        title(titleText{1});
     else
-        legend(TitleText{:});
+        legend(titleText{:});
     end
 
 
@@ -464,7 +505,7 @@ function plotDos_CallbackFcn(hObject,~,Direction,NormaliseType)
 %     OxArpes_DataViewer(data);
 
 function mapViewerNew_CallbackFcn(hObject,~)
-
+    % Dispatch supported 2-D, 3-D, and 4-D data to the matching ARPES viewer.
     UpdateVarList(hObject);
     handles=guidata(hObject);
     DataNames=handles.VarNames';
@@ -473,39 +514,87 @@ function mapViewerNew_CallbackFcn(hObject,~)
     if isstruct(data)
         data.name = DataNames{1};
     end
+    if ~hasDataMember(data, 'value')
+        errordlg('The selected variable does not contain ARPES value data.', ...
+            'Data Viewer');
+        return;
+    end
+    if isvector(data.value)
+        PlotData(hObject);
+        return;
+    end
+
     if ndims(data.value) == 3
         OxArpes_DataViewer_3D(data);
-    elseif ndims(data.value) == 2
+    elseif ismatrix(data.value)
         OxArpes_DataViewer_2D(data);
     elseif ndims(data.value) == 4
         OxArpes_DataViewer_4D(data);
+    else
+        errordlg(sprintf('The data viewer does not support %d-D arrays.', ...
+            ndims(data.value)), 'Data Viewer');
     end
 
-function volumeViwer_Callback(hObject,~)
-
+function volumeViewerCallback(hObject,~)
+    % Open MATLAB's volume viewer for the selected 3-D value array. Scale
+    % factors are estimated from the data axes before the viewer is launched.
     UpdateVarList(hObject);
     handles=guidata(hObject);
     DataNames=handles.VarNames';
 
     data = evalin('base',DataNames{1});
+    requiredMembers = {'value', 'x', 'y', 'z'};
+    hasRequiredMembers = all(cellfun(@(memberName) ...
+        hasDataMember(data, memberName), requiredMembers));
+    if ~hasRequiredMembers || ndims(data.value) ~= 3
+        errordlg('Select a 3-D ARPES dataset with x, y, and z coordinates.', ...
+            'Volume Viewer');
+        return;
+    end
 
-    xx = (max(data.x)-min(data.x))/length(data.x);
-    yy = (max(data.y)-min(data.y))/length(data.y);
-    zz = (max(data.z)-min(data.z))/length(data.z);
+    xAxis = data.x(:);
+    yAxis = data.y(:);
+    zAxis = data.z(:);
+    if ~isnumeric(data.value) || ~isnumeric(xAxis) || ~isnumeric(yAxis) || ...
+            ~isnumeric(zAxis) || ~isvector(data.x) || ~isvector(data.y) || ...
+            ~isvector(data.z) || size(data.value, 1) ~= numel(xAxis) || ...
+            size(data.value, 2) ~= numel(yAxis) || ...
+            size(data.value, 3) ~= numel(zAxis)
+        errordlg('The value array dimensions must match the x, y, and z axes.', ...
+            'Volume Viewer');
+        return;
+    end
 
-    rr = (max(data.z)-min(data.z)) / ((max(data.x)-min(data.x)+max(data.y)-min(data.y))/2);
+    xRange = max(xAxis) - min(xAxis);
+    yRange = max(yAxis) - min(yAxis);
+    zRange = max(zAxis) - min(zAxis);
+    meanInPlaneRange = (xRange + yRange) / 2;
+    if any(~isfinite(xAxis)) || any(~isfinite(yAxis)) || ...
+            any(~isfinite(zAxis)) || ...
+            any(~isfinite([xRange, yRange, zRange])) || ...
+            any([xRange, yRange, zRange] <= 0) || meanInPlaneRange <= 0
+        errordlg('The x, y, and z axes must have finite, nonzero ranges.', ...
+            'Volume Viewer');
+        return;
+    end
 
+    xStep = xRange / numel(xAxis);
+    yStep = yRange / numel(yAxis);
+    zStep = zRange / numel(zAxis);
+    zRangeRatio = zRange / meanInPlaneRange;
+    scaleFactors = [xStep / yStep, 1, zStep / yStep / zRangeRatio];
     try
-        volumeViewer(permute(data.value, [2 1 3]), ScaleFactors=[xx/yy 1 zz/yy/rr])    
-    catch
-        evalin('caller','volumeViewer(permute(data.value, [2 1 3]), ScaleFactors=[xx/yy 1 zz/yy/rr])');
-        % volumeviewer is not supported well by early versions of Matlab
+        volumeViewer(permute(data.value, [2 1 3]), ScaleFactors=scaleFactors);
+    catch exception
+        errordlg(sprintf('MATLAB could not open the volume viewer:\n%s', ...
+            exception.message), 'Volume Viewer');
     end
 
 
 
-function SaveVarsSeparate_CallbackFcn(hObject,varargin)
-    %% Load data from VarList
+function SaveVarsSeparate_CallbackFcn(hObject,~)
+    % Save each selected base-workspace variable to its own MAT-file in a
+    % folder chosen by the user.
     UpdateVarList(hObject);
     handles=guidata(hObject);
     DataNames=handles.VarNames';
@@ -522,8 +611,9 @@ function SaveVarsSeparate_CallbackFcn(hObject,varargin)
         disp(['Save ',DataNames{i}]);
     end
 
-function SaveVars_CallbackFcn(hObject,eventdata)
-    %% Load data from VarList
+function SaveVars_CallbackFcn(hObject,~)
+    % Save selected variables together. If the target file exists, the user
+    % chooses whether to append, overwrite, or cancel.
     UpdateVarList(hObject);
     handles=guidata(hObject);
     DataNames=handles.VarNames';
@@ -557,8 +647,8 @@ function SaveVars_CallbackFcn(hObject,eventdata)
         disp(['Save ',fullfilename]);
     end
 
-function Delete_CallbackFcn(hObject,eventdata)
-    %% Load data from VarList
+function Delete_CallbackFcn(hObject,~)
+    % Delete selected variables from the base workspace after confirmation.
     UpdateVarList(hObject);
     handles=guidata(hObject);
     %% Delete
@@ -575,8 +665,8 @@ function Delete_CallbackFcn(hObject,eventdata)
     end
     UpdateVarList(hObject);
 
-function Listbox_openvar(hObject,eventdata)
-    %% Load data from VarList
+function Listbox_openvar(hObject,~)
+    % Open the first selected workspace variable in MATLAB's variable editor.
     UpdateVarList(hObject);
     handles=guidata(hObject);
     DataName=handles.VarNames{1};
@@ -585,7 +675,8 @@ function Listbox_openvar(hObject,eventdata)
 
 
 %% ============= Group Selector Callback Functions===============
-%part092501
+% Group selection changes the list filter. Add/Move/Remove callbacks below
+% update the GroupInfo flags stored in each ARPES data object's INFO metadata.
 function Group0(hObject,varargin)
     handles=guidata(hObject);
     setcolors(handles);
@@ -632,6 +723,8 @@ function setcolors(handles)
     set(handles.Group3,'BackgroundColor',[147 112 219]/256);
     set(handles.Group4,'BackgroundColor',[126 192 238]/256);
 function ListboxItemRename(hObject,varargin)
+    % Rename the first selected base-workspace variable while preserving its
+    % value. MATLAB variable-name rules are checked before assignment.
     handles=guidata(hObject);
     list_entries=get(handles.VarList,'String');
     index_selected=get(handles.VarList,'Value');
@@ -669,6 +762,7 @@ function AddToGroup4(hObject,varargin)
     AddToGroup(hObject,4);
 
 function AddToGroup(hObject,GroupNumber)
+    % Add selected ARPES variables to a group without clearing other flags.
     handles=guidata(hObject);
     list_entries=get(handles.VarList,'String');
     index_selected=get(handles.VarList,'Value');
@@ -698,6 +792,8 @@ function MoveToGroup4(hObject,varargin)
     MoveToGroup(hObject,4);
     
 function MoveToGroup(hObject,GroupNumber)
+    % Move selected ARPES variables into one group, clearing the active group's
+    % flag first. Other group memberships are retained.
     handles=guidata(hObject);
     list_entries=get(handles.VarList,'String');
     index_selected=get(handles.VarList,'Value');
@@ -725,6 +821,7 @@ function MoveToGroup(hObject,GroupNumber)
     UpdateVarList(hObject);
     
 function RemoveFromGroup(hObject,varargin)
+    % Remove selected ARPES variables from the currently active group.
     handles=guidata(hObject);
     list_entries=get(handles.VarList,'String');
     index_selected=get(handles.VarList,'Value');
@@ -746,14 +843,20 @@ function RemoveFromGroup(hObject,varargin)
     UpdateVarList(hObject);
  
 %% combine 2D -> 3D
-function pb_rearrange_2Dto3D_Callback(hObject,varargin)
+function pb_rearrange_2Dto3D_Callback(hObject,~)
+% Collect selected datasets and prompt for the mapping coordinate used when
+% arranging multiple 2-D cuts into one 3-D dataset.
 handles=guidata(hObject);
-list_entries=get(handles.VarList,'String');
-index_selected=get(handles.VarList,'Value');
-n_index=length(index_selected);
-for i=1:n_index
-    varname=list_entries{index_selected(i)};
-    data_list{i}=evalin('base',varname);
+listEntries = get(handles.VarList, 'String');
+selectedIndices = get(handles.VarList, 'Value');
+if isempty(selectedIndices) || all(strcmp(listEntries(selectedIndices), 'Empty'))
+    errordlg('Select at least one dataset to rearrange.', 'Rearrange Data');
+    return;
+end
+dataList = cell(numel(selectedIndices), 1);
+for dataIndex = 1:numel(selectedIndices)
+    variableName = listEntries{selectedIndices(dataIndex)};
+    dataList{dataIndex} = evalin('base', variableName);
 end
 
 % create window for input of file name
@@ -768,9 +871,8 @@ filenamewindow = figure( 'Position', [500 400 200 150], ...
 % create vertical arrange of elements
 vbox = uiextras.VBox('Parent', filenamewindow);
 
-MappingMenu = uicontextmenu;
 % create mapping selection
-Mapping_String = uicontrol('Parent',vbox,...
+uicontrol('Parent',vbox,...
     'Style','text',...
     'String','Mapping by:');
 Mapping_Selection = uicontrol('Parent',vbox,...
@@ -778,7 +880,7 @@ Mapping_Selection = uicontrol('Parent',vbox,...
     'String', {'theta','phi','index'});
 
 % create file name input
-FileName_String = uicontrol('Parent', vbox,...
+uicontrol('Parent', vbox,...
     'Style','text',...
     'String','Enter file name:');
 FileName_Input = uicontrol('Parent',vbox,...
@@ -786,101 +888,170 @@ FileName_Input = uicontrol('Parent',vbox,...
     'String','Map');
 
 % save button
-SaveButton = uicontrol('Parent',vbox,...
+uicontrol('Parent',vbox,...
     'Style','pushbutton',...
     'String','Save',...
-    'Callback',{@Rearrange_2Dto3D_Processing,FileName_Input,Mapping_Selection,data_list,filenamewindow});
+    'Callback',{@Rearrange_2Dto3D_Processing,FileName_Input,Mapping_Selection, ...
+    dataList,filenamewindow});
 
-function Rearrange_2Dto3D_Processing(hObject, eventobj, FileName_Input,Mapping_Selection,data_list,filenamewindow)
-Mapping_Filename = get(FileName_Input,'String');
-Mapping_Value = get(Mapping_Selection,'Value');
-switch Mapping_Value
+function Rearrange_2Dto3D_Processing(~, ~, fileNameInput, mappingSelection, ...
+        dataList, filenameWindow)
+% Convert the selected mapping menu item to the mode expected by
+% Rearrange2DTo3D, then publish the result in the base workspace.
+outputName = strtrim(get(fileNameInput, 'String'));
+mappingValue = get(mappingSelection, 'Value');
+switch mappingValue
     case 1
-        mapping_by = 'theta';
+        mappingBy = 'theta';
     case 2
-        mapping_by = 'phi';
+        mappingBy = 'phi';
     case 3
-        mapping_by = 'index';
+        mappingBy = 'index';
+    otherwise
+        errordlg('Choose a valid mapping coordinate.', 'Rearrange Data');
+        return;
 end
 
-data_new = Rearrange2DTo3D(data_list,mapping_by);
-assignin('base', Mapping_Filename,data_new)
-set (filenamewindow, 'Visible','off')
+if ~isvarname(outputName)
+    errordlg('Enter a valid MATLAB variable name for the output.', ...
+        'Rearrange Data');
+    return;
+end
+
+dataOut = Rearrange2DTo3D(dataList, mappingBy);
+assignin('base', outputName, dataOut);
+set(filenameWindow, 'Visible', 'off');
 
 %% Combine data
-function pb_combine_data_Callback(hObject, eventdata)
-% hObject    handle to pb_interp_nans (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+function pb_combine_data_Callback(hObject, ~)
+% Concatenate selected maps directly when their Y axes match, then sort the
+% combined X axis and reorder VALUE along its first dimension. The result is
+% assigned to the fixed base-workspace name combinedMap.
 handles=guidata(hObject);
 
-list_entries = get(handles.VarList,'String');
-index_selected = get(handles.VarList,'Value');
-
-for i=1:length(index_selected)
-    varname=list_entries{index_selected(i)};
-    data{i}=evalin('base',varname);
+listEntries = get(handles.VarList, 'String');
+selectedIndices = get(handles.VarList, 'Value');
+if isempty(selectedIndices) || all(strcmp(listEntries(selectedIndices), 'Empty'))
+    errordlg('Select at least one ARPES dataset to combine.', 'Combine Data');
+    return;
 end
 
-% put the first file
-dataout = data{1};
-
-
-for i = 2:size(index_selected,2)
-    datain = data{i};
-    if isequal(dataout.y,datain.y)
-        try
-            dataout.x = cat(2,dataout.x, datain.x);
-        catch
-            dataout.x = cat(1,dataout.x, datain.x);
-        end
-        dataout.value = cat(1,dataout.value,datain.value);
-    else
-        errordlg(['data ',num2str(i),' is not the same as previous'])
+selectedData = cell(numel(selectedIndices), 1);
+xAxes = cell(numel(selectedIndices), 1);
+valueArrays = cell(numel(selectedIndices), 1);
+for dataIndex = 1:numel(selectedIndices)
+    variableName = listEntries{selectedIndices(dataIndex)};
+    candidate = evalin('base', variableName);
+    requiredMembers = {'value', 'x', 'y'};
+    hasRequiredMembers = all(cellfun(@(memberName) ...
+        hasDataMember(candidate, memberName), requiredMembers));
+    if ~hasRequiredMembers
+        errordlg(sprintf('Variable "%s" must contain value, x, and y data.', ...
+            variableName), 'Combine Data');
+        return;
     end
+
+    value = candidate.value;
+    xAxis = candidate.x(:);
+    yAxis = candidate.y(:);
+    if ~isnumeric(value) || ~isnumeric(xAxis) || ~isnumeric(yAxis) || ...
+            ~isvector(candidate.x) || ~isvector(candidate.y) || ...
+            any(~isfinite(xAxis)) || any(~isfinite(yAxis)) || ...
+            ndims(value) > 3 || size(value, 1) ~= numel(xAxis) || ...
+            size(value, 2) ~= numel(yAxis)
+        errordlg(sprintf('Variable "%s" has invalid axes or array dimensions.', ...
+            variableName), 'Combine Data');
+        return;
+    end
+
+    if ndims(value) == 3
+        if ~hasDataMember(candidate, 'z') || ~isnumeric(candidate.z) || ...
+                ~isvector(candidate.z) || ...
+                size(value, 3) ~= numel(candidate.z) || ...
+                any(~isfinite(candidate.z(:)))
+            errordlg(sprintf('Variable "%s" must have a valid z axis.', ...
+                variableName), 'Combine Data');
+            return;
+        end
+    end
+
+    if dataIndex > 1
+        reference = selectedData{1};
+        referenceSize = size(reference.value);
+        candidateSize = size(value);
+        compatibleShape = isequal(referenceSize(2:end), candidateSize(2:end));
+        compatibleAxes = isequal(reference.y(:), yAxis);
+        if compatibleShape && ndims(value) == 3
+            compatibleAxes = compatibleAxes && isequal(reference.z(:), candidate.z(:));
+        end
+        if ~compatibleShape || ~compatibleAxes
+            errordlg(sprintf(['Variable "%s" has axes or dimensions that do not ' ...
+                'match the first selected dataset. No result was created.'], ...
+                variableName), 'Combine Data');
+            return;
+        end
+    end
+
+    selectedData{dataIndex} = candidate;
+    xAxes{dataIndex} = xAxis;
+    valueArrays{dataIndex} = value;
 end
 
-[dataout.x,I] = sort(dataout.x);
-dataout.value = dataout.value(I,:,:);
+dataOut = selectedData{1};
+try
+    dataOut.x = vertcat(xAxes{:});
+    dataOut.value = cat(1, valueArrays{:});
+    [dataOut.x, sortOrder] = sort(dataOut.x);
+    dataOut.value = dataOut.value(sortOrder, :, :);
+catch exception
+    errordlg(sprintf('The selected datasets could not be combined:\n%s', ...
+        exception.message), 'Combine Data');
+    return;
+end
+assignin('base', 'combinedMap', dataOut);
 
-var_name_out='combinedMap';
-assignin('base',var_name_out,dataout);
-
-function pb_combine_data_interp_Callback(hObject, eventdata)
-% hObject    handle to pb_interp_nans (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-handles=guidata(hObject);
-
-list_entries = get(handles.VarList,'String');
-index_selected = get(handles.VarList,'Value');
-
-for i=1:length(index_selected)
-    varname=list_entries{index_selected(i)};
-    data{i}=evalin('base',varname);
+function pb_combine_data_interp_Callback(hObject, ~)
+% Delegate coordinate alignment and combination to CombineData_interp. A
+% nonempty result is assigned to the fixed workspace name combinedMapIn.
+handles = guidata(hObject);
+listEntries = get(handles.VarList, 'String');
+selectedIndices = get(handles.VarList, 'Value');
+if isempty(selectedIndices) || all(strcmp(listEntries(selectedIndices), 'Empty'))
+    errordlg('Select at least one dataset to combine.', 'Combine Data');
+    return;
 end
 
-data_cm=CombineData_interp(data);
-if ~isempty(data_cm)
-    assignin('base','combinedMapIn',data_cm)
-end 
+selectedData = cell(numel(selectedIndices), 1);
+for dataIndex = 1:numel(selectedIndices)
+    variableName = listEntries{selectedIndices(dataIndex)};
+    selectedData{dataIndex} = evalin('base', variableName);
+end
+
+combinedData = CombineData_interp(selectedData);
+if ~isempty(combinedData)
+    assignin('base', 'combinedMapIn', combinedData);
+end
     
 %% Rename callbacks
 function Rename1_CallbackFcn(hObject,varargin)
-Rename(hObject,1)
+renameGroup(hObject, 1);
 function Rename2_CallbackFcn(hObject,varargin)
-Rename(hObject,2)
+renameGroup(hObject, 2);
 function Rename3_CallbackFcn(hObject,varargin)
-Rename(hObject,3)
+renameGroup(hObject, 3);
 function Rename4_CallbackFcn(hObject,varargin)
-Rename(hObject,4)
+renameGroup(hObject, 4);
 
-function Rename(hObject,num)
+function renameGroup(hObject, groupNumber)
+% Update the displayed label for one of the four user-defined group buttons.
 handles = guidata(hObject);
-Group = ['Group',num2str(num)];
-h = ['handles.',Group];
-OldName = eval(['get(',h,',''String'')']);
-NewName=inputdlg(['Please input the new name for ''' OldName ''''],'Rename',1,{OldName});
-if ~isempty(NewName)
-    eval(['set(',h,',''String'',''',NewName{1},''');']);
+groupField = sprintf('Group%d', groupNumber);
+groupButton = handles.(groupField);
+currentName = get(groupButton, 'String');
+newName = inputdlg(sprintf('Enter a new name for "%s":', currentName), ...
+    'Rename Group', 1, {currentName});
+if ~isempty(newName)
+    set(groupButton, 'String', strtrim(newName{1}));
 end
 
 %% ======================== Update VarList =====================================
@@ -888,7 +1059,8 @@ end
 
 
 function VarList_CallbackFcn(hObject,varargin)
-    % callback of any click on the varlist
+    % A double-click plots the first selected ARPES variable; a single click
+    % refreshes the selection-dependent data-information panel.
     handles=guidata(hObject);
     SelectionTypeFlag=get(handles.mObject,'SelectionType');
     switch SelectionTypeFlag
@@ -902,177 +1074,179 @@ function VarList_CallbackFcn(hObject,varargin)
 
 
 function PlotData(hObject)
-% PLOT THE SELECTED VARIABLE
+% Plot a selected variable according to its value-array dimensionality. The
+% OxArpes_1D_Data class supplies its own SHOW method; other 1-D arrays use PLOT.
 
-    handles=guidata(hObject);
-    list_entries = get(handles.VarList,'String');
-    index_selected = get(handles.VarList,'Value');
-    
-    VarNames=list_entries(index_selected);
-    if isempty(VarNames)
+    handles = guidata(hObject);
+    listEntries = get(handles.VarList, 'String');
+    selectedIndices = get(handles.VarList, 'Value');
+    if isempty(selectedIndices)
         return;
     end
-    data=evalin('base',VarNames{1});
 
-    if isfield(data,'value') || isprop(data,'value')
-        switch ndims(squeeze(data.value))
-            case 2
-                if size(data.value,1)==1 || size(data.value,2)==1 % 1D DATA
-
-                    if class(data) == "OxArpes_1D_Data"
-                        data.show();
-                    else
-                        figure;
-                        plot(data.x(:),data.value(:));
-                    end
-
-                else % 2D DATA
-                    PlotSlices(VarNames{1},'z');
-                end
-
-            case 3 % 3D DATA
-                PlotSlices(VarNames{1},'z');
-        end
+    variableName = listEntries{selectedIndices(1)};
+    data = evalin('base', variableName);
+    if ~hasDataMember(data, 'value')
+        return;
     end
 
+    if isvector(data.value)
+        if isa(data, 'OxArpes_1D_Data')
+            data.show();
+            return;
+        end
 
-%% Updata Variable List
+        if hasDataMember(data, 'x') && numel(data.x) == numel(data.value)
+            xAxis = data.x(:);
+            xLabel = 'x';
+        else
+            xAxis = (1:numel(data.value))';
+            xLabel = 'Index';
+        end
+        figure;
+        plot(xAxis, data.value(:));
+        xlabel(xLabel);
+    elseif ismatrix(data.value) || ndims(data.value) == 3
+        PlotSlices(variableName, 'z');
+    elseif ndims(data.value) == 4
+        OxArpes_DataViewer_4D(data);
+    else
+        errordlg(sprintf('Plotting is not supported for %d-D arrays.', ...
+            ndims(data.value)), 'Data Browser');
+    end
+
+%% Refresh variable list and selected-data information
 function UpdateVarList(hObject)
-    handles=guidata(hObject);
-    VarNamesAll = evalin('base','who');
-    % get dims for list
-    
-    % get current list number, empty for GroupAll, 1 for Group1, etc.
-    CurrentList=get(handles.GroupAll,'Value');
-    CurrentList=find(CurrentList,1,'last');
+    % Read names from the base workspace and apply the active group filter.
+    handles = guidata(hObject);
+    allVariableNames = evalin('base', 'who');
+    activeGroup = find(get(handles.GroupAll, 'Value'), 1, 'last');
 
-    % -----------------------------------------------------------
-    % for group selection
-    % part092501
-    % -----------------------------------------------------------
-    if ~isempty(CurrentList) % group 1~4
-        VarNames={};
-        for i=1:length(VarNamesAll)
-            data = evalin('base',VarNamesAll{i});
-            try
-                if data.info.GroupInfo(CurrentList) == 1
-                    VarNames{end+1}=VarNamesAll{i};
+    if isempty(activeGroup)
+        variableNames = allVariableNames;
+    else
+        variableNames = cell(numel(allVariableNames), 1);
+        matchCount = 0;
+        for variableIndex = 1:numel(allVariableNames)
+            workspaceValue = evalin('base', allVariableNames{variableIndex});
+            if hasDataMember(workspaceValue, 'info') && ...
+                    isstruct(workspaceValue.info) && ...
+                    isfield(workspaceValue.info, 'GroupInfo')
+                groupInfo = workspaceValue.info.GroupInfo;
+                if isnumeric(groupInfo) && numel(groupInfo) >= activeGroup && ...
+                        groupInfo(activeGroup) == 1
+                    matchCount = matchCount + 1;
+                    variableNames{matchCount} = allVariableNames{variableIndex};
                 end
-            catch
             end
         end
-    else % group all
-        VarNames = VarNamesAll;
+        variableNames = variableNames(1:matchCount);
     end
 
-    % change the selected variable after changing the group
-    if isempty(VarNames) % empty list
-        VarNames={'Empty'};
-        set(handles.VarList,'String',VarNames);
-        set(handles.VarList,'Value',1,'ListboxTop',1);
-    else
-        index=get(handles.VarList,'Value');
-        if isempty(index)
-            set(handles.VarList,'Value',1,'ListboxTop',1);
-        else
-            if max(index)>length(VarNames)
-                set(handles.VarList,'Value',length(VarNames),'ListboxTop',1);      
-            end
-        end
-        ss = get(handles.VarList,'ListboxTop');
-        set(handles.VarList,'String',VarNames,'ListboxTop',ss);
+    % Keep a visible placeholder for an empty group, but never treat it as a
+    % real workspace variable when updating the data-information panel.
+    if isempty(variableNames)
+        variableNames = {'Empty'};
     end
-    
-    index=get(handles.VarList,'Value');
-    handles.VarNames={};
-    for i = 1:length(index)
-        handles.VarNames{i}=VarNames{index(i)};
+    set(handles.VarList, 'String', variableNames);
+
+    selectedIndices = get(handles.VarList, 'Value');
+    selectedIndices = selectedIndices(selectedIndices >= 1 & ...
+        selectedIndices <= numel(variableNames));
+    if isempty(selectedIndices)
+        selectedIndices = 1;
     end
-    
-    % -----------------------------------------------------------
-    % Data Info Setting
-    % -----------------------------------------------------------
-    
-    set(handles.datainfo_x_min,'String','')
-    set(handles.datainfo_x_max,'String','')
-    set(handles.datainfo_x_no,'String','')
-    set(handles.datainfo_x_stepsize,'String','')
-    set(handles.datainfo_y_min,'String','')
-    set(handles.datainfo_y_max,'String','')
-    set(handles.datainfo_y_no,'String','')
-    set(handles.datainfo_y_stepsize,'String','')
-    set(handles.datainfo_z_min,'String','')
-    set(handles.datainfo_z_max,'String','')
-    set(handles.datainfo_z_no,'String','')
-    set(handles.datainfo_z_stepsize,'String','')
-    
-    varname=handles.VarNames{i};
-    if isempty(varname) || isempty(evalin('base',['who(''' varname ''')']))
-        return
-    end
-    
-    data = evalin('base',varname);
-    if ~isstruct(data) && ~isobject(data)
-        return
-    end
-    if ~isfield(data,'value') && ~isprop(data,'value')
-        return
-    end
-    
-    if (isstruct(data) && isfield(data,'value')) || (isobject(data) && isprop(data,'value'))
-        di=size(size(data.value),2);
-    end
-    
-    %set(handles.hTitle_panel_datainfo,'String',['info: ' varname ' - ' num2str(di) 'D']);
-    
-    if isfield(data,'x') || isprop(data,'x')
-        size_x=max(size(data.x));
-        set(handles.datainfo_x_no,'String',num2str(size_x));
-        set(handles.datainfo_x_min,'String',num2str(data.x(1)));
-        set(handles.datainfo_x_max,'String',num2str(data.x(size_x)));
-        set(handles.datainfo_x_stepsize,'String',num2str(data.x(2)-data.x(1)));
-    else
-        size_x=size(data.value,1);
-        set(handles.datainfo_x_no,'String',num2str(size_x));
-        set(handles.datainfo_x_min,'String','index');
-        set(handles.datainfo_x_max,'String','index');
-        set(handles.datainfo_x_stepsize,'String','index');
-    end
-    
-    if isfield(data,'y') || isprop(data,'y')
-        size_y=max(size(data.y));
-        set(handles.datainfo_y_no,'String',num2str(size_y));
-        set(handles.datainfo_y_min,'String',num2str(data.y(1)));
-        set(handles.datainfo_y_max,'String',num2str(data.y(size_y)));
-        set(handles.datainfo_y_stepsize,'String',num2str(data.y(2)-data.y(1)));
-    else
-        size_y=size(data.value,1);
-        set(handles.datainfo_y_no,'String',num2str(size_y));
-        set(handles.datainfo_y_min,'String','index');
-        set(handles.datainfo_y_max,'String','index');
-        set(handles.datainfo_y_stepsize,'String','index');
-    end
-    
-    if di==3
-        if isfield(data,'z') || isprop(data,'z')
-            size_z=max(size(data.z));
-            set(handles.datainfo_z_no,'String',num2str(size_z));
-            set(handles.datainfo_z_min,'String',num2str(data.z(1)));
-            set(handles.datainfo_z_max,'String',num2str(data.z(size_z)));
-            set(handles.datainfo_z_stepsize,'String',num2str(data.z(2)-data.z(1)));
-        else
-            size_z=size(data.value,1);
-            set(handles.datainfo_z_no,'String',num2str(size_z));
-            set(handles.datainfo_z_min,'String','index');
-            set(handles.datainfo_z_max,'String','index');
-            set(handles.datainfo_z_stepsize,'String','index');
+    topIndex = min(max(get(handles.VarList, 'ListboxTop'), 1), ...
+        numel(variableNames));
+    set(handles.VarList, 'Value', selectedIndices, 'ListboxTop', topIndex);
+    handles.VarNames = variableNames(selectedIndices);
+
+    % Clear the previous selection's axis details before populating new data.
+    axisNames = {'x', 'y', 'z'};
+    for axisIndex = 1:numel(axisNames)
+        axisName = axisNames{axisIndex};
+        controlSuffixes = {'min', 'max', 'no', 'stepsize'};
+        for suffixIndex = 1:numel(controlSuffixes)
+            controlName = sprintf('datainfo_%s_%s', axisName, ...
+                controlSuffixes{suffixIndex});
+            set(handles.(controlName), 'String', '');
         end
     end
 
-    guidata(handles.mObject,handles);
+    variableName = handles.VarNames{1};
+    if strcmp(variableName, 'Empty')
+        guidata(handles.mObject, handles);
+        return;
+    end
+
+    data = evalin('base', variableName);
+    if ~hasDataMember(data, 'value')
+        guidata(handles.mObject, handles);
+        return;
+    end
+
+    valueSize = size(data.value);
+    axisValues = cell(1, 3);
+    for axisIndex = 1:min(ndims(data.value), 3)
+        axisName = axisNames{axisIndex};
+        if hasDataMember(data, axisName)
+            axisValues{axisIndex} = data.(axisName);
+        else
+            axisValues{axisIndex} = [];
+        end
+        updateAxisSummary(handles, axisName, axisValues{axisIndex}, ...
+            valueSize(axisIndex));
+    end
+
+    guidata(handles.mObject, handles);
+
+function updateAxisSummary(handles, axisName, axisValues, dimensionSize)
+% Display a coordinate range safely, including empty and single-point axes.
+    controlNames = {sprintf('datainfo_%s_min', axisName), ...
+        sprintf('datainfo_%s_max', axisName), ...
+        sprintf('datainfo_%s_no', axisName), ...
+        sprintf('datainfo_%s_stepsize', axisName)};
+
+    if isempty(axisValues)
+        displayValues = {'index', 'index', num2str(dimensionSize), 'index'};
+    elseif ~isnumeric(axisValues) || ~isvector(axisValues) || ...
+            any(~isfinite(axisValues(:)))
+        displayValues = {'invalid', 'invalid', num2str(dimensionSize), 'invalid'};
+    else
+        axisValues = axisValues(:);
+        displayCount = num2str(numel(axisValues));
+        if numel(axisValues) ~= dimensionSize
+            displayCount = sprintf('%d (expected %d)', ...
+                numel(axisValues), dimensionSize);
+        end
+        if isscalar(axisValues)
+            stepSize = 'n/a';
+        else
+            stepSize = num2str(axisValues(2) - axisValues(1));
+        end
+        displayValues = {num2str(min(axisValues)), num2str(max(axisValues)), ...
+            displayCount, stepSize};
+    end
+
+    for valueIndex = 1:numel(controlNames)
+        set(handles.(controlNames{valueIndex}), 'String', ...
+            displayValues{valueIndex});
+    end
+
+function hasMember = hasDataMember(data, memberName)
+% Test for a field or property on a scalar ARPES data value.
+    if isstruct(data)
+        hasMember = isscalar(data) && isfield(data, memberName);
+    elseif isobject(data)
+        hasMember = isscalar(data) && isprop(data, memberName);
+    else
+        hasMember = false;
+    end
 
 %% NaNs
 function interp_nans_Callback(hObject, ~)
+    % Interpolate missing values via InterpNaNs and store each result under a
+    % new name ending in _inan; source variables are left unchanged.
     handles=guidata(hObject);
     list_entries = handles.VarNames;
     
@@ -1085,6 +1259,8 @@ function interp_nans_Callback(hObject, ~)
     UpdateVarList(hObject);
 
 function replace_nans_Callback(hObject, ~)
+    % Replace NaNs in a local copy and publish it under the _onan suffix; the
+    % original base-workspace variable remains unchanged.
     handles=guidata(hObject);
     list_entries = handles.VarNames;
     
@@ -1097,6 +1273,8 @@ function replace_nans_Callback(hObject, ~)
     UpdateVarList(hObject);
 
 function saveBaseVariables(fileName,variableNames,appendToFile)
+    % Collect named variables from the base workspace into a struct and save
+    % its fields, either creating/replacing the MAT-file or appending to it.
     if ischar(variableNames)
         variableNames={variableNames};
     end
