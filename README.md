@@ -58,6 +58,12 @@ This repository aims to serve as a valuable resource for storing, publishing, an
 
 Everyone is encouraged to provide feedback, contribute new functions, or help maintain the software. Your input and collaboration are greatly appreciated.
 
+## License
+
+Project-owned code is licensed under the GNU General Public License version 3
+(`GPL-3.0-only`). See [LICENSE](LICENSE). Bundled third-party components retain
+their own licenses and attribution files.
+
 
 ---
 Contact: Cheng Peng <cheng.peng@physics.ox.ac.uk>
