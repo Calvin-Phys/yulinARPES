@@ -283,6 +283,8 @@ Main Window -> Visualization -> Plot BZ
 
 Enter the crystal parameters and plot the Brillouin zone. The BZ can be displayed on the measured data or a blank figure.
 
+For Plot BZ, enter direct-cell lengths in Å and angles in degrees; the reciprocal axes are then in Å⁻¹. Select whether the Miller indices refer to the conventional or primitive reciprocal basis. The chosen `(hkl)` direction becomes the plotted `kz` axis. The 3-D and surface rotation controls rotate the display around that axis in degrees. The horizontal cut offset is a percentage of the selected reciprocal vector `g_hkl`, not an absolute Å⁻¹ value. The **Clear** buttons remove only outlines made by Plot BZ from the selected figure, preserving other plotted data. This tool needs the bundled `matGeom` functions and Phased Array System Toolbox; run `setup_yulinARPES` first.
+
 For better experiment planning, you can also plot the cut positions in k-space for different photon energies. Open another window by selecting:
 ```
 Main Window -> Visualization -> Plot cut in kz

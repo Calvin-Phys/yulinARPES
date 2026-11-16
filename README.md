@@ -48,6 +48,7 @@ These checks cover numeric GUI input parsing and the validated entry points for 
 
 - `third_party/export_fig` is used by the subplot figure-export tool.
 - `third_party/matGeom` is an optional dependency for the BXSF utility under `Others_uncertain/bxsf2mat`.
+- `Visualization/plotBZ_V1` uses the bundled `third_party/matGeom` geometry functions and MATLAB's `rotx`/`rotz` from Phased Array System Toolbox. Add the package with `setup_yulinARPES` before opening Plot BZ.
 - `archive/third_party/export_fig_2013` is an older duplicate of the active export_fig package. It is retained but excluded from setup.
 - `archive/legacy/+LoadDataARPES_old` is an older loader-package copy with no in-repository references found during review. The current `+LoadDataARPES` package remains under `Loader_kconvert`.
 

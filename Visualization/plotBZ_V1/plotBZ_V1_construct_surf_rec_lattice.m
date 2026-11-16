@@ -1,21 +1,28 @@
-function [surf_rec_lattice_coordinates,surf_rec_lattice_rows] = plotBZ_V1_construct_surf_rec_lattice(s1,s2,handles)
-s1start = str2double(get(handles.s1start,'String'));
-s1end = str2double(get(handles.s1end,'String'));
-s2start = str2double(get(handles.s2start,'String'));
-s2end = str2double(get(handles.s2end,'String'));
-s1range = s1start:s1end;
-s2range = s2start:s2end;
-surf_rec_lattice_rows = zeros(1,length(s1range)*length(s2range));
-surf_rec_lattice_coordinates = zeros((length(s1range)+4)*+(length(s2range)+4),2);
-i=1;
-j=1;
-for hh = s1start-2:s1end+2
-    for kk = s2start-2:s2end+2
-        surf_rec_lattice_coordinates(i,:) = hh.*s1+kk.*s2;
-        if ismember(hh,s1range) && ismember(kk,s2range)
-            surf_rec_lattice_rows(1,j) = i;
-            j=j+1;
-        end
-        i=i+1;
-    end
+function [sites, targetRows] = plotBZ_V1_construct_surf_rec_lattice(s1, s2, handles)
+%PLOTBZ_V1_CONSTRUCT_SURF_REC_LATTICE Enclose requested surface BZ cells.
+
+starts = [plotBZ_V1_parse_scalar(handles, 's1start', 'integer'), ...
+    plotBZ_V1_parse_scalar(handles, 's2start', 'integer')];
+ends = [plotBZ_V1_parse_scalar(handles, 's1end', 'integer'), ...
+    plotBZ_V1_parse_scalar(handles, 's2end', 'integer')];
+if any(starts > ends)
+    error('plotBZ_V1:InvalidInput', ...
+        'Each surface lattice start index must not exceed its end index.');
+end
+
+basis = [s1; s2];
+padding = plotBZ_V1_lattice_padding(basis);
+pointCount = prod(ends - starts + 1 + 2*padding);
+if pointCount > 50000
+    error('plotBZ_V1:TooManySites', ...
+        'Surface Voronoi construction needs %g sites; reduce the range.', pointCount);
+end
+
+indexRanges = arrayfun(@(axisIndex) ...
+    (starts(axisIndex)-padding(axisIndex)):(ends(axisIndex)+padding(axisIndex)), ...
+    1:2, 'UniformOutput', false);
+[i, j] = ndgrid(indexRanges{:});
+integerSites = [i(:), j(:)];
+sites = integerSites*basis;
+targetRows = find(all(integerSites >= starts & integerSites <= ends, 2))';
 end

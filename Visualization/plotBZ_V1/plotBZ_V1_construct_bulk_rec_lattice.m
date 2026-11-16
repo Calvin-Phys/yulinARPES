@@ -1,33 +1,33 @@
-function [rec_lattice_coordinates,rec_lattice_rows] = plotBZ_V1_construct_bulk_rec_lattice(b1_prim, b2_prim, b3_prim,handles)
-%plotBZ_V1_construct_rec_lattice constructs reciprocal lattice based on
-%primitive reciprocal lattice vectors.
-KxStart=str2double(get(handles.KxStart,'String'));
-KxEnd=str2double(get(handles.KxEnd,'String'));
-KyStart=str2double(get(handles.KyStart,'String'));
-KyEnd=str2double(get(handles.KyEnd,'String'));
-KzStart=str2double(get(handles.KzStart,'String'));
-KzEnd=str2double(get(handles.KzEnd,'String'));
-BZ_Kxrange=KxStart:KxEnd;
-BZ_Kyrange=KyStart:KyEnd;
-BZ_Kzrange=KzStart:KzEnd;
-rec_lattice_coordinates=zeros((length(BZ_Kxrange)+6)*+(length(BZ_Kyrange)+6)*(length(BZ_Kzrange)+6),3);
-rec_lattice_rows = zeros(1,length(BZ_Kxrange)*length(BZ_Kyrange)*length(BZ_Kzrange));
-i=1; 
-j=1;
+function [sites, targetRows] = plotBZ_V1_construct_bulk_rec_lattice(b1, b2, b3, handles)
+%PLOTBZ_V1_CONSTRUCT_BULK_REC_LATTICE Build sites enclosing requested zones.
+%   The padding bound includes every possible Voronoi-facet neighbor of a
+%   requested site. It adapts to skew reciprocal cells.
 
+starts = [plotBZ_V1_parse_scalar(handles, 'KxStart', 'integer'), ...
+    plotBZ_V1_parse_scalar(handles, 'KyStart', 'integer'), ...
+    plotBZ_V1_parse_scalar(handles, 'KzStart', 'integer')];
+ends = [plotBZ_V1_parse_scalar(handles, 'KxEnd', 'integer'), ...
+    plotBZ_V1_parse_scalar(handles, 'KyEnd', 'integer'), ...
+    plotBZ_V1_parse_scalar(handles, 'KzEnd', 'integer')];
+if any(starts > ends)
+    error('plotBZ_V1:InvalidInput', ...
+        'Each bulk lattice start index must not exceed its end index.');
+end
 
-for hh=KxStart-3:KxEnd+3 % more lattice points are created than BZ's are plotted to avoid boundary artefacts
-    for kk=KyStart-3:KyEnd+3
-        for ll=KzStart-3:KzEnd+3
-            rec_lattice_coordinates(i,:)=hh.*b1_prim+kk.*b2_prim+ll.*b3_prim; 
-            
-            if ismember(hh,BZ_Kxrange) && ismember(kk,BZ_Kyrange)&& ismember(ll,BZ_Kzrange)
-               rec_lattice_rows(1,j)=i;
-               j=j+1;
-            end;
-            i=i+1;
-        end;
-    end
-end;
+basis = [b1; b2; b3];
+padding = plotBZ_V1_lattice_padding(basis);
+pointCount = prod(ends - starts + 1 + 2*padding);
+if pointCount > 50000
+    error('plotBZ_V1:TooManySites', ...
+        'Bulk Voronoi construction needs %g sites; reduce the range or skew.', pointCount);
+end
 
-
+% The target indices refer to rows of the same cloud passed to voronoin.
+indexRanges = arrayfun(@(axisIndex) ...
+    (starts(axisIndex)-padding(axisIndex)):(ends(axisIndex)+padding(axisIndex)), ...
+    1:3, 'UniformOutput', false);
+[i, j, k] = ndgrid(indexRanges{:});
+integerSites = [i(:), j(:), k(:)];
+sites = integerSites*basis;
+targetRows = find(all(integerSites >= starts & integerSites <= ends, 2))';
+end

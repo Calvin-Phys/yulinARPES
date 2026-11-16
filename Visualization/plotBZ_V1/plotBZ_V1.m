@@ -538,7 +538,7 @@ function KxStartup_Callback(hObject, eventdata, handles)
 % hObject    handle to KxStartup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.KxStart,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'KxStart', 'integer');
 temp=temp+1;
 set(handles.KxStart,'String',num2str(temp));
 
@@ -570,7 +570,7 @@ function KxEnddown_Callback(hObject, eventdata, handles)
 % hObject    handle to KxEnddown (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.KxEnd,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'KxEnd', 'integer');
 temp=temp-1;
 set(handles.KxEnd,'String',num2str(temp));
 
@@ -579,7 +579,7 @@ function KxEndup_Callback(hObject, eventdata, handles)
 % hObject    handle to KxEndup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.KxEnd,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'KxEnd', 'integer');
 temp=temp+1;
 set(handles.KxEnd,'String',num2str(temp));
 
@@ -611,7 +611,7 @@ function KyStartdown_Callback(hObject, eventdata, handles)
 % hObject    handle to KyStartdown (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.KyStart,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'KyStart', 'integer');
 temp=temp-1;
 set(handles.KyStart,'String',num2str(temp));
 
@@ -620,7 +620,7 @@ function KyStartup_Callback(hObject, eventdata, handles)
 % hObject    handle to KyStartup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.KyStart,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'KyStart', 'integer');
 temp=temp+1;
 set(handles.KyStart,'String',num2str(temp));
 
@@ -652,7 +652,7 @@ function KzStartdown_Callback(hObject, eventdata, handles)
 % hObject    handle to KzStartdown (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.KzStart,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'KzStart', 'integer');
 temp=temp-1;
 set(handles.KzStart,'String',num2str(temp));
 
@@ -661,7 +661,7 @@ function KzStartup_Callback(hObject, eventdata, handles)
 % hObject    handle to KzStartup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.KzStart,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'KzStart', 'integer');
 temp=temp+1;
 set(handles.KzStart,'String',num2str(temp));
 
@@ -693,7 +693,7 @@ function KyEnddown_Callback(hObject, eventdata, handles)
 % hObject    handle to KyEnddown (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.KyEnd,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'KyEnd', 'integer');
 temp=temp-1;
 set(handles.KyEnd,'String',num2str(temp));
 
@@ -702,7 +702,7 @@ function KyEndup_Callback(hObject, eventdata, handles)
 % hObject    handle to KyEndup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.KyEnd,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'KyEnd', 'integer');
 temp=temp+1;
 set(handles.KyEnd,'String',num2str(temp));
 
@@ -734,7 +734,7 @@ function KzEnddown_Callback(hObject, eventdata, handles)
 % hObject    handle to KzEnddown (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.KzEnd,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'KzEnd', 'integer');
 temp=temp-1;
 set(handles.KzEnd,'String',num2str(temp));
 
@@ -743,7 +743,7 @@ function KzEndup_Callback(hObject, eventdata, handles)
 % hObject    handle to KzEndup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.KzEnd,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'KzEnd', 'integer');
 temp=temp+1;
 set(handles.KzEnd,'String',num2str(temp));
 
@@ -775,10 +775,10 @@ function SurfBZ_clear_Callback(hObject, eventdata, handles)
 % hObject    handle to SurfBZ_clear (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-SurfBZ_fig=str2double(get(handles.SurfBZ_fig,'String'));
-h_axes=figure(SurfBZ_fig);
-h1=findobj(h_axes,'Type','Line'); 
-delete(h1);
+% Only remove outlines made by this GUI; a measured-data overlay may share
+% the same figure and axes.
+SurfBZ_fig = plotBZ_V1_parse_scalar(handles, 'SurfBZ_fig', 'figure');
+plotBZ_V1_clear_graphics(SurfBZ_fig);
 
 
 % --- Executes on button press in SurfBZ_plot.
@@ -786,35 +786,20 @@ function SurfBZ_plot_Callback(hObject, eventdata, handles)
 % hObject    handle to SurfBZ_plot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-SurfBZ_fig = str2double(get(handles.SurfBZ_fig,'String'));
-SurfBZ_color_val = get(handles.SurfBZ_color,'Value');
-switch SurfBZ_color_val
-    case 1
-        SurfBZ_color = 'k';
-    case 2
-        SurfBZ_color = 'b';
-    case 3
-        SurfBZ_color = 'c';
-    case 4
-        SurfBZ_color = 'g';
-    case 5
-        SurfBZ_color = 'm';
-    case 6
-        SurfBZ_color = 'r';
-    case 7
-        SurfBZ_color = 'y';
-    case 8
-        SurfBZ_color = 'w';
-end
+SurfBZ_fig = plotBZ_V1_parse_scalar(handles, 'SurfBZ_fig', 'figure');
+SurfBZ_color = plotBZ_V1_popup_color(handles.SurfBZ_color);
+% Project the full 3-D reciprocal lattice and use a primitive 2-D basis.
 [b1_origin_prim,b2_origin_prim,b3_origin_prim,g_origin_hkl] = plotBZ_V1_construct_rec_lattice_vectors(handles);
 [s1,s2] = plotBZ_V1_surface_realtime_vector(b1_origin_prim,b2_origin_prim,b3_origin_prim,g_origin_hkl,handles);
 [surf_rec_lattice_coordinates,surf_rec_lattice_rows] = plotBZ_V1_construct_surf_rec_lattice(s1,s2,handles);
 [v,c]=voronoin(surf_rec_lattice_coordinates);
 
-ln = str2num(get(handles.edit93,'String'));
+ln = plotBZ_V1_parse_scalar(handles, 'edit93', 'positive');
 
-ff = figure(SurfBZ_fig);
+figure(SurfBZ_fig);
 ax = gca;
+% Record existing graphics so a later Clear leaves experimental data alone.
+previousGraphics = findall(ax);
 xl = xlim;
 yl = ylim;
 
@@ -826,13 +811,12 @@ for ii=surf_rec_lattice_rows
 end
 
 if ~(isequal(xl,[0 1]) && isequal(yl,[0 1]))
-    ff = figure(SurfBZ_fig);
-    ax = gca;
     xlim(ax,xl);
     ylim(ax,yl);
 else
     axis equal;
 end
+plotBZ_V1_tag_graphics(ax, previousGraphics);
 
 %  xlabel('Kx');ylabel('Ky');
 %  axis equal;
@@ -894,39 +878,24 @@ function TwoDpBZ_plot_Callback(hObject, eventdata, handles)
 % hObject    handle to TwoDpBZ_plot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-TwoDpBZ_fig = str2double(get(handles.TwoDpBZ_fig,'String'));
-TwoDpBZ_color_val = get(handles.TwoDpBZ_color,'Value');
-switch TwoDpBZ_color_val
-    case 1
-        TwoDpBZ_color = 'k';
-    case 2
-        TwoDpBZ_color = 'b';
-    case 3
-        TwoDpBZ_color = 'c';
-    case 4
-        TwoDpBZ_color = 'g';
-    case 5
-        TwoDpBZ_color = 'm';
-    case 6
-        TwoDpBZ_color = 'r';
-    case 7
-        TwoDpBZ_color = 'y';
-    case 8
-        TwoDpBZ_color = 'w';
-end
+TwoDpBZ_fig = plotBZ_V1_parse_scalar(handles, 'TwoDpBZ_fig', 'figure');
+TwoDpBZ_color = plotBZ_V1_popup_color(handles.TwoDpBZ_color);
 
-ln = str2num(get(handles.edit91,'String'));
+ln = plotBZ_V1_parse_scalar(handles, 'edit91', 'positive');
 
 [b1_origin_prim,b2_origin_prim,b3_origin_prim,g_origin_hkl] = plotBZ_V1_construct_rec_lattice_vectors(handles);
 [b1_prim,b2_prim,b3_prim,g_hkl] = plotBZ_V1_bulk_realtime_vector(b1_origin_prim,b2_origin_prim,b3_origin_prim,g_origin_hkl,handles);
 [rec_lattice_coordinates,rec_lattice_rows] = plotBZ_V1_construct_bulk_rec_lattice(b1_prim,b2_prim,b3_prim,handles);
-rot2DpBZ = str2double(get(handles.rot2DpBZ,'String'));
-rot2DpBZ_inplane = str2double(get(handles.rot2DpBZ_inplane,'String'));
+rot2DpBZ = plotBZ_V1_parse_scalar(handles, 'rot2DpBZ');
+rot2DpBZ_inplane = plotBZ_V1_parse_scalar(handles, 'rot2DpBZ_inplane');
+% The vertical section plane contains the origin and is perpendicular to
+% an in-plane direction obtained by rotating the cleavage normal.
 perpendicular_plane = createPlane([0 0 0], (rotz(rot2DpBZ)*rotx(90)*g_hkl')');
 [v,c]=voronoin(rec_lattice_coordinates);
 
-ff = figure(TwoDpBZ_fig);
+figure(TwoDpBZ_fig);
 ax = gca;
+previousGraphics = findall(ax);
 xl = xlim;
 yl = ylim;
 
@@ -938,13 +907,12 @@ for ii=rec_lattice_rows
 end
 
 if ~(isequal(xl,[0 1]) && isequal(yl,[0 1]))
-    ff = figure(TwoDpBZ_fig);
-    ax = gca;
     xlim(ax,xl);
     ylim(ax,yl);
 else
     axis equal;
 end
+plotBZ_V1_tag_graphics(ax, previousGraphics);
 %  xlabel('Kz');ylabel('Ky');
 %  axis equal;
 
@@ -1000,10 +968,8 @@ function TwoDpBZ_clear_Callback(hObject, eventdata, handles)
 % hObject    handle to TwoDpBZ_clear (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-TwoDpBZ_fig=str2double(get(handles.TwoDpBZ_fig,'String'));
-h_axes=figure(TwoDpBZ_fig);
-h1=findobj(h_axes,'Type','Line'); 
-delete(h1);
+TwoDpBZ_fig = plotBZ_V1_parse_scalar(handles, 'TwoDpBZ_fig', 'figure');
+plotBZ_V1_clear_graphics(TwoDpBZ_fig);
 
 
 
@@ -1057,10 +1023,8 @@ function TwoDhBZ_clear_Callback(hObject, eventdata, handles)
 % hObject    handle to TwoDhBZ_clear (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-TwoDhBZ_fig=str2double(get(handles.TwoDhBZ_fig,'String'));
-h_axes=figure(TwoDhBZ_fig);
-h1=findobj(h_axes,'Type','Line'); 
-delete(h1);
+TwoDhBZ_fig = plotBZ_V1_parse_scalar(handles, 'TwoDhBZ_fig', 'figure');
+plotBZ_V1_clear_graphics(TwoDhBZ_fig);
 
 
 % --- Executes on button press in TwoDhBZ_plot.
@@ -1068,38 +1032,23 @@ function TwoDhBZ_plot_Callback(hObject, eventdata, handles)
 % hObject    handle to TwoDhBZ_plot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-TwoDhBZ_fig = str2double(get(handles.TwoDhBZ_fig,'String'));
-TwoDhBZ_color_val = get(handles.TwoDhBZ_color,'Value');
-switch TwoDhBZ_color_val
-     case 1
-        TwoDhBZ_color = 'k';
-    case 2
-        TwoDhBZ_color = 'b';
-    case 3
-        TwoDhBZ_color = 'c';
-    case 4
-        TwoDhBZ_color = 'g';
-    case 5
-        TwoDhBZ_color = 'm';
-    case 6
-        TwoDhBZ_color = 'r';
-    case 7
-        TwoDhBZ_color = 'y';
-    case 8
-        TwoDhBZ_color = 'w';
-end
+TwoDhBZ_fig = plotBZ_V1_parse_scalar(handles, 'TwoDhBZ_fig', 'figure');
+TwoDhBZ_color = plotBZ_V1_popup_color(handles.TwoDhBZ_color);
 
-ln = str2num(get(handles.edit92,'String'));
+ln = plotBZ_V1_parse_scalar(handles, 'edit92', 'positive');
 
 [b1_origin_prim,b2_origin_prim,b3_origin_prim,g_origin_hkl] = plotBZ_V1_construct_rec_lattice_vectors(handles);
 [b1_prim,b2_prim,b3_prim,g_hkl] = plotBZ_V1_bulk_realtime_vector(b1_origin_prim,b2_origin_prim,b3_origin_prim,g_origin_hkl,handles);
 [rec_lattice_coordinates,rec_lattice_rows] = plotBZ_V1_construct_bulk_rec_lattice(b1_prim,b2_prim,b3_prim,handles);
-shi2DhBZ = str2double(get(handles.shi2DhBZ,'String'));
+shi2DhBZ = plotBZ_V1_parse_scalar(handles, 'shi2DhBZ');
+% The offset control is a percent of the selected reciprocal normal,
+% rather than an absolute kz coordinate.
 horizontal_plane = createPlane((shi2DhBZ/100)*g_hkl,g_hkl);
 [v,c]=voronoin(rec_lattice_coordinates);
 
-ff = figure(TwoDhBZ_fig);
+figure(TwoDhBZ_fig);
 ax = gca;
+previousGraphics = findall(ax);
 xl = xlim;
 yl = ylim;
 
@@ -1111,13 +1060,12 @@ for ii=rec_lattice_rows
 end
 
 if ~(isequal(xl,[0 1]) && isequal(yl,[0 1]))
-    ff = figure(TwoDhBZ_fig);
-    ax = gca;
     xlim(ax,xl);
     ylim(ax,yl);
 else
     axis equal;
 end
+plotBZ_V1_tag_graphics(ax, previousGraphics);
 %  xlabel('Kx');ylabel('Ky');
 %  axis equal;
 
@@ -1149,72 +1097,23 @@ function ThreeDBZ_plot_Callback(hObject, eventdata, handles)
 % hObject    handle to ThreeDBZ_plot (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ThreeDBZ_fig = str2double(get(handles.ThreeDBZ_fig,'String'));
-ThreeDBZ_color_val = get(handles.ThreeDBZ_color,'Value');
-TwoDhBZ_color_val = get(handles.TwoDhBZ_color,'Value');
-TwoDpBZ_color_val = get(handles.TwoDpBZ_color,'Value');
-switch ThreeDBZ_color_val
-    case 1
-        ThreeDBZ_color = 'k';
-    case 2
-        ThreeDBZ_color = 'b';
-    case 3
-        ThreeDBZ_color = 'c';
-    case 4
-        ThreeDBZ_color = 'g';
-    case 5
-        ThreeDBZ_color = 'm';
-    case 6
-        ThreeDBZ_color = 'r';
-    case 7
-        ThreeDBZ_color = 'y';
-    case 8
-        ThreeDBZ_color = 'w';
-end
-switch TwoDhBZ_color_val
-     case 1
-        TwoDhBZ_color = 'k';
-    case 2
-        TwoDhBZ_color = 'b';
-    case 3
-        TwoDhBZ_color = 'c';
-    case 4
-        TwoDhBZ_color = 'g';
-    case 5
-        TwoDhBZ_color = 'm';
-    case 6
-        TwoDhBZ_color = 'r';
-    case 7
-        TwoDhBZ_color = 'y';
-    case 8
-        TwoDhBZ_color = 'w';
-end
-switch TwoDpBZ_color_val
-     case 1
-        TwoDpBZ_color = 'k';
-    case 2
-        TwoDpBZ_color = 'b';
-    case 3
-        TwoDpBZ_color = 'c';
-    case 4
-        TwoDpBZ_color = 'g';
-    case 5
-        TwoDpBZ_color = 'm';
-    case 6
-        TwoDpBZ_color = 'r';
-    case 7
-        TwoDpBZ_color = 'y';
-    case 8
-        TwoDpBZ_color = 'w';
-end
+ThreeDBZ_fig = plotBZ_V1_parse_scalar(handles, 'ThreeDBZ_fig', 'figure');
+ThreeDBZ_color = plotBZ_V1_popup_color(handles.ThreeDBZ_color);
+TwoDhBZ_color = plotBZ_V1_popup_color(handles.TwoDhBZ_color);
+TwoDpBZ_color = plotBZ_V1_popup_color(handles.TwoDpBZ_color);
 [b1_origin_prim,b2_origin_prim,b3_origin_prim,g_origin_hkl] = plotBZ_V1_construct_rec_lattice_vectors(handles);
 [b1_prim,b2_prim,b3_prim,g_hkl] = plotBZ_V1_bulk_realtime_vector(b1_origin_prim,b2_origin_prim,b3_origin_prim,g_origin_hkl,handles);
 [rec_lattice_coordinates,rec_lattice_rows] = plotBZ_V1_construct_bulk_rec_lattice(b1_prim,b2_prim,b3_prim,handles);
-shi2DhBZ = str2double(get(handles.shi2DhBZ,'String'));
+shi2DhBZ = plotBZ_V1_parse_scalar(handles, 'shi2DhBZ');
 horizontal_plane = createPlane((shi2DhBZ/100)*g_hkl,g_hkl);
-rot2DpBZ = str2double(get(handles.rot2DpBZ,'String'));
+rot2DpBZ = plotBZ_V1_parse_scalar(handles, 'rot2DpBZ');
 perpendicular_plane = createPlane([0 0 0], (rotz(rot2DpBZ)*rotx(90)*g_hkl')');
 [v,c]=voronoin(rec_lattice_coordinates);
+figure(ThreeDBZ_fig);
+plotAxes = gca;
+previousGraphics = findall(plotAxes);
+% Draw each selected Voronoi cell and optional plane intersections in the
+% same target figure, preserving pre-existing measurement graphics.
 for ii=rec_lattice_rows
     figure(ThreeDBZ_fig);
     drawPoint3d(rec_lattice_coordinates(ii,:));
@@ -1230,9 +1129,10 @@ for ii=rec_lattice_rows
         plotBZ_V1_intersectBZ(vertices,faces,perpendicular_plane,-90,ThreeDBZ_fig,0,'Linewidth',1,'Color',TwoDpBZ_color);
     end
     hold on
-end;
+end
  xlabel('Kx');ylabel('Ky');zlabel('Kz');
  axis equal;
+ plotBZ_V1_tag_graphics(plotAxes, previousGraphics);
 
 
 
@@ -1241,12 +1141,8 @@ function ThreeDBZ_clear_Callback(hObject, eventdata, handles)
 % hObject    handle to ThreeDBZ_clear (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ThreeDBZ_fig=str2num(get(handles.ThreeDBZ_fig,'String'));
-h_axes=figure(ThreeDBZ_fig);
-h1=findobj(h_axes,'Type','Line'); 
-delete(h1);
-h2=findobj(h_axes,'Type','patch');
-delete(h2);
+ThreeDBZ_fig = plotBZ_V1_parse_scalar(handles, 'ThreeDBZ_fig', 'figure');
+plotBZ_V1_clear_graphics(ThreeDBZ_fig);
 
 
 % --- Executes on selection change in ThreeDBZ_color.
@@ -1325,7 +1221,7 @@ function Hdown_Callback(hObject, eventdata, handles)
 % hObject    handle to Hdown (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.MillerH,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'MillerH', 'integer');
 temp=temp-1;
 set(handles.MillerH,'String',num2str(temp));
 
@@ -1334,7 +1230,7 @@ function Hup_Callback(hObject, eventdata, handles)
 % hObject    handle to Hup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.MillerH,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'MillerH', 'integer');
 temp=temp+1;
 set(handles.MillerH,'String',num2str(temp));
 
@@ -1366,7 +1262,7 @@ function Ldown_Callback(hObject, eventdata, handles)
 % hObject    handle to Ldown (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.MillerL,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'MillerL', 'integer');
 temp=temp-1;
 set(handles.MillerL,'String',num2str(temp));
 
@@ -1375,7 +1271,7 @@ function Lup_Callback(hObject, eventdata, handles)
 % hObject    handle to Lup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.MillerL,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'MillerL', 'integer');
 temp=temp+1;
 set(handles.MillerL,'String',num2str(temp));
 
@@ -1407,7 +1303,7 @@ function Kdown_Callback(hObject, eventdata, handles)
 % hObject    handle to Kdown (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.MillerK,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'MillerK', 'integer');
 temp=temp-1;
 set(handles.MillerK,'String',num2str(temp));
 
@@ -1416,7 +1312,7 @@ function Kup_Callback(hObject, eventdata, handles)
 % hObject    handle to Kup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-temp=str2num(get(handles.MillerK,'String'));
+temp=plotBZ_V1_parse_scalar(handles, 'MillerK', 'integer');
 temp=temp+1;
 set(handles.MillerK,'String',num2str(temp));
 
