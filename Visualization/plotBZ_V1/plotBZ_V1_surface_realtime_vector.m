@@ -7,8 +7,8 @@ function [s1, s2] = plotBZ_V1_surface_realtime_vector(b1, b2, b3, normal, handle
 bulkBasis = [b1; b2; b3];
 surfaceBasis = plotBZ_V1_primitive_surface_basis(bulkBasis, normal);
 [azimuth, elevation] = cart2sph(normal(1), normal(2), normal(3));
-alignNormal = rotx(90 - rad2deg(elevation))*rotz(90 - rad2deg(azimuth));
-displayRotation = rotz(plotBZ_V1_parse_scalar(handles, 'rotsurBZ'));
+alignNormal = plotBZ_V1_rotation('x', 90 - rad2deg(elevation))*plotBZ_V1_rotation('z', 90 - rad2deg(azimuth));
+displayRotation = plotBZ_V1_rotation('z', plotBZ_V1_parse_scalar(handles, 'rotsurBZ'));
 surfaceBasis = surfaceBasis*(displayRotation*alignNormal)';
 
 s1 = surfaceBasis(1, 1:2);
@@ -16,6 +16,4 @@ s2 = surfaceBasis(2, 1:2);
 if abs(det([s1; s2])) <= 1e-12*norm(s1)*norm(s2)
     error('plotBZ_V1:InvalidBasis', 'Surface reciprocal vectors are collinear.');
 end
-set(handles.s1_vector, 'String', sprintf('%0.4f  ', s1));
-set(handles.s2_vector, 'String', sprintf('%0.4f  ', s2));
 end

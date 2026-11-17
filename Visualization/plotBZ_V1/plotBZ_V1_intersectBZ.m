@@ -57,8 +57,8 @@ if uniqueCount < 3
 end
 
 [azimuth, elevation] = cart2sph(normal(1), normal(2), normal(3));
-rotation = rotz(inPlaneAngle)*rotx(90 - rad2deg(elevation))* ...
-    rotz(90 - rad2deg(azimuth));
+rotation = plotBZ_V1_rotation('z', inPlaneAngle)*plotBZ_V1_rotation('x', 90 - rad2deg(elevation))* ...
+    plotBZ_V1_rotation('z', 90 - rad2deg(azimuth));
 projected = uniquePoints*rotation';
 projected = projected(:, 1:2);
 if rank(projected - projected(1, :), tolerance) < 2
