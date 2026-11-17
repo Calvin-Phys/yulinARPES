@@ -16,6 +16,12 @@ data_browser_demo_v32
 
 The setup function adds the maintained code folders and the active support packages. It does not add the archived code. The GUI workflows also depend on the separate OX_ARPES checkout and GUI Layout Toolbox 2.3.5; install/add those as described in the manual.
 
+AI agents can use [AI_skills/arpes-browse/SKILL.md](AI_skills/arpes-browse/SKILL.md) to load and view data, convert supported objects to momentum space, and export 2D images without inspecting the full codebase.
+
+For crystal and Brillouin-zone plotting with fixed-photon-energy or photon-energy-scan simulations, use [AI_skills/arpes-plot-bz/SKILL.md](AI_skills/arpes-plot-bz/SKILL.md). Run `plotBZ_V1` after setup to open the three-column control panel.
+
+For improving an existing scientific program, [AI_skills/improve-scientific-guis/SKILL.md](AI_skills/improve-scientific-guis/SKILL.md) captures the GUI, code review, AI-interface, testing, documentation, and coordination lessons from these sessions.
+
 ## Repository map
 
 | Folder | Contents |
@@ -30,6 +36,7 @@ The setup function adds the maintained code folders and the active support packa
 | `archive` | Superseded copies retained for reference; do not add to the MATLAB path. |
 | `Manual` | User guide and related material. |
 | `doc` | Review and maintenance documents. |
+| `AI_skills` | Agent workflow skill and tested-session summary. |
 
 Some older GUI tools use the MATLAB base workspace. Save the original measurement files separately and review the selected inputs and output paths before running write/export operations.
 
@@ -48,7 +55,7 @@ These checks cover numeric GUI input parsing and the validated entry points for 
 
 - `third_party/export_fig` is used by the subplot figure-export tool.
 - `third_party/matGeom` is an optional dependency for the BXSF utility under `Others_uncertain/bxsf2mat`.
-- `Visualization/plotBZ_V1` uses the bundled `third_party/matGeom` geometry functions and MATLAB's `rotx`/`rotz` from Phased Array System Toolbox. Add the package with `setup_yulinARPES` before opening Plot BZ.
+- `Visualization/plotBZ_V1` uses MATLAB and the bundled `third_party/matGeom` geometry functions. Add the package with `setup_yulinARPES` before opening Plot BZ. Its local Cartesian rotations do not require Phased Array System Toolbox; the ARPES simulation is independent of the separate BZ_Plotter checkout.
 - `archive/third_party/export_fig_2013` is an older duplicate of the active export_fig package. It is retained but excluded from setup.
 - `archive/legacy/+LoadDataARPES_old` is an older loader-package copy with no in-repository references found during review. The current `+LoadDataARPES` package remains under `Loader_kconvert`.
 
