@@ -58,10 +58,10 @@ uimenu(VisualMenu,'Label','Slice 3D plot','Callback',@slice_3d_plot,'Separator',
 uimenu(VisualMenu,'Label','Volume 3D plot','Callback',@volume_3d_plot_w_notch);
 uimenu(VisualMenu,'Label','RenderDataARPES','Callback',@RenderDataARPES);
 uimenu(VisualMenu,'Label','Plot Tools','Callback',@plot_tools2_demo,'Separator','On');
-uimenu(VisualMenu,'Label','Plot BZ','Callback',@plotBZ_V1);
-uimenu(VisualMenu,'Label','plot BZ 2','Callback',@brillouin_zone_plot);
-uimenu(VisualMenu,'Label','Plot cut in kz','Callback',@kz_plot);
+uimenu(VisualMenu,'Label','Plot BZ','Callback',@brillouin_zone_plot);
 uimenu(VisualMenu,'Label','MiniBZ plotter','Callback',@MiniBZ_plotter);
+uimenu(VisualMenu,'Label','Plot BZ (new)','Callback',@plotBZ_V1,'Separator','On');
+uimenu(VisualMenu,'Label','KZ cut simulation','Callback',@kz_plot);
 
 ProcessMenu = uimenu(handles.mObject,'Label','Process');
 uimenu(ProcessMenu,'Label','Data Interpolation','Callback',@data_interpolation_demo);
@@ -73,12 +73,11 @@ uimenu(ProcessMenu,'Label','Spin data combine','Callback',@spin_data_combine);
 uimenu(ProcessMenu,'Label','Combine Data For KZ','Callback',@CombineDataForKZ,'Separator','On');
 uimenu(ProcessMenu,'Label','Combine Data For MAP','Callback',@CombineDataForMAP);
 
-FineStructureMenu = uimenu(ProcessMenu,'Label','Fine Structure','Separator','On');
-uimenu(FineStructureMenu,'Label','Curvature','Callback',@Curvature);
-uimenu(FineStructureMenu,'Label','Gradient','Callback',@Gradient);
-uimenu(FineStructureMenu,'Label','Smooth derivation','Callback',@smooth_derivation_v1);
-uimenu(FineStructureMenu,'Label','Mirror','Callback',@(~,~)data_mirror_symmetrize);
-uimenu(FineStructureMenu,'Label','Ridge detection','Callback',@ridge_detection);
+uimenu(ProcessMenu,'Label','Curvature','Callback',@Curvature,'Separator','On');
+uimenu(ProcessMenu,'Label','Gradient','Callback',@Gradient);
+uimenu(ProcessMenu,'Label','Smooth derivation','Callback',@smooth_derivation_v1);
+uimenu(ProcessMenu,'Label','Mirror','Callback',@(~,~)data_mirror_symmetrize);
+uimenu(ProcessMenu,'Label','Ridge detection','Callback',@ridge_detection);
 
 ToolsMenu = uimenu(handles.mObject,'Label','Tools');
 uimenu(ToolsMenu,'Label','Fit MDC ','Callback',@fit_MDC_demo_20150312);

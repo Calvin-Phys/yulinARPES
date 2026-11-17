@@ -1,3 +1,17 @@
 /doc/
 /tests/
 /AI_skills/
+
+# Track the browser entry point's documentation, checks and operation skill.
+!/doc/
+/doc/*
+!/doc/ARPES_data_browser_v5_log.md
+!/doc/ARPES_data_browser_v5_interface.png
+!/doc/ARPES_data_browser_v5_compact.png
+!/doc/ARPES_data_browser_v32_comparison.png
+!/tests/
+/tests/*
+!/tests/test_ARPES_data_browser_v5.m
+!/AI_skills/
+/AI_skills/*
+!/AI_skills/arpes-data-browser/
