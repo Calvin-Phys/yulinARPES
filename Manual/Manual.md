@@ -1,5 +1,11 @@
 # Manual of `yulinARPES`: Chen group's ARPES data process software
 
+The primary entry point is `ARPES_data_browser_v5`. `data_browser_demo_v32`
+is retained as the legacy browser. Some screenshots and menu labels below
+describe the legacy interface; use the [AI manual](Manual_for_AI.md) and
+[browser v5 skill](../AI_skills/arpes-data-browser/SKILL.md) for current setup
+and scriptable operation.
+
 This manual is intended to provide a brief introduction to using yulinARPES for processing and visualizing ARPES data. It will guide you through the basic workflow of ARPES data processing and help you become familiar with the software's structure.
 
 Please note that this manual does not cover the principles of ARPES. If you would like to learn more about ARPES, we recommend referring to review articles on the topic, such as:
@@ -15,7 +21,7 @@ To use the software, download `yulinARPES` [from GitHub](https://github.com/Calv
 To launch the software, enter the following command into the Matlab command line:
 
 ```
-data_browser_demo_v32
+ARPES_data_browser_v5
 ```
 
 Press Enter to run the command, and the main window of the software will appear as shown below.
@@ -25,9 +31,9 @@ Press Enter to run the command, and the main window of the software will appear 
 ---
 ## Loader ARPES data
 
-The program can load raw data into the workspace. To load data, click on 
+The program can load raw data into the workspace. To load data, click on
 ```
-Loader -> Load ARPES Data (New)
+Load -> ARPES loader (new)
 ```
 
 This will open the Loader window, as shown below:
@@ -36,12 +42,12 @@ This will open the Loader window, as shown below:
 You can select and load multiple files at once by using the file selection dialog.
 
 > **What are the differences between the new and old loader?**
-> 
+>
 > 1. The new loader differs from the old loader in that it loads raw data into pre-defined class objects (The data structure is defined in project `OX_ARPES`), whereas the old loader only produces raw Matlab structs. By using pre-defined class objects, the new loader can integrate more information (photon energy, polarisation, pass energy, scan mod, temperature ...) and provide processing methods (truncate, k-convert, normalise ...) for the data.
 > 2. The new loader has enhanced compatibility with Dropbox. It can now access online Dropbox folders without any disruptions and selectively download desired data files.
 > 3. The new loader can remember the last path it opened, which can save users time and effort when accessing frequently-used directories.
 > 4. The new loader is being actively maintained and upgraded, and it usually has better compatiblity and speed.
-> 
+>
 > It is recommended to use the new loader due to its added functionality, but the old loader remains available within the software.
 >
 > **How to convert the data loaded by the new loader to Matlab structure that is compitable with some older programs?**
@@ -62,7 +68,7 @@ Once the loading process is finished, click on the list in the main window to re
 ---
 ## Visualisation
 
-After loading the data into the workspace, you can double-click on it to plot the data. For 3D data, it will be plotted along the z direction by default. To change this, you can right-click on the plot and select 
+After loading the data into the workspace, you can double-click on it to plot the data. For 3D data, it will be plotted along the z direction by default. To change this, you can right-click on the plot and select
 ```
 plot -> plot along x/y/z.
 ```
@@ -72,7 +78,7 @@ The data plot window will look like this:
 ![Plot](./pictures/plot.png)
 
 You can:
-- adjust the color map range with the sliders to set the minimum and maximum percentages. `Fix Clim` option decides whether percentages are set only for current slice or the entire data. 
+- adjust the color map range with the sliders to set the minimum and maximum percentages. `Fix Clim` option decides whether percentages are set only for current slice or the entire data.
 - To change the contrast, adjust the `/gamma` slider. When gamma is zero, the image has a log scale.
 - Change the color map by selecting a new option from the drop-down list. To flip the color map, check or uncheck the `Flip` checkbox.
 - Enable interpolation of the data by selecting the `Interp` option
@@ -85,7 +91,7 @@ If you are working with 3D data, you can also:
 
 ### Energy and Momentum Distribution Curve (EDC/MDC)
 
-To view the EDC and MDC of a cut, click on the `ARPES Tools` menu and select `EDC/MDC`. 
+To view the EDC and MDC of a cut, click on the `ARPES Tools` menu and select `EDC/MDC`.
 ```
 ARPES Tools -> EDC/MDC
 ```
@@ -112,7 +118,7 @@ If the resolution of the cut is not sufficient, you can turn on the interpolatio
 ARPES Tools -> Interpolate
 ```
 or selecting the `Interp` option on the main panel.
-This will improve the visualization of the data. 
+This will improve the visualization of the data.
 
 Here is an example (left without interpolation, right with interpolation):
 
@@ -167,7 +173,7 @@ Then there will be a dialog box asking about the azimuth offset for the conversi
 
 To convert a photon energy scan map to k-space, you can first plot it along either the z or x direction. If you plot it along the z direction, move the horizontal line of the crosshair to the vertical center of symmetry (i.e., Ky = 0). Alternatively, if you plot it along the x direction, move the vertical line to the horizontal center (i.e., Kx = 0).
 
-Once the crosshair is properly positioned, click on `ARPES Tools` and select `K-Convert (object)`. 
+Once the crosshair is properly positioned, click on `ARPES Tools` and select `K-Convert (object)`.
 ```
 Plot Window -> ARPES Tools -> K-Convert (object)
 ```
@@ -213,7 +219,7 @@ Next, select the target data from the main window's list, input the truncate ran
 
 ### Data normalise
 
-Self-normalizing the data can make unclear features of the data more apparent. To do this, click on the main window's menu and select 
+Self-normalizing the data can make unclear features of the data more apparent. To do this, click on the main window's menu and select
 ```
 Main Window -> Process -> Self Normalization.
 ```
@@ -246,9 +252,9 @@ Main Window -> Tool -> Fit Fermi Level
 ![fit Fermi level](./pictures/fit_fermi_level.png)
 
 Then, follow these steps:
-1. Find the figure number of the target plot and enter it in the `Figure Number` field of the `FitFermiSurface` window. 
+1. Find the figure number of the target plot and enter it in the `Figure Number` field of the `FitFermiSurface` window.
 2. Click `Get EDC From Figure` button, and draw a square on the plot to select the integration area.
-3. An EDC of the selected area will appear in the `FitFermiSurface` window. Click `Fit FS` button. 
+3. An EDC of the selected area will appear in the `FitFermiSurface` window. Click `Fit FS` button.
 4. Repeat steps 2-3 if the fitting is not satisfactory. When the fitting looks good enough, click `Offset Energy` button. A new variable will appear in the workspace.
 
 ### Combine Data for KZ

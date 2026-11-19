@@ -1,78 +1,39 @@
-# yulinARPES: Chen group ARPES data processing software
+# yulinARPES
 
-This repository is designed to organize and maintain the current ARPES data processing software used in Chen's group, ensuring it remains up-to-date for all users. It is an ongoing project and will be updated periodically.
-
-A user manual is available at [Manual/Manual.md](Manual/Manual.md).
+MATLAB software from the Chen group for loading, processing, fitting, and
+visualising angle-resolved photoemission spectroscopy data.
 
 ## Quick start
 
-Use MATLAB 2022a–2024a as described in the manual. From MATLAB, add this checkout to the path and run the setup function:
+In MATLAB, make the checkout root the current folder and run:
 
 ```matlab
-addpath('/path/to/yulinARPES')
-setup_yulinARPES
-data_browser_demo_v32
+setup_yulinARPES;
+ARPES_data_browser_v5;
 ```
 
-The setup function adds the maintained code folders and the active support packages. It does not add the archived code. The GUI workflows also depend on the separate OX_ARPES checkout and GUI Layout Toolbox 2.3.5; install/add those as described in the manual.
+[`ARPES_data_browser_v5.m`](ARPES_data_browser_v5.m) is the primary entry point.
+[`data_browser_demo_v32.m`](data_browser_demo_v32.m) is **legacy**, retained for
+compatibility. GUI workflows require GUI Layout Toolbox; measured-data classes
+and several tools also use the separate OX_ARPES package.
 
-AI agents can use [AI_skills/arpes-browse/SKILL.md](AI_skills/arpes-browse/SKILL.md) to load and view data, convert supported objects to momentum space, and export 2D images without inspecting the full codebase.
+## Documentation
 
-For crystal and Brillouin-zone plotting with fixed-photon-energy or photon-energy-scan simulations, use [AI_skills/arpes-plot-bz/SKILL.md](AI_skills/arpes-plot-bz/SKILL.md). Run `plotBZ_V1` after setup to open the three-column control panel.
+- [User manual](Manual/Manual.md): interactive workflows and background.
+- [AI manual](Manual/Manual_for_AI.md): setup, dependencies, package structure,
+  agent entry points, session handling, and validation instructions.
+- [Skills map](AI_skills/SKILLS_MAP.md): choose a skill and understand instruction
+  categories and discovery.
+- [Review and maintenance records](doc/README.md): dated evidence and limitations.
 
-For improving an existing scientific program, [AI_skills/improve-scientific-guis/SKILL.md](AI_skills/improve-scientific-guis/SKILL.md) captures the GUI, code review, AI-interface, testing, documentation, and coordination lessons from these sessions.
+The software reflects contributions from many generations of group members.
+Feedback, fixes, and new functions are welcome.
 
-## Repository map
+## License and contact
 
-| Folder | Contents |
-|---|---|
-| `Data_enhance` | Symmetrisation, interpolation, curvature, and related enhancement tools. |
-| `Data_process` | Data combination, grid repair, and processing tools. |
-| `Fitting` | Peak, dispersion, and Fermi-edge fitting tools. |
-| `Loader_kconvert` | Format readers and momentum-conversion tools. |
-| `Visualization` | Plotting, viewers, and figure export interface. |
-| `Others_uncertain` | Older and less-classified helper utilities; use only when needed by a workflow. |
-| `third_party` | Active third-party libraries kept separate from project code. |
-| `archive` | Superseded copies retained for reference; do not add to the MATLAB path. |
-| `Manual` | User guide and related material. |
-| `doc` | Review and maintenance documents. |
-| `AI_skills` | Agent workflow skill and tested-session summary. |
+Project-owned code is [GPL-3.0-only](LICENSE). Bundled third-party components
+retain their own licenses and attribution.
 
-Some older GUI tools use the MATLAB base workspace. Save the original measurement files separately and review the selected inputs and output paths before running write/export operations.
-
-## Focused checks
-
-Run the small project-owned checks from the repository root with MATLAB:
-
-```matlab
-results = runtests(fullfile(pwd, 'tests'));
-assertSuccess(results)
-```
-
-These checks cover numeric GUI input parsing and the validated entry points for 2-D to 3-D rearrangement. They do not replace tests with representative beamline files or a GUI walkthrough.
-
-## Active and archived dependencies
-
-- `third_party/export_fig` is used by the subplot figure-export tool.
-- `third_party/matGeom` is an optional dependency for the BXSF utility under `Others_uncertain/bxsf2mat`.
-- `Visualization/plotBZ_V1` uses MATLAB and the bundled `third_party/matGeom` geometry functions. Add the package with `setup_yulinARPES` before opening Plot BZ. Its local Cartesian rotations do not require Phased Array System Toolbox; the ARPES simulation is independent of the separate BZ_Plotter checkout.
-- `archive/third_party/export_fig_2013` is an older duplicate of the active export_fig package. It is retained but excluded from setup.
-- `archive/legacy/+LoadDataARPES_old` is an older loader-package copy with no in-repository references found during review. The current `+LoadDataARPES` package remains under `Loader_kconvert`.
-
-The yulinARPES software and functions are the collective contributions of numerous group members across various generations (the full list can be found on the [group website](http://www.arpes.org.uk/People.html)).
-
-This repository aims to serve as a valuable resource for storing, publishing, and bringing together the knowledge and efforts of past and present contributors.
-
-Everyone is encouraged to provide feedback, contribute new functions, or help maintain the software. Your input and collaboration are greatly appreciated.
-
-## License
-
-Project-owned code is licensed under the GNU General Public License version 3
-(`GPL-3.0-only`). See [LICENSE](LICENSE). Bundled third-party components retain
-their own licenses and attribution files.
-
-
----
 Contact: Cheng Peng <cheng.peng@physics.ox.ac.uk>
 
-Group web: [Chen Group | ARPES at Oxford](http://www.arpes.org.uk)
+[Chen Group | ARPES at Oxford](http://www.arpes.org.uk)

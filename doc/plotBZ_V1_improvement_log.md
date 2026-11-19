@@ -1,11 +1,15 @@
 # plotBZ_V1 improvement log
 
+> Dated review/implementation evidence. Use the [documentation index](README.md)
+> and [skills map](../AI_skills/SKILLS_MAP.md) for current workflow routing.
+> Later follow-ups supersede earlier designs and findings; recorded test
+> results do not describe the current runtime unless rerun.
+
 Date: 17 November 2026.
 
 ## Scope and plan
 
-Read `plotBZ_V1_review.md` and `kz_plot_review.md` (the requested paths were
-written with an extra directory separator before `.md`). Preserve the previous
+Read `plotBZ_V1_review.md` and `kz_plot_review.md`. Preserve the previous
 primitive surface basis, validated reciprocal geometry, adaptive Voronoi
 padding, and tagged BZ graphics while improving the interface and simulation.
 
@@ -14,7 +18,7 @@ padding, and tagged BZ graphics while improving the interface and simulation.
 2. Trace the b1/b2/b3/s1/s2 display controls; remove them if output-only while
    retaining the numerical vectors used by the geometry.
 3. Implement fixed-photon-energy and photon-energy-scan free-electron surfaces,
-   referencing the local `OX_ARPES_AI/BZ_Plotter` implementation. Support 3D,
+   referencing a separate BZ plotting implementation used as design context. Support 3D,
    projected surface BZ, and true horizontal/vertical section overlays.
 4. Review numerical conventions, validation, graphics ownership, and code style;
    run regression/integration checks and inspect captured UI and plot images.
@@ -205,7 +209,7 @@ image objects**, verified by inspecting its PDF object dictionaries. Temporary
 export files were removed. No measured data were changed.
 
 The corrected interface and the new style example were visually inspected.
-The panel and isolated example figure 91401 were left open in the primary session.
+The panel and isolated example figure were left open in the primary session at the end of that run.
 
 ![Updated colours, sections, and scans](plotBZ_V1_style_example.png)
 

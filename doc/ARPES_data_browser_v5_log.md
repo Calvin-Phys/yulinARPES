@@ -1,8 +1,13 @@
 # ARPES data browser v5 improvement record
 
-## Current delivery summary — 17 November 2026
+> Dated review/implementation evidence. Use the [documentation index](README.md)
+> and [skills map](../AI_skills/SKILLS_MAP.md) for current workflow routing.
+> Later follow-ups supersede earlier designs and findings; recorded test
+> results do not describe the current runtime unless rerun.
 
-This section describes the final interface. The chronological sections below retain earlier decisions and validation results; later user revisions supersede them.
+## Final recorded delivery summary — 17 November 2026
+
+This section describes the final interface recorded for this revision. The chronological sections below retain earlier decisions and validation results; later user revisions supersede them.
 
 - **Entry point:** `ARPES_data_browser_v5` opens its own singleton, independently of v32. Default client size is 600 x 460, with two equal 300-pixel columns; minimum size is 600 x 450. Compact margins and consistent 8-point controls/main table preserve the existing coordinate/metadata font sizes.
 - **Menus:** actions are grouped under Load, Visualize, Process and Analyze. Load starts with the direct `ARPES loader (new)` action. Process includes the six-action Fine structure submenu above the Processing toolbox separator. All 43 original main-menu callback destinations remain represented. The initial v32 menu renaming/reordering and flattened Process actions are included as a separate compatibility change in its original entry point.
@@ -19,11 +24,11 @@ Physical Windows mouse automation remains blocked by the documented window-owner
 
 ### Commit scope
 
-The browser commit contains the new entry point, the earlier v32 menu edits, the focused comparison test, this log and three screenshots, the browser operation skill, and browser-specific ignore exceptions. Pre-existing Plot BZ, README/manual and broader skill/session-history work remains outside this commit. No data files or scientific model changes are included.
+The browser commit contains the new entry point, the earlier v32 menu edits, the focused comparison test, this log and interface screenshots, the browser operation skill, and browser-specific ignore exceptions. Pre-existing Plot BZ, README/manual and broader skill/session-history work remains outside this commit. No data files or scientific model changes are included.
 
 ## Chronological implementation record
 
-17 November 2026. Implementation complete; validated in MATLAB R2024a on Windows. Current layout: 600 x 460 with two 300-pixel columns; see the compact-layout follow-up at the end for the latest menu arrangement.
+17 November 2026. Implementation complete; validated in MATLAB R2024a on Windows. Current layout: 600 x 460 with two 300-pixel columns; see the final recorded summary above for the delivered menu arrangement.
 
 Request: create a new entry point from v32, organize menus, improve groups and details, inspect the actual layout, and compare callback behavior.
 
@@ -42,7 +47,7 @@ Launch from the yulinARPES path:
 ARPES_data_browser_v5
 ```
 
-The new file has its own singleton tag (`ARPESDataBrowserV5`). The v32 file retains the menu adjustments made earlier in this chat; this v5 work does not change it. Existing plotting, viewing, combination, save and processing callbacks were carried into the new entry point. They retain their base-workspace conventions and external dependencies. This is a staged GUI improvement, not a replacement of the scientific processing backend.
+The new file has its own singleton tag (`ARPESDataBrowserV5`). The v32 file retains the menu adjustments made earlier in that maintenance session; this v5 work does not change it. Existing plotting, viewing, combination, save and processing callbacks were carried into the new entry point. They retain their base-workspace conventions and external dependencies. This is a staged GUI improvement, not a replacement of the scientific processing backend.
 
 Menus now follow the task:
 
@@ -88,10 +93,10 @@ The test saves/restores existing v32 controls, group-name preferences, and remov
 Fresh captured client areas were inspected visually:
 
 - [Default v5 layout](ARPES_data_browser_v5_interface.png): populated 2D fixture; selection, coordinate checks and metadata are readable.
-- [Compact v5 layout](ARPES_data_browser_v5_compact.png): 900 x 580; controls remain separated, tables and bottom actions remain accessible.
-- [V32 comparison](ARPES_data_browser_v32_comparison.png): same synthetic 2D fixture in the original narrow browser.
+- [Compact v5 layout](ARPES_data_browser_v5_compact.png): the retained image was regenerated after the later compact-layout changes; it does not show the original 900 x 580 layout.
+- The former v32 comparison screenshot was removed during documentation cleanup because its workspace list exposed measurement names. Callback comparison results remain recorded above.
 
-Screenshots reflect the machine's display scaling (approximately 125 percent); `getframe` captures the client area, excluding the native title/menu bars. Menu hierarchy and destination preservation were verified from live menu objects. Initial visual review found names cramped in a five-button row; a two-row arrangement resolved that. The unused sixth grid cell provides spacing.
+Screenshot pixel dimensions can differ from MATLAB logical pixels because of display scaling; `getframe` captures the client area, excluding the native title/menu bars. Menu hierarchy and destination preservation were verified from live menu objects. Initial visual review found names cramped in a five-button row; a two-row arrangement resolved that. The unused sixth grid cell provides spacing.
 
 ## Development findings and corrections
 
@@ -149,7 +154,7 @@ R2024a classic `figure` tables reject the newer programmatic Selection / Selecti
 
 Validation: six comparison groups pass without warnings. V32 double-click plotting is compared with v5's table Enter callback and exact fixture samples. Table event tests cover repeated cells in one row and two distinct rows, name/class/storage formatting, tab filtering, and absence of the DataSummary control. Existing actual context-menu group and NaN-processing callback comparisons remain passing. Both changed MATLAB files have zero Code Analyzer notices. Default/minimum screenshots were regenerated and inspected visually.
 
-A live Windows mouse check was attempted using the computer-use skill. Window discovery succeeded, but get_window failed twice (with refreshed discovery) with `window id 11797890 no longer belongs to Mathworks.MATLAB.MATLAB.R2024a; current owner is Mathworks.MATLAB.MATLAB.R2024a`. No mouse input was issued. Therefore actual OS double-click delivery remains unverified; the implemented mouse route is source-reviewed, while table selection and Enter/context action routes are executed callback checks. The temporary mouse fixture was removed and existing workspace data/figures retained. This limitation does not change the six callback-test results.
+A live Windows mouse check was attempted using the computer-use skill. Window discovery succeeded, but get_window failed twice (with refreshed discovery) with a window-ownership mismatch error. No mouse input was issued. Therefore actual OS double-click delivery remains unverified; the implemented mouse route is source-reviewed, while table selection and Enter/context action routes are executed callback checks. The temporary mouse fixture was removed and existing workspace data/figures retained. This limitation does not change the six callback-test results.
 
 The metadata table still shows only data.info; previous data-list and removed-summary descriptions are historical. These changes add no numerical processing formulas.
 

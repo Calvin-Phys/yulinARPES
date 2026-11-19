@@ -1,5 +1,10 @@
 # kz_plot: Interface Improvements and Review
 
+> Dated review/implementation evidence. Use the [documentation index](README.md)
+> and [skills map](../AI_skills/SKILLS_MAP.md) for current workflow routing.
+> Later follow-ups supersede earlier designs and findings; recorded test
+> results do not describe the current runtime unless rerun.
+
 **Updated:** 16 November 2026
 
 **Files:** `Visualization/kz_plot.m`, `Visualization/kz_plot.fig`, `Visualization/kz_plot_build_layout.m`
