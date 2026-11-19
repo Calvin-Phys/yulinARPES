@@ -16,9 +16,72 @@ some historical screenshots/menu labels describe the legacy browser. The
 review/evaluation records. Examples use synthetic names; discover actual paths,
 dataset names, and MATLAB ownership for the current task.
 
+## Default MATLAB session workflow
+
+Use **one identified, shared MATLAB workspace** for live work. Agents and
+subagents must not each let their MATLAB MCP server start a new session: those
+sessions have separate base workspaces and figures. In particular, a PID in a
+prompt identifies the target but does not make an MCP tool attach to it.
+
+1. **Select the data-owning MATLAB first.** If the user already has the data
+   loaded, use that MATLAB. Have its owner run `shareMATLABSession()` there and
+   record `feature('getpid')` plus expected workspace variable names. Obtain
+   this identity independently of the MCP connection being checked. Keep the
+   MATLAB open while agents use its workspace.
+2. **Connect through the MATLAB MCP server in `existing` mode.** Configure the
+   host entry with `--matlab-session-mode=existing`; Codex subagents inherit the
+   parent's MCP configuration. This mode fails when no shared MATLAB is
+   available instead of silently starting an empty one. A fresh connection
+   discovers the MATLAB that most recently ran `shareMATLABSession()`.
+3. **Guard every agent connection before work.** Each agent or subagent must
+   compare its tool's `feature('getpid')` with the independently recorded PID
+   and check the expected base-workspace variables, classes, dimensions, and
+   relevant metadata. Keep that guard in the same tool call as a mutation when
+   practical. Stop if the PID or data differ; re-share the intended MATLAB and
+   establish a fresh MCP connection. Never load, plot, or edit in a newly
+   reached empty MATLAB just because the tool call succeeded.
+4. **Share work through that workspace.** Subagents can read data left in the
+   same running MATLAB. Serialize changes to its base workspace and figures;
+   do not assume subagent workspaces are isolated.
+5. **Disconnect before ending an agent phase.** Each agent or subagent should
+   close its own MCP client connection before it finishes, then verify that the
+   intended MATLAB PID is still running. Leave the MATLAB workspace and its
+   figures open for the next agent, which must make a fresh connection and
+   repeat the PID/data guard. Disconnecting is handoff discipline, not an
+   exclusive lock: other MCP clients can attach to a shared MATLAB.
+
+The inherited Codex MATLAB tool has no per-call disconnect action in the
+inspected interface, and ending a subagent turn has not been shown to close its
+MCP server. For a handoff requiring **verified disconnection**, use an
+agent-owned standalone `existing`-mode MCP client, close its transport before
+the agent ends, and check that its server exited while MATLAB stayed alive.
+Do not use MATLAB `exit` to disconnect an agent, or disable a shared host MCP
+server that another agent is using. Report the disconnect as unverified if the
+client cannot be closed explicitly.
+
+If an agent must create a MATLAB for a task whose workspace will be handed to
+another agent, start MATLAB as an **independent OS process**, load the data,
+run `shareMATLABSession()`, and keep MATLAB running. An interactive `-r` startup
+script can do this; `-batch` exits when its script completes. Connect agent A
+with `existing` mode, then disconnect A's MCP client before A finishes. Agent B
+starts a fresh `existing`-mode connection and verifies the same PID and data
+before continuing. Do not use MCP `new` mode or `auto` launch fallback for a workspace
+that must survive its MCP server: the server closes MATLAB processes it
+launched when it stops. `matlab.engine.shareEngine` and Engine `disconnect()`
+are separate from MCP session sharing.
+
+If the target is missing, investigate or ask for the data/session location
+before doing live work. A batch MATLAB has its own workspace and requires
+explicit file input and saved output; use it only when the task permits that
+workflow. See [shared setup](../AI_skills/MATLAB_SETUP.md#verify-the-live-session),
+the [session-sharing guide](../doc/MATLAB_AI_session_sharing_review.md), and
+the [tested Codex handoff log](../doc/codex_matlab_workflow_log.md) for details
+and limitations.
+
 ## Quick start
 
-In MATLAB, make the checkout root the current folder, then run:
+In the verified, intended MATLAB, make the checkout root the current folder,
+then run:
 
 ```matlab
 setup_yulinARPES;
@@ -64,13 +127,11 @@ Repository skills are files to read, not automatically installed host skills.
 The [skills map](../AI_skills/SKILLS_MAP.md) explains discovery, relevant references,
 helper paths, and routing for operations without a dedicated skill.
 
-Before live execution, verify the intended MATLAB workspace and target figures.
-An agent or subagent may connect to another MATLAB process; passing its PID in a
-prompt does not reconnect the tool. Use the [session-sharing guide](../doc/MATLAB_AI_session_sharing_review.md)
-when attachment is uncertain. A batch process has separate state. Coordinate
-shared mutations, preserve raw measurements, and use distinct output names
-unless replacement is requested. Check actual classes, axis units, calibration,
-and dimensions; a successful GUI callback alone does not validate a scientific result.
+Before live execution, follow the [default session workflow](#default-matlab-session-workflow)
+and verify the target figures. Coordinate shared mutations, preserve raw
+measurements, and use distinct output names unless replacement is requested.
+Check actual classes, axis units, calibration, and dimensions; a successful
+GUI callback alone does not validate a scientific result.
 
 ## Repository map
 

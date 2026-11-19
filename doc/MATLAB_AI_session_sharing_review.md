@@ -20,9 +20,12 @@ no per-call PID selector.
 | Named MATLAB Engine bridge | A custom Python-based tool must choose a shared MATLAB by name. | Separate API/tool integration and release-compatible Python required. |
 
 For most ARPES tasks, start with documented existing-session sharing and verify
-the workspace before each operation. Until direct subagent attachment has been
-confirmed, let subagents return self-contained functions for the coordinator to
-execute in the verified session. Serialize shared workspace/GUI changes.
+the workspace before each operation. A later
+[live handoff test](codex_matlab_workflow_log.md)
+confirmed that a fresh subagent can attach to the same independently started
+MATLAB and read data left by a prior agent. Serialize shared workspace/GUI
+changes; subagents may also return self-contained functions for a coordinator
+to execute in the verified session.
 
 ## Standard MCP sharing procedure
 
@@ -62,6 +65,29 @@ execute in the verified session. Serialize shared workspace/GUI changes.
 4. Establish fresh agent/MCP connections, then check their actual MATLAB target.
    An existing server can retain its previous connection; sharing another MATLAB
    or changing a prompt is not a reliable retargeting mechanism.
+
+## Disconnect before an agent ends
+
+For a sequential handoff, each agent or subagent should close **its own MCP
+client connection** after completing and verifying its work, before ending its
+turn. Confirm that its client/server exited and that the independently started
+MATLAB PID still runs. Leave MATLAB, its base workspace, and requested figures
+open. The next agent opens a fresh `existing`-mode connection and checks the
+independently expected PID and data before acting. This is an orderly handoff
+procedure; sharing does not grant one MCP client exclusive ownership.
+
+The inspected inherited Codex MATLAB tool exposes no per-call disconnect
+action. Completing a subagent turn was not verified to stop that inherited MCP
+server. For a handoff that requires proof of disconnection, have the agent use
+an agent-owned standalone MCP client, close its transport explicitly, and
+verify that the server exited while MATLAB remained running. This was tested
+with both a synthetic in-memory variable and measured scans in the
+[workflow log](codex_matlab_workflow_log.md). If the connection cannot be
+explicitly closed, report that limitation instead of claiming a disconnect.
+Do not call MATLAB `exit` or stop a host-wide MCP service to disconnect one
+agent; the former ends the shared workspace, and the latter can affect other
+agents. A MATLAB launched by MCP `new` mode or `auto` fallback can be closed
+when that server stops, so start handoff sessions independently of MCP.
 
 MathWorks documents `new`, `auto`, and `existing` modes. `auto` can start a new
 MATLAB when discovery fails. `existing` avoids that initial launch fallback.

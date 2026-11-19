@@ -12,6 +12,7 @@ introduces the interactive processing workflow.
 | [Skills map](../AI_skills/SKILLS_MAP.md) | Skill summaries, task routing, instruction categories, and skill discovery. |
 | [MATLAB setup](../AI_skills/MATLAB_SETUP.md) | Portable path resolution, dependencies, session ownership, and live/batch boundaries. |
 | [MATLAB session sharing](MATLAB_AI_session_sharing_review.md) | Existing-session attachment, PID guards, version-specific connection pinning, and named Engine alternatives. |
+| [Codex–MATLAB workflow log](codex_matlab_workflow_log.md) | Dated connection diagnostics, MCP restart behavior, and disconnect options. |
 | [Documentation maintenance review](AI_documentation_review.md) | Scope, changes, validation, and limits of the portability/navigation cleanup. |
 
 ## Dated implementation evidence

@@ -72,9 +72,17 @@ the requested result or requires information that cannot be discovered.
 
 Read [MATLAB setup and session guidance](MATLAB_SETUP.md) when establishing a
 connection, resolving paths/dependencies, or choosing live versus batch execution.
-Verify the expected workspace and figure before changing either. Serialize
-operations that share a MATLAB GUI or base workspace. Preserve source data,
-unrelated figures, and existing files unless the requested operation replaces them.
+Default to one independently started, shared MATLAB with MCP `existing` mode;
+each agent and subagent must verify its PID and expected workspace before work.
+Do not let separate MCP servers launch empty MATLAB sessions for data already
+loaded elsewhere. Verify the expected workspace and figure before changing
+either. Serialize operations that share a MATLAB GUI or base workspace.
+Preserve source data, unrelated figures, and existing files unless the
+requested operation replaces them.
+For a sequential handoff, each agent closes its own MCP client before ending,
+keeps the shared MATLAB running, and has the next agent verify the PID and data
+through a fresh connection. See [MATLAB setup](MATLAB_SETUP.md#verify-the-live-session)
+for the inherited Codex tool's disconnect limitation.
 
 Names such as `sample_cut` and `sample_map`, and figure numbers in worked examples,
 are illustrative. Discover actual inputs and targets from the current request
