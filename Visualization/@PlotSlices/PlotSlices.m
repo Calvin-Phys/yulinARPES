@@ -581,8 +581,8 @@ classdef PlotSlices < handle
                 case 'x'
                     xData = obj.Data.y;
                     yData = obj.Data.z;
-                    xData_label = arpes_axis_label(obj.Data, 'y');
-                    yData_label = arpes_axis_label(obj.Data, 'z');
+                    xData_label = PlotSlices.arpes_axis_label(obj.Data, 'y');
+                    yData_label = PlotSlices.arpes_axis_label(obj.Data, 'z');
                     cond = ( abs(obj.AxisData - pos) <= width/2 );
                     if ~any(cond)
                         [~,cond] = min(abs(obj.AxisData - pos));
@@ -591,8 +591,8 @@ classdef PlotSlices < handle
                 case 'y'
                     xData = obj.Data.x;
                     yData = obj.Data.z;
-                    xData_label = arpes_axis_label(obj.Data, 'x');
-                    yData_label = arpes_axis_label(obj.Data, 'z');
+                    xData_label = PlotSlices.arpes_axis_label(obj.Data, 'x');
+                    yData_label = PlotSlices.arpes_axis_label(obj.Data, 'z');
                     cond = ( abs(obj.AxisData - pos) <= width/2 );
                     if ~any(cond)
                         [~,cond] = min(abs(obj.AxisData - pos));
@@ -601,8 +601,8 @@ classdef PlotSlices < handle
                 otherwise
                     xData = obj.Data.x;
                     yData = obj.Data.y;
-                    xData_label = arpes_axis_label(obj.Data, 'x');
-                    yData_label = arpes_axis_label(obj.Data, 'y');
+                    xData_label = PlotSlices.arpes_axis_label(obj.Data, 'x');
+                    yData_label = PlotSlices.arpes_axis_label(obj.Data, 'y');
                     cond = ( abs(obj.AxisData - pos) <= width/2 );
                     if ~any(cond)
                         [~,cond] = min(abs(obj.AxisData - pos));
@@ -1835,6 +1835,10 @@ classdef PlotSlices < handle
                 end
             end
         end
+    end
+
+    methods (Static)
+        label = arpes_axis_label(data, axisName) % Shared axis-label formatter.
     end
 
     methods (Static, Access = private)

@@ -80,7 +80,9 @@ explicitly excluded.
 
 `PlotSlices` leaves missing axis names and units blank, including the synthetic
 axis used internally when promoting a 2-D struct. The shared `arpes_axis_label`
-formatter displays supplied names and units independently, without empty
+formatter (`Visualization/@PlotSlices/arpes_axis_label.m`, exposed as the public
+static method `PlotSlices.arpes_axis_label`) displays supplied names and units
+independently, without empty
 parentheses. Both browser versions use it for struct spectra, including the
 optional `v_name`/`v_unit` intensity label. Structs skip both automatic equal-axis
 checks even when their supplied units match. Manual equal-axis selection and

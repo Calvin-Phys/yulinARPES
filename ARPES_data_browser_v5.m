@@ -802,8 +802,8 @@ function PlotData(hObject,varargin)
         figure;
         plot(xAxis, data.value(:));
         if isstruct(data)
-            xLabel = arpes_axis_label(data, 'x');
-            ylabel(arpes_axis_label(data, 'v'));
+            xLabel = PlotSlices.arpes_axis_label(data, 'x');
+            ylabel(PlotSlices.arpes_axis_label(data, 'v'));
         end
         xlabel(xLabel);
     elseif ismatrix(data.value) || ndims(data.value) == 3
