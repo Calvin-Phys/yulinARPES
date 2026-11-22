@@ -160,12 +160,14 @@ classdef PlotSlices < handle
 
             % Choose useful default orientation and aspect settings when the
             % stored axis units indicate that two displayed axes are related.
+            % Keep automatic equal scaling off for structs: missing units
+            % default to empty strings, which would otherwise compare equal.
             if obj.Direction == 'z' && numel(obj.Data.x) ~= 1
                 obj.FlipCheckbox.Value = 1;
                 obj.Width.String = '0.05';
                 
                 try
-                    if strcmp(obj.Data.x_unit,obj.Data.y_unit)
+                    if ~isstruct(obj.Data) && strcmp(obj.Data.x_unit,obj.Data.y_unit)
                         obj.Checkbox.Value = 1;
                     end
                 catch
@@ -175,7 +177,7 @@ classdef PlotSlices < handle
 
             if obj.Direction == 'x'
                 try
-                    if strcmp(obj.Data.y_unit,obj.Data.z_unit)
+                    if ~isstruct(obj.Data) && strcmp(obj.Data.y_unit,obj.Data.z_unit)
                         obj.Checkbox.Value = 1;
                     end
                 catch
@@ -269,8 +271,8 @@ classdef PlotSlices < handle
                 data.y = oldX;
                 data.z = oldY;
                 data.value = value3D;
-                data.x_name = 'Index';
-                data.x_unit = 'index';
+                data.x_name = '';
+                data.x_unit = '';
                 data.y_name = oldXName;
                 data.y_unit = oldXUnit;
                 data.z_name = oldYName;
@@ -579,11 +581,8 @@ classdef PlotSlices < handle
                 case 'x'
                     xData = obj.Data.y;
                     yData = obj.Data.z;
-                    try
-                    xData_label = [obj.Data.y_name ' (' obj.Data.y_unit ')'];
-                    yData_label = [obj.Data.z_name ' (' obj.Data.z_unit ')'];
-                    catch
-                    end
+                    xData_label = arpes_axis_label(obj.Data, 'y');
+                    yData_label = arpes_axis_label(obj.Data, 'z');
                     cond = ( abs(obj.AxisData - pos) <= width/2 );
                     if ~any(cond)
                         [~,cond] = min(abs(obj.AxisData - pos));
@@ -592,11 +591,8 @@ classdef PlotSlices < handle
                 case 'y'
                     xData = obj.Data.x;
                     yData = obj.Data.z;
-                    try
-                    xData_label = [obj.Data.x_name ' (' obj.Data.x_unit ')'];
-                    yData_label = [obj.Data.z_name ' (' obj.Data.z_unit ')'];
-                    catch
-                    end
+                    xData_label = arpes_axis_label(obj.Data, 'x');
+                    yData_label = arpes_axis_label(obj.Data, 'z');
                     cond = ( abs(obj.AxisData - pos) <= width/2 );
                     if ~any(cond)
                         [~,cond] = min(abs(obj.AxisData - pos));
@@ -605,11 +601,8 @@ classdef PlotSlices < handle
                 otherwise
                     xData = obj.Data.x;
                     yData = obj.Data.y;
-                    try
-                    xData_label = [obj.Data.x_name ' (' obj.Data.x_unit ')'];
-                    yData_label = [obj.Data.y_name ' (' obj.Data.y_unit ')'];
-                    catch
-                    end
+                    xData_label = arpes_axis_label(obj.Data, 'x');
+                    yData_label = arpes_axis_label(obj.Data, 'y');
                     cond = ( abs(obj.AxisData - pos) <= width/2 );
                     if ~any(cond)
                         [~,cond] = min(abs(obj.AxisData - pos));
@@ -1676,14 +1669,14 @@ classdef PlotSlices < handle
         end
 
         function normalizeLegacyMetadata(obj)
-            % Supply optional display metadata missing from older bare structs.
+            % Keep absent axis metadata blank for older bare structs.
             if ~isstruct(obj.Data) || ~isscalar(obj.Data)
                 return
             end
             defaults = struct('name', obj.DataName, ...
-                'x_name', 'x', 'x_unit', '', ...
-                'y_name', 'y', 'y_unit', '', ...
-                'z_name', 'z', 'z_unit', '');
+                'x_name', '', 'x_unit', '', ...
+                'y_name', '', 'y_unit', '', ...
+                'z_name', '', 'z_unit', '');
             defaultFields = fieldnames(defaults);
             for fieldIndex = 1:numel(defaultFields)
                 fieldName = defaultFields{fieldIndex};

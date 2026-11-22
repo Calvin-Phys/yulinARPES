@@ -70,3 +70,29 @@ The class still combines GUI construction, slicing, plotting, and ARPES workflow
 ## Review limits
 
 The initial review used static inspection and MATLAB Code Analyzer; later Mass Plot checks launched the GUI and processed a representative measured map. Other loader and conversion paths were not retested in those checks. Beamline conventions used to distinguish legacy MAP and KZ structs still need confirmation against real metadata before relying on automatic classification for ambiguous 3-D inputs.
+
+## Struct display defaults — 22 November 2026
+
+The user requested that structs retain their supplied display metadata without
+invented axis labels or automatic equal-axis scaling. The confirmed scope is
+the browsers' 1-D plots and `PlotSlices` 2-D/3-D views; 4-D visualization is
+explicitly excluded.
+
+`PlotSlices` leaves missing axis names and units blank, including the synthetic
+axis used internally when promoting a 2-D struct. The shared `arpes_axis_label`
+formatter displays supplied names and units independently, without empty
+parentheses. Both browser versions use it for struct spectra, including the
+optional `v_name`/`v_unit` intensity label. Structs skip both automatic equal-axis
+checks even when their supplied units match. Manual equal-axis selection and
+native-object defaults are retained; plotting does not write display defaults
+back to the source workspace struct.
+
+Validation in a separate MATLAB R2024a process passed for bare, name-only,
+unit-only, and string-valued metadata on 2-D inputs and all three 3-D slice
+directions. New 2-D plot windows, manual equal-axis selection, native-object
+defaults, and preservation of source workspace structs were also checked.
+Both browsers' 1-D plotting callbacks passed with bare structs, absent
+coordinates (index fallback), and supplied labels. Batch mode could not
+initialize v5's desktop mouse bridge, so the installed Enter callback was used;
+native mouse interaction was not retested. Code Analyzer reported zero notices
+for all four changed MATLAB files, and `git diff --check` passed.
