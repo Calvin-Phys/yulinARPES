@@ -894,6 +894,7 @@ function saveBaseVariables(fileName,variableNames,appendToFile)
 function buildMenus(fig)
 top=uimenu(fig,'Label','Load');
 uimenu(top,'Label','ARPES loader (new)','Callback',@(~,~)loader_UI);
+uimenu(top,'Label','Export NXmpes...','Tag','ExportNXmpes','Callback',@(~,~)export_nxmpes_UI);
 parent=uimenu(top,'Label','Import data');
 uimenu(parent,'Label','ARPES loader (classic)','Callback',@LoadDataARPES.main);
 uimenu(parent,'Label','Sync and load','Callback',@(~,~)OxArpes_Sync);

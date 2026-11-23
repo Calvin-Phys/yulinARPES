@@ -264,3 +264,37 @@ After setting up both repositories and GUI Layout Toolbox, from the yulinARPES
 root run `addpath('tests'); test_ARPES_data_browser_v5`. This existing comparison
 test also opens the legacy browser and regenerates its documented screenshots.
 The focused slider checks are `runtests('tests/test_PlotSlices_position_slider.m')`.
+
+## NXmpes export in both browser menus — 23 November 2026
+
+Added **Load → Export NXmpes...** to browser v5 and
+**Loader → Export NXmpes...** to legacy v32. Both entries have tag
+`ExportNXmpes` and call `export_nxmpes_UI` from the separate OX_ARPES `GUI`
+folder. The existing new-loader item remains first in the v5 Load menu.
+The exporter and its final compact layout are recorded in OX_ARPES commit
+`d9a77ad`, following the NXmpes backend commit `15fdbd7`.
+The README and user manual now describe these routes and the path dependency.
+The comparison test's menu-count message now derives its count from the
+discovered callbacks rather than printing a fixed historical count.
+
+The shared exporter lists all base-workspace variables, lets users tick
+supported scalar OX datasets and choose an output path, and writes each
+selection as a separate NXmpes entry. Its final default is 400 x 400 pixels,
+with instructions and save/error status under the title and more space for
+the variable list. Its implementation, workspace-loading changes, three GUI
+tests and detailed format limitations are maintained in OX_ARPES; this
+repository adds the menu integration only.
+
+Validation used an isolated MATLAB **R2024a, 24.1.0.2537033** process with
+GUI Layout Toolbox and the matching OX checkout on the path. Both real menu
+callbacks opened the export window and saved a synthetic cut through its
+Save callback. Independent `load_nxmpes` round-trips matched the original
+object exactly, and the source workspace object was unchanged. Menu parent
+labels and browser singleton behavior were checked. Code Analyzer reported
+no notices on either added menu line; `git diff --check` passed.
+
+This was a focused integration check, not a rerun of the full browser
+comparison or R2025a runtime acceptance. No live user workspace or figures
+were changed. Reopen existing browser windows to create the new menu items;
+the OX `GUI` folder must remain on the MATLAB path. Refer to OX_ARPES
+`doc/NXmpes_GUI_worklog.md` for final exporter layout and test evidence.

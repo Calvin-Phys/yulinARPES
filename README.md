@@ -17,6 +17,11 @@ ARPES_data_browser_v5;
 compatibility. GUI workflows require GUI Layout Toolbox; measured-data classes
 and several tools also use the separate OX_ARPES package.
 
+Use **Load → Export NXmpes...** in browser v5, or
+**Loader → Export NXmpes...** in legacy v32, to select workspace datasets
+and save a NeXus file. This opens `export_nxmpes_UI` from the separate
+OX_ARPES `GUI` folder, which must be on the MATLAB path.
+
 ## Documentation
 
 - [User manual](Manual/Manual.md): interactive workflows and background.

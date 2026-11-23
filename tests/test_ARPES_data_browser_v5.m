@@ -53,7 +53,7 @@ assert(numel(get(fine,'Children'))==6);
 toolbox=findall(process,'Label','Processing toolbox');
 assert(get(fine,'Position')<get(toolbox,'Position') && strcmp(get(toolbox,'Separator'),'on'));
 
-fprintf('PASS: fixture discovery and all 43 menu dispatch targets.\n');
+fprintf('PASS: fixture discovery and all %d menu dispatch targets.\n',numel(oldCallbacks));
 % Same 1D plot callback route and exact sampled output.
 curves=cell(1,2);
 for k=1:2

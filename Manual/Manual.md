@@ -41,6 +41,11 @@ This will open the Loader window, as shown below:
 
 You can select and load multiple files at once by using the file selection dialog.
 
+To export workspace datasets, choose **Load → Export NXmpes...** (or
+**Loader → Export NXmpes...** in legacy v32). Tick the OX datasets to save,
+choose a destination and click **Save NXmpes**. The export window comes from
+the separate OX_ARPES `GUI` folder; add that folder to the MATLAB path.
+
 > **What are the differences between the new and old loader?**
 >
 > 1. The new loader differs from the old loader in that it loads raw data into pre-defined class objects (The data structure is defined in project `OX_ARPES`), whereas the old loader only produces raw Matlab structs. By using pre-defined class objects, the new loader can integrate more information (photon energy, polarisation, pass energy, scan mod, temperature ...) and provide processing methods (truncate, k-convert, normalise ...) for the data.
