@@ -122,6 +122,7 @@ dependency contracts; neither supplies a uniform API for every algorithm.
 | Manage simulated photon-energy cut curves | [arpes-kz-plot](../AI_skills/arpes-kz-plot/SKILL.md) | `kz_plot_agent` |
 | Crystal/BZ geometry and simulated ARPES coverage | [arpes-plot-bz](../AI_skills/arpes-plot-bz/SKILL.md) | `plotbz_agent` / `plotBZ_V1` |
 | Review/improve GUI, code, scientific contracts, or agent APIs | [improve-scientific-guis](../AI_skills/improve-scientific-guis/SKILL.md) | Maintenance workflow and evidence templates |
+| Fit a Fermi edge (E_F, resolution, T) or shift/Fermi-Dirac-correct a cut or map | OX_ARPES `AI_skills/ox-arpes-fdd-fit/SKILL.md` (dependency skill) | `FDD_fit_app`, `fdd_extract_edc` / `fdd_fit_edc` / `fdd_correct_data` in OX_ARPES `GUI/FDD` |
 
 Repository skills are files to read, not automatically installed host skills.
 The [skills map](../AI_skills/SKILLS_MAP.md) explains discovery, relevant references,
@@ -133,13 +134,44 @@ measurements, and use distinct output names unless replacement is requested.
 Check actual classes, axis units, calibration, and dimensions; a successful
 GUI callback alone does not validate a scientific result.
 
+### Fermi-edge fitting (OX_ARPES FDD)
+
+`FDD_fit_app` is the maintained Fermi-edge fitter. It lives in the separate
+OX_ARPES checkout under `GUI/FDD` (with its `fdd_*` backend), not in this
+repository, and needs base MATLAB only (no Curve Fitting, Optimization or Image
+Processing Toolbox). Open it from **Analyze → Fit spectra → Fit Fermi-level
+(new)** in browser v5 or **Tools → Fit Fermi-level (new)** in legacy v32; both
+sit directly below the original `FitFermiSurface` entry, which is unchanged.
+From code, add OX_ARPES `GUI/FDD` to the path and call `app = FDD_fit_app` or the
+scriptable functions:
+
+```matlab
+[E, I] = fdd_extract_edc(goldCut, 'XRange', [-10 10]);
+R = fdd_fit_edc(E, I, 'Model', 'rcfd_lin_bg_T', 'Temperature', T_K);
+shifted = fdd_correct_data(goldCut, R.params);          % new object, source unchanged
+```
+
+The app opens empty and lists base-workspace cuts and maps. Selecting one copies
+a finite, positive `data.info.temperature` (K) into the Temperature start value,
+which the default model holds fixed; a lamp shows Idle, Fitting…, Done or Failed,
+also returned by `getState().fitStatus`. Fitting T and resolution together is
+flagged as degenerate; prefer the measured temperature. Outputs are new
+base-workspace variables. Read OX_ARPES `AI_skills/ox-arpes-fdd-fit/SKILL.md`
+before agent use; `doc/FDD_user_guide.md`, `doc/FDD_review.md` and
+`doc/FDD_improvement_log.md` there hold the interface, the review of the original
+`FDD_new` program and dated validation (synthetic edges, R2023a). Menu wiring is
+recorded in the [browser record](../doc/ARPES_data_browser_v5_log.md).
+
+**NXmpes export:** **Load → Export NXmpes...** (v5) and **Loader → Export
+NXmpes...** (v32) open OX_ARPES `export_nxmpes_UI`; see the README.
+
 ## Repository map
 
 | Folder | Contents and scope |
 |---|---|
 | `Data_enhance` | Symmetrisation, interpolation, curvature, and related enhancement tools. |
 | `Data_process` | Data combination, grid repair, and processing tools. |
-| `Fitting` | Peak, dispersion, and Fermi-edge fitting tools. |
+| `Fitting` | Peak, dispersion, and Fermi-edge fitting tools (`FitFermiSurface` is the original Fermi-level window; the maintained fitter is OX_ARPES `FDD_fit_app`). |
 | `Loader_kconvert` | Format readers and momentum-conversion tools. |
 | `Visualization` | `PlotSlices`, plotting, viewers, figure export, `kz_plot`, and `plotBZ_V1`. |
 | `Others_uncertain` | Older or less-classified utilities; inspect callers/contracts before use. |

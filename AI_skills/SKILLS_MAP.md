@@ -13,6 +13,7 @@ task. Read the matching `SKILL.md`, then only the references needed for the task
 | Inspect/filter workspace variables or manage four ARPES groups in browser v5 | [arpes-data-browser](arpes-data-browser/SKILL.md) | `ARPES_data_browser_v5` public facade. Group membership changes metadata; this is not a general numerical-processing API. |
 | Add, style, move, update, or delete simulated photon-energy cut curves in an existing figure | [arpes-kz-plot](arpes-kz-plot/SKILL.md) | `kz_plot_agent` over `kz_plot` callbacks. Simulated Fermi-level cuts, not measured-data conversion. |
 | Draw crystal/BZ geometry or simulate fixed-photon-energy and photon-energy-scan coverage | [arpes-plot-bz](arpes-plot-bz/SKILL.md) | `plotbz_agent` over `plotBZ_V1`. Distinguishes 3-D coverage, surface projections, and bulk sections. |
+| Fit a Fermi edge for E_F, resolution and temperature, or shift / Fermi-Dirac-correct a cut or map | OX_ARPES `AI_skills/ox-arpes-fdd-fit/SKILL.md` (dependency skill) | `FDD_fit_app` and `fdd_*` in OX_ARPES `GUI/FDD`; browser menu **Fit Fermi-level (new)**. Base MATLAB only. See the [AI manual](../Manual/Manual_for_AI.md#fermi-edge-fitting-ox_arpes-fdd). |
 | Review or improve scientific GUI code, its numerical contracts, or an agent interface | [improve-scientific-guis](improve-scientific-guis/SKILL.md) | Maintenance workflow, evidence templates, and transferable implementation lessons. Routine operation belongs to the matching operation skill. |
 
 For a task spanning several rows, compose only the necessary skills. For example,

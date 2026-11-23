@@ -305,3 +305,15 @@ default from R2025a. It now explicitly sets Units='pixels', Position=[100 100
 560 420], and WindowStyle='normal' for a consistent legacy-sized standalone
 window. No root defaults, control layout or user resizing policy changed.
 Code Analyzer and whitespace checks pass; remote visual confirmation pending.
+
+## Fermi-edge fitter (OX_ARPES FDD) and browser menus — 23 November 2026
+
+The standalone `FDD_new` Fermi-edge program was reviewed with
+[improve-scientific-guis](improve-scientific-guis/SKILL.md) and upgraded to the
+toolbox-free `FDD_fit_app` / `fdd_*`, now maintained in OX_ARPES `GUI/FDD` with its
+own `ox-arpes-fdd-fit` skill, review and improvement log (synthetic edges, R2023a).
+User feedback then compacted the window to 80 %, added `info.temperature` autofill
+of the held T and a fit-status lamp. This repository adds **Fit Fermi-level (new)**
+to the v5 Analyze → Fit spectra and v32 Tools menus (`925a1a0`) and routes the task
+from the [AI manual](../Manual/Manual_for_AI.md#fermi-edge-fitting-ox_arpes-fdd) and
+[skills map](SKILLS_MAP.md). Menu checks: [browser record](../doc/ARPES_data_browser_v5_log.md).
