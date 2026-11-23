@@ -243,3 +243,65 @@ Browser v5 row-spacing follow-up (17 November): radios now above counts; removed
 Browser v5 colour/button follow-up (17 November): EditVariable moved to bottom-right with same callback; class texts and filter labels use CUT blue / MAP+ToF green / KZ purple. Class cells use HTML, Name cells remain literal; public facade unchanged. Eight checks pass including colour assertions and Swing double-click regression; both files have zero analyzer notices. Default screenshot inspected, state restored.
 
 Browser v5 row-colour follow-up (17 November): alternating white/very-light-green main-table backgrounds, with blue selection overriding and correct stripes restored on deselection. Targeted live palette checks and visual inspection passed, zero browser analyzer notices; no new API behavior or broad regression claim.
+
+R2025a compatibility maintenance (23 November): browser v5 uses literal class
+names plus native cell font styles and DoubleClickedFcn on R2025a+, retaining
+legacy HTML/Swing on earlier releases. PlotSlices configures coordinate bounds
+after slider construction with valid intermediate limits/values, fixes the
+N-1 step and initial index, disables single-position sliders, and clamps
+position edits. Browser assertions are release-aware; a focused slider test
+was added. Public facades and operation skills are unchanged. Work follows
+MathWorks R2025a online documentation at the user's request. Standalone R2024a
+Code Analyzer and diff whitespace checks pass; no runtime/visual pass is
+claimed. R2025a is absent, MCP attach failed and the separate R2024a probe
+failed at startup. The user will verify on another desktop; commands and
+limitations are recorded in the browser log and PlotSlices review.
+
+Slider lower-bound clarification (23 November): user specified `0..Max`
+instead of `Min..Max`. Final slider assignments now set Max before Min, leaving
+Min as the final bound written. Tests inspect after draw/resize, cover positive
+minima in x/y/z and exercise the Value listener without manual refresh. Fixed
+trailing-singleton validation with size(value,dimension), which otherwise
+prevented single-slice checks reaching the slider. Static analysis and diff
+checks pass; R2025a runtime/root-cause confirmation remains unperformed.
+
+Slider API verification (23 November): MathWorks still documents Min/Max for
+UIControl in R2025a; uislider uses Limits on both earlier and later releases.
+Added public static PlotSlices.configure_position_slider to select Limits or
+Min/Max from the actual control, configure Value/Enable, and distinguish
+relative SliderStep from absolute Step when available. PlotSlices retains
+its UIControl layout/callbacks. Tests now create real controls of both types
+and exercise the shared setup; no MATLAB release switch is assumed. Standalone
+Code Analyzer and whitespace checks pass; runtime tests remain unexecuted as
+requested. This supersedes the speculative assignment-order explanation.
+
+Remote slider evidence (23 November): user reports UIControl with both stored
+axis/control limits 154.2140..155.7863 and Value 155.0002 in the intended
+checkout. Incorrect stored Min is ruled out for that instance; visual/input
+disagreement is suspected. PlotSlices now uses a native uislider in a panel
+for the position control on R2025a+, while older releases and colour/gamma
+controls retain UIControl. Native drag rendering uses event.Value; release
+and programmatic Value updates are supported. Tests cover both release paths,
+the reported energy range, callbacks, panel bounds and desktop-only UI drag
+gestures. Static checks pass; runtime/visual tests remain unexecuted locally.
+This follow-up supersedes the prior decision to retain UIControl on all releases.
+
+UIControl restoration (23 November): user reported native Slider.Value is not
+SetObservable and explicitly requested the previous component/panel. Removed
+the native uislider, host panel, resize callback and native event paths; every
+release now uses the original UIControl/HBox arrangement. R2025a+ uses raw
+0..1 storage mapped to axis units through PlotSlices.position_slider_value;
+older releases retain raw physical coordinates. All position reads/writes,
+including mass plots and retained separate methods, use the accessor.
+Tests now cover both mappings with actual UIControls, physical endpoints and
+images, edits/restoration, component types and original layout. Native tests
+were removed. Static checks pass; no runtime pass is claimed. This supersedes
+the native-control workaround and documents its user-observed runtime failure.
+
+Initial PlotSlices size (23 November): user confirmed the normalized UIControl
+works on R2025a and reported a larger initial window. The main figure previously
+inherited MATLAB defaults; MathWorks documents a larger monitor-dependent
+default from R2025a. It now explicitly sets Units='pixels', Position=[100 100
+560 420], and WindowStyle='normal' for a consistent legacy-sized standalone
+window. No root defaults, control layout or user resizing policy changed.
+Code Analyzer and whitespace checks pass; remote visual confirmation pending.

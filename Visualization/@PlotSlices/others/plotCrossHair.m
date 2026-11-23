@@ -37,7 +37,7 @@ function plotCrossHair(obj,~,~)
 
             % Plot Edc and Mdc
 
-            pos=get(obj.Slider,'Value');
+            pos=PlotSlices.position_slider_value(obj.Slider);
             [~,posInd]=min(abs(obj.AxisData-pos));
             set(obj.Position,'String',num2str(pos));
             set(obj.PositionIndex,'String',num2str(posInd));

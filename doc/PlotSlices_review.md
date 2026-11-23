@@ -98,3 +98,204 @@ coordinates (index fallback), and supplied labels. Batch mode could not
 initialize v5's desktop mouse bridge, so the installed Enter callback was used;
 native mouse interaction was not retested. Code Analyzer reported zero notices
 for all four changed MATLAB files, and `git diff --check` passed.
+
+## R2025a position-slider compatibility — 23 November 2026
+
+User reported an incorrect 3-D position-slider range on R2025a and requested
+changes based on online documentation for testing on another desktop. The
+acceptance contract is that the slider covers the selected x/y/z coordinates,
+its displayed index identifies the initially plotted slice, endpoint positions
+select the correct slices, and single-position axes remain valid.
+
+The [R2025a UIControl reference](https://www.mathworks.com/help/releases/R2025a/matlab/ref/matlab.ui.control.uicontrol-properties.html)
+requires `Min < Max` and defines `SliderStep` as fractions of `Max-Min`.
+PlotSlices now configures limits after creating the slider, expanding the
+default range first and setting an in-range value before narrowing either end.
+All intermediate bounds and values remain valid for positive-only and
+negative-only coordinates. The initial index is the actual nearest sample.
+The minor step is `1/(N-1)` instead of `1/N`; the major step is capped at one
+range. Constant/single-position axes get a disabled slider with a small valid
+padding around the actual coordinate. Position edits clamp to the actual data
+range and nonfinite edits retain the previous position.
+
+These address source-level issues and provide a compatibility measure; the
+reported release-specific failure has not been reproduced here. Added
+`tests/test_PlotSlices_position_slider.m` covers all three directions, shifted
+positive/negative ranges, ascending/descending/nonuniform axes, two-sample
+axes, endpoint image values, edit clamping, singleton axes and promoted 2-D
+data. Tests own their fixture variables/figures and preserve existing ones.
+
+Validation is static only: standalone R2024a Code Analyzer reports no notices
+for both changed implementations and both tests, and `git diff --check` passes.
+R2025a is unavailable locally; the connector could not attach and a separate
+R2024a process failed at startup. Runtime and visual checks await the other
+desktop. After `setup_yulinARPES` with GUI Layout Toolbox and `drawcrosshair`
+available, run `runtests('tests/test_PlotSlices_position_slider.m')` from the
+repository root. Also drag a real 3-D dataset through both slider endpoints
+and compare the position/index fields with its stored coordinates.
+
+### Lower-bound recheck — 23 November 2026
+
+User clarified the symptom: the position range is `0..Max` rather than
+`Min..Max`. This is a lower-bound issue, separate from step size. The first
+compatibility patch still finalized `Max` after `Min`; it now finalizes `Max`
+first and assigns `Min` last, after placing Value inside the requested range.
+No later position-slider Max assignment occurs during construction. This is
+a targeted initialization correction; neither an R2025a property-reset bug nor
+the original runtime cause has been reproduced or established from the docs.
+
+The slider tests now call `drawnow` before inspecting bounds and explicitly
+exercise positive minima above the default `[0,1]` range in all directions,
+including after figure resize. They verify that the lower bound stays nonzero
+and that a programmatic Value change refreshes the index via the installed
+listener without directly calling `update_CData`. Existing checks also cover
+negative-only ranges. Inspection additionally found that validation indexed
+`size(value)` at dimension 3 for singleton-z data; `size(value,3)` now correctly
+returns 1, allowing those tests to reach slider construction.
+
+Standalone R2024a Code Analyzer reports no notices for PlotSlices and its
+slider test; `git diff --check` passes. No MATLAB runtime checks were repeated,
+in accordance with the documentation-only R2025a workflow. The other desktop
+must still confirm the physical slider's range and endpoint behaviour.
+
+### Limits versus Min/Max API verification — 23 November 2026
+
+User suggested that R2025a replaced Min/Max with Limits. MathWorks documents
+these as two different component APIs, rather than a release-wide property
+rename: [UIControl](https://www.mathworks.com/help/releases/R2025a/matlab/ref/matlab.ui.control.uicontrol-properties.html)
+still exposes Min/Max for slider controls in R2025a; [uislider](https://www.mathworks.com/help/releases/R2025a/matlab/ref/uislider.html)
+uses Limits, including on earlier releases. The
+[UIControl migration guide](https://www.mathworks.com/help/matlab/creating_guis/update-ui-controls-and-callbacks.html)
+explicitly maps Min/Max to Limits when replacing a UIControl with uislider.
+The R2025a Slider reference also documents absolute Step, whereas UIControl's
+SliderStep values are fractions of the range.
+
+Position-slider setup is now centralized in the public static helper
+`PlotSlices.configure_position_slider(slider,axisData)`. It checks the actual
+object's properties: assign Limits together when available, otherwise use
+Min/Max with valid intermediate bounds. It assigns Value inside the range,
+uses relative SliderStep or absolute Step only when supported, and handles
+single-position axes with disabled, strictly increasing bounds. Position and
+nearest-sample index are returned for the viewer fields. The helper uses no
+release-number assumption. PlotSlices continues creating its existing
+UIControl in the GUI Layout Toolbox layout, so this change does not claim a
+full migration to the uislider callbacks or layout.
+
+The slider regression file now also creates real UIControl and uislider
+objects and exercises the same helper on both with positive, negative,
+zero-crossing, narrow, descending and singleton coordinate ranges. This
+checks the Limits branch even when running tests on an older release with
+uislider support. Existing complete-viewer checks remain in place.
+
+Standalone R2024a Code Analyzer reports no notices for PlotSlices, the helper
+and the slider test; `git diff --check` passes. Tests have been authored but
+not executed. R2025a runtime and visual confirmation remain for the user's
+other desktop. The earlier assignment-order hypothesis was not a verified
+root cause; the documented slider-type distinction supersedes any implication
+that all R2025a slider objects require the same property names.
+
+### Native position control after remote diagnostics — 23 November 2026
+
+The user supplied R2025a output from the failing desktop: the position control
+is `matlab.ui.control.UIControl`; stored axis and control bounds both equal
+154.2140..155.7863, and Value is 155.0002. The constructor resolves to the
+intended yulinARPES checkout. This rules out an incorrectly stored lower bound
+in that inspected instance. A disagreement between reported UIControl bounds
+and its visual/interactive range is now the leading explanation; the user has
+not yet supplied a captured leftmost drag value. The colour/gamma controls all
+intentionally start at zero, so their appearing correct does not test nonzero
+lower-bound handling. The earlier assignment-order changes were insufficient.
+
+On R2025a and later, PlotSlices now creates the position control with native
+`uislider` and its Limits API. MathWorks explicitly documents support for
+uislider in classic figure-based apps from R2025a in the
+[uislider version history](https://www.mathworks.com/help/matlab/ref/uislider.html).
+Older MATLAB releases retain UIControl and Min/Max. Only the position control
+changes type; existing colour/gamma controls remain UIControls. The native
+slider is hosted in a borderless panel within the original GUI Layout Toolbox
+row and resized with that panel; tick labels are disabled to fit the row.
+
+The native ValueChangingFcn renders event.Value, as required by the
+[R2025a Slider reference](https://www.mathworks.com/help/releases/R2025a/matlab/ref/matlab.ui.control.slider.html):
+Slider.Value retains the last committed value while dragging. ValueChangedFcn
+refreshes on release, and the existing Value listener retains programmatic
+position/index editing and mass-plot updates/restoration.
+
+Tests are now aware of the expected control type for the running release.
+New callback checks cover the user's narrow nonzero energy range, transient
+drag values without changing the committed Value, release updates, endpoint
+images and panel bounds. A desktop-only test uses the documented App Testing
+Framework drag gesture to move the real native slider to both endpoints;
+property readbacks alone cannot validate the reported failure.
+
+Standalone R2024a Code Analyzer and diff whitespace checks pass. These tests
+remain unexecuted locally, and native rendering/layout/drag validation is still
+required on the R2025a desktop. Reopen a new viewer after syncing the checkout;
+its position slider must now report `matlab.ui.control.Slider` and the expected
+154.2140..155.7863 Limits. This is a targeted workaround for the observed
+legacy-control disagreement, not a confirmed general MathWorks bug diagnosis.
+
+### Restore UIControl and normalize its internal position — 23 November 2026
+
+User rejected the native component after an R2025a constructor failure:
+`matlab.ui.control.Slider.Value` is not SetObservable, so attaching the legacy
+PostSet listener throws. The native replacement was not validated at runtime
+and introduced this error. The user explicitly requires the previous
+UIControl and panel behaviour. This supersedes the native-control design above.
+
+PlotSlices again creates a direct UIControl child in its original HBox on
+every release. The added native host panel, resize method, native callbacks
+and transient event-value handling are removed. The original Value PostSet
+listener now attaches only to the same UIControl type used by the other sliders.
+Existing row sizes and fixed control widths are retained.
+
+For R2025a and later, the position UIControl deliberately uses Min=0, Max=1.
+`PlotSlices.position_slider_value(slider)` maps its raw Value to the actual
+axis range; passing a second argument writes a position in axis units.
+Thus raw Value=0 means physical position 154.2140 for the user's dataset,
+and raw Value=1 means 155.7863. This removes dependence on the reported
+nonzero-Min visual/input behaviour while retaining the previous widget.
+Older releases retain physical-coordinate Min/Max and Value. The Pos/Ind
+fields, averaging widths, slice calculations, index buttons, edit callbacks,
+new-figure paths and mass-plot positioning/restoration use physical units on
+both paths. The retained separate crosshair/export/correction methods also
+use the accessor. Colour and gamma slider code is unchanged.
+
+The configuration helper now accepts only slider UIControls; all uislider
+branches and native-component tests are removed. Tests exercise physical and
+normalized storage explicitly on the same release, verify endpoint mapping
+and images, index and position edits, position restoration, singleton axes,
+original HBox parenting/sizes and all four slider component types. Directly
+reading or writing raw `viewer.Slider.Value` is no longer a physical-position
+API on R2025a+; scripts should use the accessor or the existing GUI edit fields.
+
+Standalone R2024a Code Analyzer reports no notices for PlotSlices, both slider
+helpers and the rewritten regression file; diff whitespace checks pass.
+R2025a runtime/visual confirmation remains unperformed locally. The next
+remote check must use a newly constructed viewer after closing old windows
+and clearing their retained object variables. This change removes the
+unsupported native-component listener path; it does not claim that the
+original MATLAB UIControl rendering issue has been reproduced locally.
+
+## Initial figure size across releases — 23 November 2026
+
+User confirmed the normalized UIControl slider works on R2025a, then reported
+that the PlotSlices window opens larger than in older MATLAB versions.
+`figureConstruct` did not specify Units, Position or WindowStyle, so the main
+window inherited MATLAB's defaults. The
+[R2025a release notes](https://www.mathworks.com/help/releases/r2025a/matlab/release-notes.html)
+explicitly document a larger monitor-dependent default figure size and show
+`Position=[100 100 560 420]` to recover the previous default size. They also
+document the change from standalone windows to a docked figure container.
+
+The main PlotSlices figure now explicitly uses pixel units, a 560-by-420
+content area at [100 100], and WindowStyle='normal' on every release. This
+sets a consistent initial size without changing graphics-root defaults or
+fixing/locking subsequent user resizing. The uicontrol/HBox arrangement and
+linked/mass-plot figure sizing are unchanged. Window decorations and OS display
+scaling can still affect the outer window's physical appearance.
+
+Validation: source inspection found no later main-window size assignment;
+standalone R2024a Code Analyzer reports no notices for PlotSlices and diff
+whitespace checks pass. No new runtime or visual check was performed; the
+R2025a appearance remains for remote confirmation.

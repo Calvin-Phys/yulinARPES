@@ -228,3 +228,39 @@ All eight check groups pass in R2024a, including all three colours and ToF's sha
 Main-table rows alternate white and very light green (RGB 0.95, 0.98, 0.95). The palette is recomputed in the shared selection update, so deselecting a row restores the correct alternating background and selected rows retain their existing light-blue highlight. Other tables and type text colours are unchanged.
 
 Targeted live checks verified green even rows, white odd rows, selection highlighting and restoration after selection changes. Browser Code Analyzer has zero notices. The live screenshot was regenerated and inspected, and prior group/filter/search/selection was retained. The previous eight-group regression result is historical; this cosmetic change received targeted palette/runtime and visual checks only.
+
+## R2025a class colours and mouse callbacks — 23 November 2026
+
+User reported literal HTML in the Class column on R2025a and requested a
+documentation-based compatibility change, with verification on another desktop.
+Scope: retain CUT/MAP/ToF/KZ colours, exact workspace names, filtering, grouping,
+selection and double-click plotting; preserve the pre-R2025a rendering path.
+
+R2025a and later now store literal class names and apply `uistyle`/`addStyle`
+font colours only to Class cells. Refresh removes and rebuilds row-specific
+styles so filters and tab changes cannot leave colours on the wrong classes.
+Older releases retain the Swing HTML rendering. R2025a also uses the documented
+`DoubleClickedFcn` and `InteractionInformation.Row`/`Column`, avoiding the old
+Swing peer lookup. Both callback paths share clicked-row plotting logic.
+
+Basis: MathWorks [R2025a uitable version history](https://www.mathworks.com/help/releases/R2025a/matlab/ref/uitable.html)
+adds styling and double-click properties to figure-based tables; the
+[R2025a Table reference](https://www.mathworks.com/help/releases/R2025a/matlab/ref/matlab.ui.control.table.html)
+documents class-cell styling and click information. The comparison test now
+checks actual native style targets/colours on R2025a, retaining HTML assertions
+on older releases. R2025a mouse tests invoke the installed callback with
+synthetic event data; only the legacy branch dispatches Swing events.
+
+Validation: standalone R2024a Code Analyzer reports no notices for the browser,
+browser test, PlotSlices or its new slider test; `git diff --check` passes.
+No runtime or visual verification completed: R2025a is not installed here,
+the MATLAB MCP connector could not attach, and a separate R2024a probe failed
+during startup (`failed to load settings errors_warnings plugin`). No user
+MATLAB workspace or figures were changed. R2025a acceptance remains for the
+other desktop: inspect all four class colours, filter/search and change tabs,
+then double-click a selected row repeatedly and a different row.
+
+After setting up both repositories and GUI Layout Toolbox, from the yulinARPES
+root run `addpath('tests'); test_ARPES_data_browser_v5`. This existing comparison
+test also opens the legacy browser and regenerates its documented screenshots.
+The focused slider checks are `runtests('tests/test_PlotSlices_position_slider.m')`.

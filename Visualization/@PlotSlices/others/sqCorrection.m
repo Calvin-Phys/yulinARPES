@@ -14,7 +14,7 @@ switch obj.Direction
         xData=obj.Data.x;
         yData=obj.Data.y;
 end
-pos=get(obj.Slider,'Value');
+pos=PlotSlices.position_slider_value(obj.Slider);
 [~,posInd]=min(abs(obj.AxisData-pos));
 index=arraySliceIndex(3,posInd,d);
 sliceData=squeeze(obj.Data.value(index{:}));

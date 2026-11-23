@@ -295,6 +295,8 @@ classdef PlotSlices < handle
             %% Figure layout
             obj.Figure = figure('Name', DataName, 'MenuBar', 'none', ...
                 'ToolBar', 'none', ...
+                'WindowStyle', 'normal', 'Units', 'pixels', ...
+                'Position', [100 100 560 420], ...
                 'CloseRequestFcn', @obj.closeMainFigure);
 
             obj.homeVBox=uiextras.VBox('Parent',obj.Figure,'BackgroundColor','w');
@@ -321,10 +323,6 @@ classdef PlotSlices < handle
             set(colorleftVBox,'Sizes',[-1,-1]);
             set(colorrightVBox,'Sizes',[-1,-1]);
 
-            axisMin=min(obj.AxisData);
-            axisMax=max(obj.AxisData);
-            step=1/numel(obj.AxisData);
-            
             %% Controls for slice position and averaging width
             uicontrol(...
                 'Parent',       infoHBox,...
@@ -336,13 +334,13 @@ classdef PlotSlices < handle
                 'Style',        'Checkbox',...
                 'String',       'Ax Equal',...
                 'Callback',     @obj.setAx);
-            obj.Slider=uicontrol(...
-                'Parent',       infoHBox,...
-                'Style',        'Slider',...
-                'Min',          axisMin,...
-                'Max',          axisMax,...
-                'Value',        mean([axisMin,axisMax]),...
-                'SliderStep',   [step,5*step]);
+            obj.Slider=uicontrol('Parent',infoHBox,'Style','Slider', ...
+                'Visible','off');
+            % Keep the original component and layout on every release.
+            % R2025a+ uses an internal 0..1 range mapped to the data axis.
+            [initialPosition,initialIndex]= ...
+                PlotSlices.configure_position_slider(obj.Slider,obj.AxisData);
+            set(obj.Slider,'Visible','on');
             addlistener(obj.Slider,'Value','PostSet',@obj.update_CData);
             uicontrol(...
                 'Parent',       infoHBox,...
@@ -351,7 +349,7 @@ classdef PlotSlices < handle
             obj.Position=uicontrol(...
                 'Parent',       infoHBox,...
                 'Style',        'Edit',...
-                'String',       num2str(round(mean([axisMin,axisMax]),3)),...
+                'String',       num2str(round(initialPosition,3)),...
                 'BackgroundColor','w',...
                 'Callback',     @obj.setPos);
             %%
@@ -378,7 +376,7 @@ classdef PlotSlices < handle
             obj.PositionIndex=uicontrol(...
                 'Parent',       infoHBox,...
                 'Style',        'Edit',...
-                'String',       num2str(round((1+numel(obj.AxisData)/2))),...
+                'String',       num2str(initialIndex),...
                 'BackgroundColor','w',...
                 'Callback',     {@obj.setInd,'='});
             uicontrol(...
@@ -573,7 +571,7 @@ classdef PlotSlices < handle
  
              % Select the initial slab around the current slider position.
              % If the width contains no samples, use the nearest axis point.
-            pos = get(obj.Slider,'Value');
+            pos = PlotSlices.position_slider_value(obj.Slider);
             width = str2double(get(obj.Width, 'String'));
 
             % slice data
@@ -769,7 +767,7 @@ classdef PlotSlices < handle
             % Recompute the slab after a slider, width, interpolation, or
             % gamma change, then refresh overlays and linked axis controls.
             %% get sliced data
-            pos = get(obj.Slider,'Value');
+            pos = PlotSlices.position_slider_value(obj.Slider);
             width = str2double(get(obj.Width, 'String'));
             
             switch obj.Direction
@@ -881,14 +879,19 @@ classdef PlotSlices < handle
                 posInd = 1;
             end
             pos = obj.AxisData(posInd);
-            set(obj.Slider,'Value',pos);
+            PlotSlices.position_slider_value(obj.Slider,pos);
             obj.update_CData();
         end
         
         function setPos(obj,~,~)
             % Apply the numeric position entered in the slice-position field.
             pos = str2double(get(obj.Position,'String'));
-            set(obj.Slider,'Value',pos);
+            if ~isfinite(pos)
+                pos=PlotSlices.position_slider_value(obj.Slider);
+            end
+            pos=max(double(min(obj.AxisData(:))), ...
+                min(double(max(obj.AxisData(:))),pos));
+            PlotSlices.position_slider_value(obj.Slider,pos);
             obj.update_CData();
         end
         
@@ -1339,8 +1342,9 @@ classdef PlotSlices < handle
                 axisLabel = 'KE';
             end
 
-            originalPosition = obj.Slider.Value;
-            restorePosition = onCleanup(@() set(obj.Slider, 'Value', originalPosition));
+            originalPosition = PlotSlices.position_slider_value(obj.Slider);
+            restorePosition = onCleanup(@() ...
+                PlotSlices.position_slider_value(obj.Slider,originalPosition));
             rootUnits = get(groot, 'Units');
             set(groot, 'Units', 'pixels');
             restoreRootUnits = onCleanup(@() set(groot, 'Units', rootUnits));
@@ -1359,7 +1363,7 @@ classdef PlotSlices < handle
             useInterpolation = strcmp(obj.InterpolateMenu.Checked, 'on');
 
             for plotIndex = 1:plotCount
-                obj.Slider.Value = positions(plotIndex);
+                PlotSlices.position_slider_value(obj.Slider,positions(plotIndex));
                 plotAxis = nexttile(layout, plotIndex);
                 if useInterpolation
                     obj.initial_plot('new2intp', plotAxis);
@@ -1692,7 +1696,6 @@ classdef PlotSlices < handle
         function validatePlotData(obj)
             % Validate the common three-axis representation used by the GUI.
             axesNames = {'x', 'y', 'z'};
-            valueSize = size(obj.Data.value);
             for axisIndex = 1:numel(axesNames)
                 axisName = axesNames{axisIndex};
                 if ~PlotSlices.hasDataMember(obj.Data, axisName)
@@ -1706,7 +1709,9 @@ classdef PlotSlices < handle
                     error('PlotSlices:InvalidAxes', ...
                         'Coordinate %s must be a nonempty finite numeric vector.', axisName);
                 end
-                if numel(axisValues) ~= valueSize(axisIndex)
+                % size(A,3) returns 1 for a trailing singleton dimension;
+                % indexing size(A) would fail before its slider is created.
+                if numel(axisValues) ~= size(obj.Data.value,axisIndex)
                     error('PlotSlices:InvalidAxes', ...
                         'The %s coordinate length must match value dimension %d.', ...
                         axisName, axisIndex);
@@ -1839,6 +1844,8 @@ classdef PlotSlices < handle
 
     methods (Static)
         label = arpes_axis_label(data, axisName) % Shared axis-label formatter.
+        [position,index] = configure_position_slider(slider,axisData,varargin)
+        position = position_slider_value(slider,varargin)
     end
 
     methods (Static, Access = private)

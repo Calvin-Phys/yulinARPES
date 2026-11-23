@@ -67,7 +67,7 @@ end
 assert(isequal(curves{1},curves{2}));
 assert(isequal(curves{2}{1},spectrum.x) && isequal(curves{2}{2},spectrum.value));
 fprintf('PASS: v32 double-click / v5 table Enter plotting match fixture samples.\n');
-% Dispatch native Swing mouse events to the actual table component.
+% Use Swing events before R2025a; invoke the documented callback thereafter.
 % Repeated double-clicks must work even when selection does not change.
 select(b,'v5test_spectrum');
 rows=namesIn(b); spectrumRow=find(strcmp(rows,'v5test_spectrum'));
@@ -98,7 +98,7 @@ assert(isscalar(created));
 line=findall(created,'Type','line'); assert(isequal(get(line(1),'YData'),spectrum.value));
 state=ARPES_data_browser_v5('read'); assert(strcmp(state.selected{1},'v5test_spectrum'));
 delete(created);
-fprintf('PASS: native repeated double-click, clicked-row identity, tab switching; other clicks ignored.\n');
+fprintf('PASS: repeated double-click, clicked-row identity and tab switching.\n');
 
 % Actual context callbacks: add and move preserve the existing semantics.
 for k=1:2
@@ -154,7 +154,7 @@ assert(b.AxisTable.FontSize==8 && b.Metadata.FontSize==8);
 assert(isempty(findall(new,'Tag','DataSummary')));
 entries=get(b.VarList,'Data');
 row=find(strcmp(entries(:,1),'v5test_cube'));
-assert(contains(entries{row,2},'OxA_KZ') && contains(entries{row,2},'#8A3EA8'));
+assertClassColor(b.VarList,row,'OxA_KZ',[138 62 168]/255);
 assert(~isempty(regexp(entries{row,3},'^\d+(\.\d+)? (B|KiB|MiB|GiB)$','once')));
 % A native selection event can cover several cells in each selected row.
 selectCallback=get(b.VarList,'CellSelectionCallback');
@@ -217,10 +217,10 @@ for k=1:numel(types)
     if strcmp(types{k},'all')
         assert(any(contains(data(:,3),'KiB')));
         names=data(:,1);
-        assert(contains(data{strcmp(names,'v5test_map'),2},'#1766A6'));
-        assert(contains(data{strcmp(names,'v5test_map3d'),2},'#16734A'));
-        assert(contains(data{strcmp(names,'v5test_tof'),2},'#16734A'));
-        assert(contains(data{strcmp(names,'v5test_cube'),2},'#8A3EA8'));
+        assertClassColor(b.VarList,find(strcmp(names,'v5test_map')),'OxA_CUT',[23 102 166]/255);
+        assertClassColor(b.VarList,find(strcmp(names,'v5test_map3d')),'OxA_MAP',[22 115 74]/255);
+        assertClassColor(b.VarList,find(strcmp(names,'v5test_tof')),'OxA_MAP_ToF',[22 115 74]/255);
+        assertClassColor(b.VarList,find(strcmp(names,'v5test_cube')),'OxA_KZ',[138 62 168]/255);
     end
     for j=1:size(data,1)
         number=strtok(data{j,3});
@@ -331,6 +331,15 @@ end
 end
 
 function dispatchMouse(table,row,count,button)
+if ~isMATLABReleaseOlderThan('R2025a')
+    % Callback-level coverage only; OS mouse interaction is a manual check.
+    if count~=2 || button~=1, return; end
+    if row>size(table.Data,1), row=[]; end
+    event=struct('InteractionInformation',struct('Row',row,'Column',1));
+    feval(get(table,'DoubleClickedFcn'),table,event);
+    drawnow;
+    return;
+end
 peer=getappdata(table,'MousePeer');
 rectangle=peer.getCellRect(row-1,0,true);
 event=javaObject('java.awt.event.MouseEvent',peer, ...
@@ -338,4 +347,23 @@ event=javaObject('java.awt.event.MouseEvent',peer, ...
     0,rectangle.x+5,(row-1)*peer.getRowHeight()+5,count,false,button);
 javaMethodEDT('dispatchEvent',peer,event);
 drawnow;
+end
+
+function assertClassColor(table,row,className,rgb)
+data=get(table,'Data');
+if isMATLABReleaseOlderThan('R2025a')
+    hex=sprintf('#%02X%02X%02X',round(255*rgb));
+    assert(contains(data{row,2},className) && contains(data{row,2},hex));
+    return;
+end
+assert(strcmp(data{row,2},className),'Native table class text must be literal.');
+styles=table.StyleConfigurations;
+for k=1:height(styles)
+    if strcmp(styles.Target(k),'cell') && ...
+            ismember([row 2],styles.TargetIndex{k},'rows')
+        assert(isequal(styles.Style(k).FontColor,rgb));
+        return;
+    end
+end
+error('No native colour style found for class cell.');
 end

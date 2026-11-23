@@ -18,7 +18,7 @@ function saveMdcEdc(obj,varargin)
             [~,Xind]=min(abs(x0-xData));
             [~,Yind]=min(abs(y0-yData));
             
-            pos=get(obj.Slider,'Value');
+            pos=PlotSlices.position_slider_value(obj.Slider);
             [~,posInd]=min(abs(obj.AxisData-pos));
             set(obj.Position,'String',num2str(pos));
             set(obj.PositionIndex,'String',num2str(posInd));

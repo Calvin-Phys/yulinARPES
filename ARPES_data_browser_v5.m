@@ -738,6 +738,11 @@ updateCounts(handles);
 updateDetails(handles);
 
 function installTableMouseHandler(table)
+% R2025a figure tables expose documented mouse callbacks and no Swing peer.
+if ~isMATLABReleaseOlderThan('R2025a')
+    set(table,'DoubleClickedFcn',@tableDoubleClicked);
+    return;
+end
 % The classic uitable consumes cell clicks before figure mouse callbacks.
 % Isolate its legacy Swing bridge here; no Java handles escape the browser.
 drawnow;
@@ -749,6 +754,13 @@ peer=handle(scroll.getViewport.getView,'CallbackProperties');
 set(peer,'MouseClickedCallback',@(~,event)tableMouseClicked(table,event));
 setappdata(table,'MousePeer',peer);
 
+function tableDoubleClicked(table,event)
+row=event.InteractionInformation.Row;
+column=event.InteractionInformation.Column;
+% Ignore headers and empty space, which have no cell row/column.
+if isempty(row) || isempty(column), return; end
+plotTableRow(table,row);
+
 function tableMouseClicked(table,event)
 if ~isgraphics(table) || event.getButton()~=1 || event.getClickCount()~=2
     return;
@@ -757,6 +769,9 @@ end
 % empty-space clicks return -1 and cannot plot an unrelated variable.
 peer=event.getSource();
 row=double(peer.rowAtPoint(event.getPoint()))+1;
+plotTableRow(table,row);
+
+function plotTableRow(table,row)
 handles=guidata(table);
 if row<1 || row>numel(variableNames(handles)), return; end
 setSelectedRows(handles,row);
@@ -1064,11 +1079,16 @@ indices=indices(found);
 workspace=evalin('base','whos');
 [~,locations]=ismember(names,{workspace.name});
 tableData=cell(numel(names),3);
+nativeStyles=~isMATLABReleaseOlderThan('R2025a');
 for k=1:numel(names)
     item=workspace(locations(k));
-    tableData(k,:)={names{k},coloredClassText(item.class),storageSize(item.bytes)};
+    if nativeStyles, classText=item.class; else, classText=coloredClassText(item.class); end
+    tableData(k,:)={names{k},classText,storageSize(item.bytes)};
 end
+% Remove old row-specific styles before filtering/replacing table contents.
+if nativeStyles, removeStyle(handles.VarList); end
 set(handles.VarList,'Data',tableData);
+if nativeStyles, styleClassColumn(handles.VarList,tableData(:,2)); end
 if isempty(indices) && ~isempty(names), indices=1; end
 setSelectedRows(handles,indices);
 handles.VarNames=selectedNames(handles);
@@ -1213,6 +1233,22 @@ switch type
 end
 
 function text = coloredClassText(className)
+rgb=classTextColor(className);
+if isempty(rgb), text=className; return; end
+hex=sprintf('#%02X%02X%02X',round(255*rgb));
+% Only the pre-R2025a Swing table uses HTML in class cells.
+text=sprintf('<html><font color="%s">%s</font></html>',hex,className);
+
+function styleClassColumn(table,classNames)
+classes=unique(classNames);
+for k=1:numel(classes)
+    rgb=classTextColor(classes{k});
+    if isempty(rgb), continue; end
+    rows=find(strcmp(classNames,classes{k}));
+    addStyle(table,uistyle('FontColor',rgb),'cell',[rows repmat(2,numel(rows),1)]);
+end
+
+function rgb = classTextColor(className)
 switch className
     case 'OxA_CUT'
         type='cut';
@@ -1221,13 +1257,10 @@ switch className
     case 'OxA_KZ'
         type='kz';
     otherwise
-        text=className;
+        rgb=[];
         return;
 end
 rgb=typeTextColor(type);
-hex=sprintf('#%02X%02X%02X',round(255*rgb));
-% Only class cells contain markup; variable names stay literal for callbacks.
-text=sprintf('<html><font color="%s">%s</font></html>',hex,className);
 
 function rgb = typeTextColor(type)
 switch type
