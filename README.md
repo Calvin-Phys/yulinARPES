@@ -22,6 +22,11 @@ Use **Load → Export NXmpes...** in browser v5, or
 and save a NeXus file. This opens `export_nxmpes_UI` from the separate
 OX_ARPES `GUI` folder, which must be on the MATLAB path.
 
+**Analyze → Fit spectra → Fit Fermi-level (new)** in browser v5, or
+**Tools → Fit Fermi-level (new)** in legacy v32, opens `FDD_fit_app`, the
+toolbox-free Fermi-edge fitter from the OX_ARPES `GUI/FDD` folder (which must be
+on the MATLAB path). The original **Fit Fermi level** entry is kept above it.
+
 ## Documentation
 
 - [User manual](Manual/Manual.md): interactive workflows and background.

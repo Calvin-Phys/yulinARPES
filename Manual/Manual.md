@@ -262,6 +262,19 @@ Then, follow these steps:
 3. An EDC of the selected area will appear in the `FitFermiSurface` window. Click `Fit FS` button.
 4. Repeat steps 2-3 if the fitting is not satisfactory. When the fitting looks good enough, click `Offset Energy` button. A new variable will appear in the workspace.
 
+#### Fit Fermi-level (new)
+
+The upgraded, toolbox-free Fermi-edge fitter `FDD_fit_app` from OX_ARPES opens from
+```
+Main Window -> Tools -> Fit Fermi-level (new)                  (legacy v32)
+ARPES_data_browser_v5 -> Analyze -> Fit spectra -> Fit Fermi-level (new)
+```
+directly below the original entry. It lists the cuts and maps in the base workspace;
+choose one, set the angle/energy window, then **Fit** and **Apply** (results are written
+to new variables, the source is not changed). A finite `info.temperature` is used as the
+held fit temperature, and a lamp shows Idle / Fitting… / Done / Failed. The OX_ARPES
+`GUI/FDD` folder must be on the MATLAB path. See OX_ARPES `doc/FDD_user_guide.md`.
+
 ### Combine Data for KZ
 
 This tool helps you combine 2D cuts at different photon energies into a 3D kz map. To open the window, follow these steps:

@@ -946,6 +946,7 @@ top=uimenu(fig,'Label','Analyze');
 parent=uimenu(top,'Label','Fit spectra');
 uimenu(parent,'Label','Fit MDC','Callback',@fit_MDC_demo_20150312);
 uimenu(parent,'Label','Fit Fermi level','Callback',@FitFermiSurface);
+uimenu(parent,'Label','Fit Fermi-level (new)','Tag','FitFermiLevelNew','Callback',@(~,~)FDD_fit_app);
 uimenu(parent,'Label','Fit effective mass','Callback',@EmassFitting);
 parent=uimenu(top,'Label','Models and calculations');
 uimenu(parent,'Label','Tight binding (2D)','Callback',@GUI_for_2D);

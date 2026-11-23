@@ -298,3 +298,34 @@ comparison or R2025a runtime acceptance. No live user workspace or figures
 were changed. Reopen existing browser windows to create the new menu items;
 the OX `GUI` folder must remain on the MATLAB path. Refer to OX_ARPES
 `doc/NXmpes_GUI_worklog.md` for final exporter layout and test evidence.
+
+## Fit Fermi-level (new) in both browser menus — 23 November 2026
+
+Request: "please add this function as "Fit Fermi-level (new)" to the menus of
+"data_browser_demo_v32→Tools" and "ARPES_data_browser_v5→Analyze→Fit spectra"
+under "Fit Fermi Level"".
+
+Added **Analyze → Fit spectra → Fit Fermi-level (new)** to browser v5 and
+**Tools → Fit Fermi-level (new)** to legacy v32, each directly below the
+existing Fit Fermi level entry, which is unchanged. Both items have tag
+`FitFermiLevelNew` and call `FDD_fit_app` with no arguments, matching the old
+entry (`FitFermiSurface` also opens empty and takes its data from the
+workspace or a figure). The app lists base-workspace cuts and maps itself.
+`FDD_fit_app` is the toolbox-free Fermi-edge fitter in the separate OX_ARPES
+`GUI/FDD` folder (OX_ARPES commit `9f4fdf1`), which must be on the MATLAB path.
+README and user manual describe the routes.
+
+Validation, MATLAB **R2023a Update 8** (Linux, `matlab -batch`), with GUI
+Layout Toolbox 2.4 (`djmsampson/layout2`) added for that session only and the
+OX checkout on the saved path: in both browsers the new item's parent and
+neighbour were checked (v32 Tools, below "Fit Fermi Level"; v5 Analyze → Fit
+spectra, below "Fit Fermi level"), and firing each real callback opened one
+`FDD_fit_app` window (1088 × 624), which was then closed. Code Analyzer: 0
+notices in both browser files. `test_ARPES_data_browser_v5` passed its menu
+section ("all 45 menu dispatch targets", previously 43) and the following
+plotting, group and NaN sections, then stopped at the existing
+`AxisTable.FontSize==8` assertion (line 153); a clean checkout of `a959983`
+stops at the same line in this environment, so it is unrelated and the
+screenshot step was not reached (no tracked images changed).
+`test_stable_entry_points`: 5 of 5 passed. Reopen existing browser windows to
+see the new items.
