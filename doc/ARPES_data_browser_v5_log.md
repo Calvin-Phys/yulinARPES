@@ -5,6 +5,48 @@
 > Later follow-ups supersede earlier designs and findings; recorded test
 > results do not describe the current runtime unless rerun.
 
+## Native layout dependency removal — 23 November 2026
+
+Replaced all direct GUI Layout Toolbox calls in `ARPES_data_browser_v5.m`
+with borderless MATLAB `uipanel` containers and local pixel-layout code.
+This covers both the browser and the context-menu **Combine → 2D cuts -> 3D**
+input dialog. The browser retains its two equal columns, fixed-height control
+rows, flexible workspace/metadata tables, and 600 x 450 minimum client size.
+The existing classic table, mouse bridge, tabs, menus, and scientific callbacks
+are retained. Minimum-size handling now measures pixels even if the caller
+changes the figure's `Units` property.
+
+This removes the browser's own layout dependency, not the requirements of
+every menu destination. Legacy v32, `PlotSlices`, and other external tools can
+still use GUI Layout Toolbox. README and operation/setup guidance distinguish
+these requirements.
+
+Validation uses MATLAB R2024a in separate batch sessions with synthetic data.
+The existing `test_ARPES_data_browser_v5` passed all eight check groups,
+including all 45 current top-level menu dispatch targets, v32/v5 plotting and
+processing parity, repeated Swing double-clicks, group/tab behavior, filters,
+selection, details, and geometry. Its refreshed default/minimum screenshots
+were inspected. `ARPES_data_browser_v5.m` and the new layout test both have
+zero Code Analyzer notices.
+
+`test_ARPES_data_browser_v5_layout` passed all eight resize cases and the
+dialog Save check. It separately removes the toolbox package
+roots from its temporary MATLAB path and verifies neither `uiextras.HBox`
+nor `uix.HBox` resolves. It exercises browser startup, search, selection,
+details, grouping/filtering, growing/shrinking and minimum dimensions,
+non-pixel figure units, and the conversion dialog's resizing and actual Save
+callback with index mapping. It restores the path and clears only its owned
+fixtures and figures. Windows display scaling is allowed less than one logical
+pixel of rounding in geometry assertions.
+
+```matlab
+setup_yulinARPES;
+addpath('tests');
+test_ARPES_data_browser_v5_layout;
+% The older comparison also needs GUI Layout Toolbox and OX_ARPES DataType:
+test_ARPES_data_browser_v5;
+```
+
 ## Final recorded delivery summary — 17 November 2026
 
 This section describes the final interface recorded for this revision. The chronological sections below retain earlier decisions and validation results; later user revisions supersede them.

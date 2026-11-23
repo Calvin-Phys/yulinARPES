@@ -30,7 +30,8 @@ Avoid `addpath(genpath(yulinRoot))`, which can expose archived/duplicate code.
 
 | Workflow | Dependencies |
 |---|---|
-| Browser v32, browser v5, and `PlotSlices` | Desktop MATLAB and GUI Layout Toolbox (`uiextras`); external viewers/processors have additional dependencies. |
+| Browser v5 | Desktop MATLAB; its native panel layout does not require GUI Layout Toolbox. External viewers/processors have their own dependencies. |
+| Browser v32 and `PlotSlices` | Desktop MATLAB and GUI Layout Toolbox (`uiextras`). |
 | Scripted measured-data loading, class methods, and new viewers | The matching OX_ARPES checkout; add `DataType`, `DataLoader`, `DataAnalysis`, and `GUI` as needed. Confirm the expected loader signature against that version. |
 | `kz_plot` simulations | yulinARPES `Visualization`; no measured data or OX_ARPES classes required. |
 | `plotBZ_V1` geometry and simulations | Its package folder and bundled `third_party/matGeom/matGeom`, both added by setup. No separate BZ plotting checkout is required. |

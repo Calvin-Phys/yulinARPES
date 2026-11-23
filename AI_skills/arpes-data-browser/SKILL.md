@@ -6,9 +6,11 @@ description: Operate yulinARPES browser v5 to inspect and filter live MATLAB wor
 # Operate ARPES browser v5
 
 Follow [shared MATLAB setup and session guidance](../MATLAB_SETUP.md). Use the
-desktop session containing the data, with yulinARPES and GUI Layout Toolbox on
-its path. This skill operates `ARPES_data_browser_v5`, an independent singleton;
-it does not silently replace a user's requested v32 browser or viewer.
+desktop session containing the data, with yulinARPES on its path. Browser v5
+uses native MATLAB panels; launched tools such as `PlotSlices` can still
+require GUI Layout Toolbox. This skill operates `ARPES_data_browser_v5`, an
+independent singleton; it does not silently replace a user's requested v32
+browser or viewer.
 
 ## Inspect and select
 

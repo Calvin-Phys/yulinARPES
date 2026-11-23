@@ -17,8 +17,9 @@ be fulfilled with independent file inputs and saved outputs.
 
 Resolve `yulinRoot` from `setup_yulinARPES` and locate the matching OX_ARPES
 checkout as described in the shared setup guide. Add its `DataType`,
-`DataLoader`, `DataAnalysis`, and `GUI` folders when needed. The browser and
-`PlotSlices` require GUI Layout Toolbox (`uiextras`).
+`DataLoader`, `DataAnalysis`, and `GUI` folders when needed. Browser v5 itself
+does not require GUI Layout Toolbox; `PlotSlices` and legacy v32 still require
+it (`uiextras`).
 
 ```matlab
 setup_yulinARPES;

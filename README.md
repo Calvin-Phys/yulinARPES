@@ -14,8 +14,10 @@ ARPES_data_browser_v5;
 
 [`ARPES_data_browser_v5.m`](ARPES_data_browser_v5.m) is the primary entry point.
 [`data_browser_demo_v32.m`](data_browser_demo_v32.m) is **legacy**, retained for
-compatibility. GUI workflows require GUI Layout Toolbox; measured-data classes
-and several tools also use the separate OX_ARPES package.
+compatibility. Browser v5 itself uses built-in MATLAB layout components and
+does not require GUI Layout Toolbox. Legacy v32 and some launched tools,
+including `PlotSlices`, still require it. Measured-data classes and several
+tools also use the separate OX_ARPES package.
 
 Use **Load → Export NXmpes...** in browser v5, or
 **Loader → Export NXmpes...** in legacy v32, to select workspace datasets

@@ -12,6 +12,8 @@ function result = ARPES_data_browser_v5(action, varargin)
 %   filters by OX_ARPES class; all includes every workspace variable.
 %   Add retains other flags; move clears the active source only; remove uses
 %   the active group. Names persist in MATLAB preferences; flags live in INFO.
+%   The browser layout uses built-in MATLAB panels. Tools launched from its
+%   menus (for example PlotSlices) can have their own toolbox requirements.
 if nargin == 0, action = 'open'; end
 action=validatestring(action, {'open','read','refresh','select','group','renamegroup','membership','typefilter'});
 fig = findall(groot,'Type','figure','Tag','ARPESDataBrowserV5');
@@ -59,19 +61,18 @@ if ~iscellstr(handles.GroupLabels) || numel(handles.GroupLabels) ~= 4
     handles.GroupLabels = {'Group 1','Group 2','Group 3','Group 4'};
 end
 buildMenus(fig);
-root = uiextras.HBox('Parent',fig,'Padding',0,'Spacing',0,'Tag','BrowserColumns');
-left = uiextras.VBox('Parent',root,'Padding',3,'Spacing',4,'Tag','WorkspaceColumn');
-right = uiextras.VBox('Parent',root,'Padding',3,'Spacing',4,'Tag','DetailsColumn');
-set(root,'Sizes',[-1 -1]);
+root = browserPanel(fig,'BrowserColumns');
+set(root,'Units','normalized','Position',[0 0 1 1]);
+left = browserPanel(root,'WorkspaceColumn');
+right = browserPanel(root,'DetailsColumn');
 uicontrol('Parent',left,'Style','text','String','WORKSPACE DATA', ...
     'HorizontalAlignment','left','FontWeight','bold','ForegroundColor',[.12 .23 .38]);
-searchRow = uiextras.HBox('Parent',left,'Spacing',4);
+searchRow = browserPanel(left,'SearchRow');
 uicontrol('Parent',searchRow,'Style','text','String','Find name:','HorizontalAlignment','left');
 handles.Search = uicontrol('Parent',searchRow,'Style','edit','BackgroundColor','white', ...
     'HorizontalAlignment','left','Tag','Search','Callback',@UpdateVarList, ...
     'TooltipString','Case-insensitive name filter; press Enter to apply.');
 uicontrol('Parent',searchRow,'String','Refresh','Callback',@UpdateVarList,'Tag','Refresh');
-set(searchRow,'Sizes',[58 -1 60]);
 handles.GroupTabs = uitabgroup('Parent',left,'Tag','GroupTabs');
 handles.GroupAll = uitab('Parent',handles.GroupTabs,'Title','All', ...
     'Tag','GroupAll','UserData',0);
@@ -150,7 +151,7 @@ handles.VarList = uitable('Parent',handles.GroupAll,'Units','normalized', ...
     'CellSelectionCallback',@tableSelectionChanged,'KeyPressFcn',@tableKeyPressed, ...
     'UIContextMenu',ListBoxMenu,'Tag','VarList','FontUnits','points','FontSize',8);
 setappdata(handles.VarList,'SelectedRows',[]);
-actions = uiextras.HBox('Parent',left,'Spacing',3);
+actions = browserPanel(left,'GroupActions');
 handles.GroupTarget = uicontrol('Parent',actions,'Style','popupmenu', ...
     'String',handles.GroupLabels,'Tag','GroupTarget');
 uicontrol('Parent',actions,'String','Add','Callback',@(h,~)groupAction(h,'add'));
@@ -158,7 +159,6 @@ uicontrol('Parent',actions,'String','Move','Callback',@(h,~)groupAction(h,'move'
 uicontrol('Parent',actions,'String','Remove','Callback',@(h,~)groupAction(h,'remove'), ...
     'TooltipString','Remove selected data from the active group.');
 uicontrol('Parent',actions,'String','Rename','Callback',@renameTarget);
-set(actions,'Sizes',[-1 40 46 56 58]);
 handles.TypeFilter = uibuttongroup('Parent',left,'BorderType','none','Tag','TypeFilter');
 filterNames={'all','cut','map','kz','4d','1d'};
 filterLabels={'All','Cut','Map','KZ','4D','1D'};
@@ -175,7 +175,6 @@ set(handles.TypeFilter,'SelectedObject',findobj(handles.TypeFilter,'Tag','Type_a
 set(handles.TypeFilter,'SelectionChangedFcn',@UpdateVarList);
 handles.GroupName=uicontrol('Parent',left,'Style','text','HorizontalAlignment','left', ...
     'String','','Tag','GroupStatus');
-set(left,'Sizes',[18 24 -1 26 18 18]);
 uicontrol('Parent',right,'Style','text','String','SELECTION DETAILS', ...
     'HorizontalAlignment','left','FontWeight','bold','ForegroundColor',[.12 .23 .38]);
 uicontrol('Parent',right,'Style','text','String','Coordinates (stored axis units)', ...
@@ -183,23 +182,21 @@ uicontrol('Parent',right,'Style','text','String','Coordinates (stored axis units
 handles.AxisTable=uitable('Parent',right,'Data',cell(4,6), ...
     'ColumnName',{'Axis','Min','Max','Count','Step','Check'}, ...
     'RowName',[],'ColumnWidth',{26 42 42 42 54 65},'Tag','AxisDetails');
-metadataHeader=uiextras.HBox('Parent',right,'Spacing',3);
-uicontrol('Parent',metadataHeader,'Style','text','String','Metadata (data.info)', ...
+uicontrol('Parent',right,'Style','text','String','Metadata (data.info)', ...
     'HorizontalAlignment','left','FontWeight','bold');
-set(metadataHeader,'Sizes',-1);
 handles.Metadata=uitable('Parent',right,'Data',cell(0,2),'RowName',[], ...
     'ColumnName',{'Field','Value / summary'},'ColumnWidth',{100 170},'Tag','Metadata');
-editRow=uiextras.HBox('Parent',right,'Spacing',3);
-uiextras.Empty('Parent',editRow);
+editRow=browserPanel(right,'EditRow');
 handles.EditVariable=uicontrol('Parent',editRow,'String','Edit Variable', ...
     'Callback',@Listbox_openvar,'Tag','EditVariable');
-set(editRow,'Sizes',[-1 92]);
-set(right,'Sizes',[18 18 96 18 -1 24]);
+handles.Layout=struct('Root',root,'Left',left,'Right',right, ...
+    'Search',searchRow,'Actions',actions,'Edit',editRow);
 % Keep labels, headings, edits and buttons consistent without changing the
 % coordinate/metadata tables or global graphics defaults. Tabs use OS fonts.
 set(findall(fig,'Type','uicontrol'),'FontUnits','points','FontSize',8);
 guidata(fig,handles);
 set(fig,'SizeChangedFcn',@resizeBrowser);
+resizeBrowser(fig,[]);
 set(handles.GroupTabs,'SelectionChangedFcn',@groupTabChanged);
 UpdateVarList(fig);
 installTableMouseHandler(handles.VarList);
@@ -563,8 +560,9 @@ filenamewindow = figure( 'Position', [500 400 200 150], ...
     'HandleVisibility','on',...
     'Tag','enter file name');
 
-% create vertical arrange of elements
-vbox = uiextras.VBox('Parent', filenamewindow);
+% Use the same native layout as the browser, including after dialog resize.
+vbox = browserPanel(filenamewindow,'RearrangeInputs');
+set(vbox,'Units','normalized','Position',[0 0 1 1]);
 
 % create mapping selection
 uicontrol('Parent',vbox,...
@@ -588,6 +586,8 @@ uicontrol('Parent',vbox,...
     'String','Save',...
     'Callback',{@Rearrange_2Dto3D_Processing,FileName_Input,Mapping_Selection, ...
     dataList,filenamewindow});
+set(filenamewindow,'SizeChangedFcn',@(~,~)layoutBrowserBox(vbox,'vertical',-ones(1,5),0,0));
+layoutBrowserBox(vbox,'vertical',-ones(1,5),0,0);
 
 function Rearrange_2Dto3D_Processing(~, ~, fileNameInput, mappingSelection, ...
         dataList, filenameWindow)
@@ -1169,11 +1169,48 @@ end
 if numel(text)>400, text=[text(1:397) '...']; end
 
 function resizeBrowser(fig,~)
-position=get(fig,'Position');
+bounds=getpixelposition(fig);
 minimum=[600 450];
-if any(position(3:4)<minimum)
-    position(3:4)=max(position(3:4),minimum);
-    set(fig,'Position',position);
+if any(bounds(3:4)<minimum)
+    bounds(3:4)=max(bounds(3:4),minimum);
+    setpixelposition(fig,bounds);
+end
+handles=guidata(fig);
+panels=handles.Layout;
+layoutBrowserBox(panels.Root,'horizontal',[-1 -1],0,0);
+layoutBrowserBox(panels.Left,'vertical',[18 24 -1 26 18 18],3,4);
+layoutBrowserBox(panels.Right,'vertical',[18 18 96 18 -1 24],3,4);
+layoutBrowserBox(panels.Search,'horizontal',[58 -1 60],0,4);
+layoutBrowserBox(panels.Actions,'horizontal',[-1 40 46 56 58],0,3);
+% Keep the single edit button aligned to the right without a spacer object.
+bounds=getpixelposition(panels.Edit);
+set(handles.EditVariable,'Units','pixels','Position',[bounds(3)-92 0 92 bounds(4)]);
+
+function panel = browserPanel(parent,tag)
+% Borderless native containers preserve the classic figure/table callbacks.
+panel=uipanel('Parent',parent,'BorderType','none','Units','pixels','Tag',tag);
+
+function layoutBrowserBox(panel,direction,sizes,padding,spacing)
+% Place direct children in creation order. Positive sizes are fixed pixels;
+% negative sizes share the remaining space by weight, as in the old layout.
+children=flipud(get(panel,'Children'));
+bounds=getpixelposition(panel);
+horizontal=strcmp(direction,'horizontal');
+dimension=2-horizontal;
+available=max(0,bounds(dimension+2)-2*padding-spacing*(numel(sizes)-1));
+flexible=sizes<0;
+lengths=sizes;
+lengths(flexible)=max(0,available-sum(sizes(~flexible))) * ...
+    abs(sizes(flexible))/sum(abs(sizes(flexible)));
+cursor=padding;
+for k=1:numel(children)
+    if horizontal
+        position=[cursor padding lengths(k) max(1,bounds(4)-2*padding)];
+    else
+        position=[padding bounds(4)-cursor-lengths(k) max(1,bounds(3)-2*padding) lengths(k)];
+    end
+    set(children(k),'Units','pixels','Position',position);
+    cursor=cursor+lengths(k)+spacing;
 end
 
 function names = variableNames(handles)
