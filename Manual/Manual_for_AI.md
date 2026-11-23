@@ -122,6 +122,7 @@ dependency contracts; neither supplies a uniform API for every algorithm.
 | Manage simulated photon-energy cut curves | [arpes-kz-plot](../AI_skills/arpes-kz-plot/SKILL.md) | `kz_plot_agent` |
 | Crystal/BZ geometry and simulated ARPES coverage | [arpes-plot-bz](../AI_skills/arpes-plot-bz/SKILL.md) | `plotbz_agent` / `plotBZ_V1` |
 | Review/improve GUI, code, scientific contracts, or agent APIs | [improve-scientific-guis](../AI_skills/improve-scientific-guis/SKILL.md) | Maintenance workflow and evidence templates |
+| Fit MDC/EDC peaks in a 2-D cut and track a dispersion | [arpes-peak-fit](../AI_skills/arpes-peak-fit/SKILL.md) | `PeakFit_app`, `pkf_fit_profile` / `pkf_track` / `pkf_export` in `Fitting/PeakFit` |
 | Fit a Fermi edge (E_F, resolution, T) or shift/Fermi-Dirac-correct a cut or map | OX_ARPES `AI_skills/ox-arpes-fdd-fit/SKILL.md` (dependency skill) | `FDD_fit_app`, `fdd_extract_edc` / `fdd_fit_edc` / `fdd_correct_data` in OX_ARPES `GUI/FDD` |
 
 Repository skills are files to read, not automatically installed host skills.
@@ -162,6 +163,18 @@ before agent use; `doc/FDD_user_guide.md`, `doc/FDD_review.md` and
 `FDD_new` program and dated validation (synthetic edges, R2023a). Menu wiring is
 recorded in the [browser record](../doc/ARPES_data_browser_v5_log.md).
 
+### MDC/EDC peak fitting (PeakFit)
+
+`PeakFit_app` (`Fitting/PeakFit`) fits Lorentzian, Gaussian or pseudo-Voigt
+peaks on a linear (or flat) background in MDCs or EDCs of a 2-D cut, with an
+optional held Fermi-Dirac cutoff for EDCs, slice-by-slice tracking and ±1σ
+uncertainties. It replaces **Fit MDC** as **Fit Peaks (MDC/EDC)** in browser
+v5 (**Analyze → Fit spectra**) and legacy v32 (**Tools**); the old
+`fit_MDC_demo` folder is kept unchanged. Results go to a new variable
+`<source>_peaks`. Read [arpes-peak-fit](../AI_skills/arpes-peak-fit/SKILL.md)
+before agent use; see the [user guide](../doc/PeakFit_user_guide.md) and
+[improvement log](../doc/PeakFit_improvement_log.md).
+
 **NXmpes export:** **Load → Export NXmpes...** (v5) and **Loader → Export
 NXmpes...** (v32) open OX_ARPES `export_nxmpes_UI`; see the README.
 
@@ -171,7 +184,7 @@ NXmpes...** (v32) open OX_ARPES `export_nxmpes_UI`; see the README.
 |---|---|
 | `Data_enhance` | Symmetrisation, interpolation, curvature, and related enhancement tools. |
 | `Data_process` | Data combination, grid repair, and processing tools. |
-| `Fitting` | Peak, dispersion, and Fermi-edge fitting tools (`FitFermiSurface` is the original Fermi-level window; the maintained fitter is OX_ARPES `FDD_fit_app`). |
+| `Fitting` | Peak, dispersion, and Fermi-edge fitting tools (`PeakFit/` holds the maintained MDC/EDC peak fitter `PeakFit_app`; `FitFermiSurface` is the original Fermi-level window; the maintained fitter is OX_ARPES `FDD_fit_app`). |
 | `Loader_kconvert` | Format readers and momentum-conversion tools. |
 | `Visualization` | `PlotSlices`, plotting, viewers, figure export, `kz_plot`, and `plotBZ_V1`. |
 | `Others_uncertain` | Older or less-classified utilities; inspect callers/contracts before use. |

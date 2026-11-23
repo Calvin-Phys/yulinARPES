@@ -29,6 +29,11 @@ OX_ARPES `GUI` folder, which must be on the MATLAB path.
 toolbox-free Fermi-edge fitter from the OX_ARPES `GUI/FDD` folder (which must be
 on the MATLAB path). The original **Fit Fermi level** entry is kept above it.
 
+**Analyze → Fit spectra → Fit Peaks (MDC/EDC)** in browser v5, or
+**Tools → Fit Peaks (MDC/EDC)** in legacy v32, opens `PeakFit_app`
+(`Fitting/PeakFit`), the toolbox-free MDC/EDC peak fitter that replaces the old
+**Fit MDC** entry. See the [PeakFit user guide](doc/PeakFit_user_guide.md).
+
 ## Documentation
 
 - [User manual](Manual/Manual.md): interactive workflows and background.

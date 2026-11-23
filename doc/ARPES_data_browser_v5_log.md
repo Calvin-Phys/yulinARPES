@@ -371,3 +371,21 @@ stops at the same line in this environment, so it is unrelated and the
 screenshot step was not reached (no tracked images changed).
 `test_stable_entry_points`: 5 of 5 passed. Reopen existing browser windows to
 see the new items.
+
+## Fit Peaks (MDC/EDC) replaces Fit MDC — 23 November 2026
+
+In browser v5 **Analyze → Fit spectra** and legacy v32 **Tools**, the **Fit
+MDC** item (`fit_MDC_demo_20150312`) is replaced in place by **Fit Peaks
+(MDC/EDC)** (tag `FitPeaksNew`). Both call `pkf_open_from_browser`, which
+opens `PeakFit_app` on the first selected variable that is a valid 2-D cut, or
+empty with a status note. `Fitting/fit_MDC_demo/` is unchanged and still on the
+path for direct calls. See the [PeakFit user guide](PeakFit_user_guide.md).
+
+Validation, MATLAB R2023a (Linux, `matlab -batch`): Code Analyzer 0 notices in
+both browser files; `test_PeakFit_gui` fires the real menu callback in both
+browsers and checks the loaded data; `test_stable_entry_points` 5 / 5;
+`test_ARPES_data_browser_v5_layout` passed; `test_ARPES_data_browser_v5`
+passed "all 45 menu dispatch targets" and the following plotting, group and NaN
+sections, then stopped at the known line-153 assertion, which also fails with
+these two edits stashed (clean `33ee1b9`). Reopen browser windows (and run
+`rehash path` in an open MATLAB) to see the new item.

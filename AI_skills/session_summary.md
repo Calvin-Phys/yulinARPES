@@ -317,3 +317,15 @@ of the held T and a fit-status lamp. This repository adds **Fit Fermi-level (new
 to the v5 Analyze → Fit spectra and v32 Tools menus (`925a1a0`) and routes the task
 from the [AI manual](../Manual/Manual_for_AI.md#fermi-edge-fitting-ox_arpes-fdd) and
 [skills map](SKILLS_MAP.md). Menu checks: [browser record](../doc/ARPES_data_browser_v5_log.md).
+
+## MDC/EDC peak fitter (PeakFit) — 23 November 2026
+
+The legacy `fit_MDC_demo` was reviewed ([review](../doc/fit_MDC_demo_review.md))
+with [improve-scientific-guis](improve-scientific-guis/SKILL.md). After Calvin
+confirmed the design (pseudo-Voigt shapes, linear/flat background, EDC crop by
+default with an optional held Fermi cutoff, 2-D only, new tool replacing the
+menu entry), `PeakFit_app` and the `pkf_*` backend were written in
+`Fitting/PeakFit`, with 35 tests, the new [arpes-peak-fit](arpes-peak-fit/SKILL.md)
+skill and **Fit Peaks (MDC/EDC)** in both browser menus. Synthetic fits recover
+centre and FWHM within 1σ; a measured i05 cut was fitted in MDC and EDC. See the
+[improvement log](../doc/PeakFit_improvement_log.md).

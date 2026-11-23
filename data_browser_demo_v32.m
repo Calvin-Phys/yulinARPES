@@ -81,7 +81,7 @@ uimenu(ProcessMenu,'Label','Mirror','Callback',@(~,~)data_mirror_symmetrize);
 uimenu(ProcessMenu,'Label','Ridge detection','Callback',@ridge_detection);
 
 ToolsMenu = uimenu(handles.mObject,'Label','Tools');
-uimenu(ToolsMenu,'Label','Fit MDC ','Callback',@fit_MDC_demo_20150312);
+uimenu(ToolsMenu,'Label','Fit Peaks (MDC/EDC)','Tag','FitPeaksNew','Callback',@pkf_open_from_browser);
 uimenu(ToolsMenu,'Label','Fit Fermi Level','Callback',@FitFermiSurface);
 uimenu(ToolsMenu,'Label','Fit Fermi-level (new)','Tag','FitFermiLevelNew','Callback',@(~,~)FDD_fit_app);
 uimenu(ToolsMenu,'Label','Tight Binding 2D','Callback',@GUI_for_2D,'Separator','On');

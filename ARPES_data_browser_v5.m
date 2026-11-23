@@ -944,7 +944,7 @@ uimenu(parent,'Label','Fine structure tool','Callback',@(~,~)OxArpes_FineStructu
 uimenu(top,'Label','Processing toolbox','Callback',@(~,~)OxArpes_DataProcess,'Separator','on');
 top=uimenu(fig,'Label','Analyze');
 parent=uimenu(top,'Label','Fit spectra');
-uimenu(parent,'Label','Fit MDC','Callback',@fit_MDC_demo_20150312);
+uimenu(parent,'Label','Fit Peaks (MDC/EDC)','Tag','FitPeaksNew','Callback',@pkf_open_from_browser);
 uimenu(parent,'Label','Fit Fermi level','Callback',@FitFermiSurface);
 uimenu(parent,'Label','Fit Fermi-level (new)','Tag','FitFermiLevelNew','Callback',@(~,~)FDD_fit_app);
 uimenu(parent,'Label','Fit effective mass','Callback',@EmassFitting);

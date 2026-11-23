@@ -32,6 +32,7 @@ source when deciding a new change.
 | `kz_plot` | [Review](kz_plot_review.md) and [skill validation](../AI_skills/arpes-kz-plot/references/validation-results.md) | Simulation model, managed overlays, callback behavior, and independent evaluation boundaries. |
 | Plot BZ geometry | [Original review and fixes](plotBZ_V1_review.md) | Reciprocal geometry defects and initial corrections; later interface/dependency work is recorded separately. |
 | Plot BZ interface and simulation | [Improvement log](plotBZ_V1_improvement_log.md) | Later GUI/API work, model conventions, scoped graphics, and dated validation. |
+| PeakFit (MDC/EDC peaks) | [User guide](PeakFit_user_guide.md), [improvement log](PeakFit_improvement_log.md) and [fit_MDC_demo review](fit_MDC_demo_review.md) | Replacement of `fit_MDC_demo`: confirmed design, model, export contract and dated synthetic/measured validation. |
 | Cross-skill history | [Development summary](../AI_skills/session_summary.md) | Historical skill/API development and evaluation; use the skills map for current routing. |
 
 ## Screenshots
@@ -39,7 +40,9 @@ source when deciding a new change.
 Retained interface screenshots show synthetic fixtures or simulation settings:
 [browser v5](ARPES_data_browser_v5_interface.png),
 [compact browser](ARPES_data_browser_v5_compact.png),
-[kz_plot](kz_plot_interface.png), and [Plot BZ](plotBZ_V1_interface.png).
+[kz_plot](kz_plot_interface.png), [Plot BZ](plotBZ_V1_interface.png) and
+[PeakFit](PeakFit_interface.png) (a measured cut under a synthetic variable
+name; [example fits](PeakFit_example_fit.png)).
 The [four-view simulation](plotBZ_V1_simulation_example.png) and
 [styled simulation](plotBZ_V1_style_example.png) show calculated geometry.
 These are historical illustrations, not proof of today's layout or numerical
