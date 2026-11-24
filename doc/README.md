@@ -9,6 +9,7 @@ introduces the interactive processing workflow.
 
 | Document | Use it for |
 |---|---|
+| [MATLAB shared-session skill](../AI_skills/matlab-shared-session/SKILL.md) | Maintained agent connection/verification procedure, troubleshooting, and handoff limits. |
 | [Skills map](../AI_skills/SKILLS_MAP.md) | Skill summaries, task routing, instruction categories, and skill discovery. |
 | [MATLAB setup](../AI_skills/MATLAB_SETUP.md) | Portable path resolution, dependencies, session ownership, and live/batch boundaries. |
 | [MATLAB session sharing](MATLAB_AI_session_sharing_review.md) | Existing-session attachment, PID guards, version-specific connection pinning, and named Engine alternatives. |

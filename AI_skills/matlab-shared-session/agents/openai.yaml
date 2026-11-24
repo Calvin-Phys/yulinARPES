@@ -1,0 +1,4 @@
+interface:
+  display_name: "MATLAB Shared Session"
+  short_description: "Connect agents to live MATLAB and troubleshoot sharing"
+  default_prompt: "Use $matlab-shared-session to connect to my open MATLAB, verify the target workspace, and resolve connection problems."

@@ -246,6 +246,26 @@ The standalone-client disconnect was tested; automatic teardown of an
 inherited Codex subagent MCP server remains unverified. No live MATLAB or MCP
 configuration was changed by this documentation update.
 
+## 24 November 2026 — Reconnect check and reusable skill
+
+In the current chat, an initial read-only MATLAB tool call returned
+`failed to attach to MATLAB session`. The existing Codex configuration already
+used `--matlab-session-mode=existing`. After the user ran
+`shareMATLABSession()` in the open MATLAB, retrying the tool connected to
+R2024a without an MCP restart. A subsequent read-only probe reported the release,
+PID, current folder, and sharing-function location. No independently supplied PID
+or dataset contract was checked, so these probes demonstrate attachment rather
+than verification of a particular measurement workspace.
+
+The installed server reported v0.16.1. Its help, README, sharing implementation,
+and primary MathWorks guidance were reviewed alongside this log, the sharing
+review, shared setup, and AI manual. Their reusable procedure is consolidated in
+[matlab-shared-session](../AI_skills/matlab-shared-session/SKILL.md), with separate
+troubleshooting and advanced-connection references. The manual, setup guide, and
+navigation now point to the skill. Earlier handoff/source observations remain
+dated evidence; the consolidation did not repeat destructive failure tests,
+restart MATLAB/MCP, or change connector/startup settings.
+
 ## References
 
 - [MathWorks MATLAB MCP Server v0.16.1 setup and session modes](https://github.com/matlab/matlab-mcp-server/blob/v0.16.1/README.md)

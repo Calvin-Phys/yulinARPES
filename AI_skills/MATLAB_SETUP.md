@@ -63,39 +63,22 @@ before installing or changing dependencies.
 
 ## Verify the live session
 
-Default to the identified, data-owning MATLAB for all agents and subagents.
-Start MATLAB independently of MCP when a new live session must outlast one
-agent; run `shareMATLABSession()` in it. Configure the parent MATLAB MCP server
-with `--matlab-session-mode=existing` so a failed attachment does not launch an
-empty workspace. Subagents inherit that configuration. A fresh connection
-selects the most recently shared MATLAB, so have each agent verify its actual
-PID against one recorded independently from the intended MATLAB, then check
-expected base-workspace names, classes/shapes, dataset metadata, and figure
-ownership before processing. A PID is an identity check, not a connection
-credential or per-call selector. See the
-[session-sharing guide](../doc/MATLAB_AI_session_sharing_review.md) and
-[tested handoff log](../doc/codex_matlab_workflow_log.md).
+Follow [matlab-shared-session](matlab-shared-session/SKILL.md), the maintained
+connection and operating procedure. Use the intended, independently started
+MATLAB, publish it with `shareMATLABSession()`, and use MCP `existing` mode.
+Verify the independently expected PID, data metadata, and figure identity before
+mutations; serialize shared workspace and GUI changes. A failed attachment may
+recover by sharing and retrying without a restart.
 
-If the target is wrong or empty, stop live mutations. Reconnect to the intended
-session, or have the agent that owns it execute a reviewed self-contained
-function and return verifiable outputs. Do not accept a newly started MATLAB as
-a substitute for loaded workspace data. Check parent and child connections
-independently when using authorized subagents; serialize shared GUI/workspace
-changes even when several connections reach the same MATLAB. If an agent must
-hand off its workspace, close its own MCP client before ending the agent turn,
-verify that client/server exited, and keep the independently started MATLAB
-running. The next agent makes a fresh `existing`-mode connection and repeats
-the PID/data check. An MCP server closes MATLAB that it launched in `new` mode
-or via `auto` fallback when that server stops. The inherited Codex MATLAB tool
-has no inspected per-call disconnect action, and ending a subagent turn has not
-been shown to close its MCP server. Use an agent-owned standalone MCP client
-when explicit disconnect is required; report the limitation if unavailable.
-Never call MATLAB `exit` as a client disconnect.
-
-Never run `restoredefaultpath` through a live MCP session: removing its helper
-paths can break the connection. Close only figures created for the current
-task, using retained handles. Avoid `clear all`, `close all`, and unrelated
-changes to root graphics defaults.
+For connection failures, wrong/empty workspaces, missing sharing functions,
+timeouts, path problems, and safe reconnects, read the skill's
+[troubleshooting reference](matlab-shared-session/references/troubleshooting.md).
+For an explicitly requested handoff, close only an agent-owned client if
+supported and verify MATLAB survives. The inspected inherited tools have no
+disconnect action; report that limit. Never call MATLAB `exit` to disconnect or
+`restoredefaultpath` to repair a live MCP session. Preserve unrelated workspace
+values and figures. The [historical sharing review](../doc/MATLAB_AI_session_sharing_review.md)
+and [handoff log](../doc/codex_matlab_workflow_log.md) retain the underlying evidence.
 
 ## Live versus batch
 

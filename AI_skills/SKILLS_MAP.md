@@ -9,6 +9,7 @@ task. Read the matching `SKILL.md`, then only the references needed for the task
 
 | Request | Skill | Entry point and boundaries |
 |---|---|---|
+| Connect/reconnect to an open MATLAB, verify the data-owning session, troubleshoot sharing, or arrange a durable handoff | [matlab-shared-session](matlab-shared-session/SKILL.md) | MathWorks MCP `existing` mode; session identity, ownership, and recovery. Scientific operations use the matching skill below after attachment. |
 | Load files, view measured cuts/maps, convert supported objects to momentum space, or export a 2-D image | [arpes-browse](arpes-browse/SKILL.md) | OX_ARPES `loader_UI` / `load_arpes`, `PlotSlices`, object methods. Uses the primary v5 browser workflow; use a specifically requested viewer instead of changing it silently. |
 | Inspect/filter workspace variables or manage four ARPES groups in browser v5 | [arpes-data-browser](arpes-data-browser/SKILL.md) | `ARPES_data_browser_v5` public facade. Group membership changes metadata; this is not a general numerical-processing API. |
 | Add, style, move, update, or delete simulated photon-energy cut curves in an existing figure | [arpes-kz-plot](arpes-kz-plot/SKILL.md) | `kz_plot_agent` over `kz_plot` callbacks. Simulated Fermi-level cuts, not measured-data conversion. |
@@ -72,8 +73,10 @@ the requested result or requires information that cannot be discovered.
 
 ## Shared operating contract
 
-Read [MATLAB setup and session guidance](MATLAB_SETUP.md) when establishing a
-connection, resolving paths/dependencies, or choosing live versus batch execution.
+Use [matlab-shared-session](matlab-shared-session/SKILL.md) for connection,
+verification, handoff, and troubleshooting. Read
+[MATLAB setup and session guidance](MATLAB_SETUP.md) for checkout paths,
+dependencies, and live versus batch execution.
 Default to one independently started, shared MATLAB with MCP `existing` mode;
 each agent and subagent must verify its PID and expected workspace before work.
 Do not let separate MCP servers launch empty MATLAB sessions for data already

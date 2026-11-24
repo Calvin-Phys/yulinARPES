@@ -1,5 +1,11 @@
 # MATLAB session sharing for AI agents
 
+For the maintained reusable procedure, use
+[matlab-shared-session](../AI_skills/matlab-shared-session/SKILL.md) and its
+[troubleshooting reference](../AI_skills/matlab-shared-session/references/troubleshooting.md).
+This review retains the detailed source analysis and historical limits; the
+skill consolidates it with the workflow log and the 24 November reconnect check.
+
 Reviewed: 19 November 2026. The source-level details below were checked against
 MathWorks MATLAB MCP Server **v0.16.1**. Verify the installed connector version
 before applying version-specific settings. Paths, process IDs, and workspace
@@ -54,7 +60,7 @@ to execute in the verified session.
    ```toml
    [mcp_servers.matlab]
    command = 'matlab-mcp-server'
-   args = ['--disable-telemetry', '--matlab-session-mode=existing']
+   args = ['--disable-telemetry=true', '--matlab-session-mode=existing']
    ```
 
    On Windows, preserve/enable forwarding of `WINDIR` as described by MathWorks.
