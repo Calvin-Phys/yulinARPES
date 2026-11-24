@@ -51,7 +51,9 @@ addpath(fullfile(oxRoot, 'DataType'));
 addpath(genpath(fullfile(oxRoot, 'DataLoader')));
 addpath(genpath(fullfile(oxRoot, 'DataAnalysis')));
 addpath(fullfile(oxRoot, 'GUI'));
+addpath(fullfile(oxRoot, 'GUI', 'FDD'));
 which loader_UI -all
+which FDD_fit_app -all
 which PlotSlices -all
 ```
 

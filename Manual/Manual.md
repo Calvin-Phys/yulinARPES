@@ -14,9 +14,9 @@ Please note that this manual does not cover the principles of ARPES. If you woul
 2. [Liu, Chang. Electronic structure of ion arsenic high temperature superconductors studied by angle resolved photoemission spectroscopy. United States. https://doi.org/10.2172/1029553](https://www.osti.gov/biblio/1029553/)
 
 ---
-## Preparetion
+## Preparation
 
-To use the software, download `yulinARPES` [from GitHub](https://github.com/Calvin-Phys/yulinARPES) and the separate `OX_ARPES` [from GitHub](https://github.com/Calvin-Phys/OX_ARPES), then add both checkouts to the MATLAB path. For yulinARPES, add the repository root and run `setup_yulinARPES` to add the supported code and dependency folders while leaving the archive off the path. Install the required toolboxes, including GUI Layout Toolbox 2.3.5 (provided under `Manual`). The recommended MATLAB version is **2022a to 2024a**. Restart MATLAB after installing toolboxes if MATLAB does not detect them.
+To use the software, download `yulinARPES` [from GitHub](https://github.com/Calvin-Phys/yulinARPES) and the separate `OX_ARPES` [from GitHub](https://github.com/Calvin-Phys/OX_ARPES), then add both checkouts to the MATLAB path. For yulinARPES, add the repository root and run `setup_yulinARPES` to add the supported code and dependency folders while leaving the archive off the path. `setup_yulinARPES` does not add OX_ARPES; add that checkout separately if you use its data classes, the new loader, NXmpes export, or the Fermi-edge fitter. The primary browser, `ARPES_data_browser_v5`, uses built-in MATLAB layout components and does not require GUI Layout Toolbox. The legacy browser `data_browser_demo_v32` and some launched tools, including `PlotSlices`, still require GUI Layout Toolbox 2.3.5 (provided under `Manual`). The recommended MATLAB version is **2022a to 2024a**; PeakFit and the OX_ARPES Fermi-edge fitter were tested on R2023a, and browser v5 includes compatibility patches for R2025a. Restart MATLAB after installing toolboxes if MATLAB does not detect them.
 
 To launch the software, enter the following command into the Matlab command line:
 
@@ -45,6 +45,9 @@ To export workspace datasets, choose **Load → Export NXmpes...** (or
 **Loader → Export NXmpes...** in legacy v32). Tick the OX datasets to save,
 choose a destination and click **Save NXmpes**. The export window comes from
 the separate OX_ARPES `GUI` folder; add that folder to the MATLAB path.
+NXmpes files can be imported through the new loader (`loader_UI`), or from
+the command line with `load_nxmpes` / `load_arpes`; there is no separate
+Import NXmpes menu item.
 
 > **What are the differences between the new and old loader?**
 >
@@ -108,7 +111,7 @@ You can move the solid-line crosshair to change the integration area, and move t
 
 ### A New Data Viewer (2D and 3D)
 
-A new data viewer for 2D and 3D ARPES data is being developped. It inlcudes a more intuitive visulizations of the data and its EDC/MDCs. You can open it by right-click on the data name on the list and select
+A new data viewer for 2D and 3D ARPES data is being developed. It includes a more intuitive visualisation of the data and its EDC/MDCs. You can open it by right-click on the data name on the list and select
 
 ```
 plot -> Map Viewer (New).
@@ -143,7 +146,7 @@ Next, enter the desired number of columns, rows, and the position array. This wi
 ![mass plot](./pictures/mass_plot2.png)
 
 ---
-## K-space convertion
+## K-space conversion
 
 The latest version of the software provides a convenient and accurate way to convert raw data to k-space.
 
@@ -164,7 +167,7 @@ Wait for a moment the variable converted to k-space would appear in the main win
 
 ### Map
 
-Plot the map along z direction, and enable the crosshair. Move the centre of the crosshair to the centre of symmetry (i.e., Kx = Kx = 0), and then click on `ARPES Tools` and select `K-Convert (object)`.
+Plot the map along z direction, and enable the crosshair. Move the centre of the crosshair to the centre of symmetry (i.e., Kx = Ky = 0), and then click on `ARPES Tools` and select `K-Convert (object)`.
 ```
 Plot Window -> ARPES Tools -> K-Convert (object)
 ```
@@ -209,6 +212,7 @@ To achieve this result, please follow the steps below:
 Basic data process includes:
 - truncate data
 - normalise data
+- fit MDC/EDC peaks
 - fit fermi level and offset
 - combine photon energy scan cuts to 3D kz maps
 
@@ -216,7 +220,8 @@ Basic data process includes:
 
 Truncating data means cutting a selected range of data. To do this, click on the main window's menu and select
 ```
-Main Window -> Process -> Data truncate
+ARPES_data_browser_v5 -> Process -> Resample and crop -> Crop data
+Main Window -> Process -> Data truncate                  (legacy v32)
 ```
 ![truncate](./pictures/truncate.png)
 
@@ -226,7 +231,8 @@ Next, select the target data from the main window's list, input the truncate ran
 
 Self-normalizing the data can make unclear features of the data more apparent. To do this, click on the main window's menu and select
 ```
-Main Window -> Process -> Self Normalization.
+ARPES_data_browser_v5 -> Process -> Normalize -> Self normalization
+Main Window -> Process -> Self Normalization.            (legacy v32)
 ```
 ![normalise](./pictures/normalise.png)
 
@@ -246,13 +252,28 @@ to select a few point on the Fermi edge.
 Finally, press ENTER and save the data.
 
 
+### Fit Peaks (MDC/EDC)
+
+The toolbox-free peak fitter `PeakFit_app` (`Fitting/PeakFit`) opens from
+```
+ARPES_data_browser_v5 -> Analyze -> Fit spectra -> Fit Peaks (MDC/EDC)
+Main Window -> Tools -> Fit Peaks (MDC/EDC)              (legacy v32)
+```
+It fits Lorentzian, Gaussian or pseudo-Voigt peaks on a linear (or flat)
+background in MDCs or EDCs of a 2-D cut, with an optional held Fermi-Dirac
+cutoff for EDCs, and can track a dispersion slice by slice. Only 2-D cuts are
+accepted; extract a slice from a map first. Results are written to a new
+variable `<source>_peaks`; the source is not changed. This tool replaces the
+old **Fit MDC** entry. See the [PeakFit user guide](../doc/PeakFit_user_guide.md).
+
 ### Fit Fermi level and offset
 
 > Note that the `Fit Fermi Level` feature is only useful for correcting the work function and is not used to convert kinetic energy to binding energy, which is done automatically by the `K-Convert` function.
 
-Open the window by
+Open the original window by
 ```
-Main Window -> Tool -> Fit Fermi Level
+ARPES_data_browser_v5 -> Analyze -> Fit spectra -> Fit Fermi level
+Main Window -> Tools -> Fit Fermi Level                  (legacy v32)
 ```
 ![fit Fermi level](./pictures/fit_fermi_level.png)
 
@@ -266,10 +287,10 @@ Then, follow these steps:
 
 The upgraded, toolbox-free Fermi-edge fitter `FDD_fit_app` from OX_ARPES opens from
 ```
-Main Window -> Tools -> Fit Fermi-level (new)                  (legacy v32)
 ARPES_data_browser_v5 -> Analyze -> Fit spectra -> Fit Fermi-level (new)
+Main Window -> Tools -> Fit Fermi-level (new)            (legacy v32)
 ```
-directly below the original entry. It lists the cuts and maps in the base workspace;
+In both browsers it sits directly below the original entry, with **Fit Peaks (MDC/EDC)** listed above the Fermi items. It lists the cuts and maps in the base workspace;
 choose one, set the angle/energy window, then **Fit** and **Apply** (results are written
 to new variables, the source is not changed). A finite `info.temperature` is used as the
 held fit temperature, and a lamp shows Idle / Fitting… / Done / Failed. The OX_ARPES
@@ -279,7 +300,8 @@ held fit temperature, and a lamp shows Idle / Fitting… / Done / Failed. The OX
 
 This tool helps you combine 2D cuts at different photon energies into a 3D kz map. To open the window, follow these steps:
 ```
-Main Window -> Process -> Combine Data for KZ
+ARPES_data_browser_v5 -> Process -> Combine data -> Combine kz scan
+Main Window -> Process -> Combine Data for KZ            (legacy v32)
 ```
 ![Combine KZ](./pictures/combine_kz.png)
 
@@ -301,7 +323,8 @@ An essential aspect of ARPES data processing is overlaying the theoretical Brill
 
 To accomplish this, open the PlotBZ_V1 function by navigating to:
 ```
-Main Window -> Visualization -> Plot BZ
+ARPES_data_browser_v5 -> Visualize -> Plot BZ (new)
+Main Window -> Visualization -> Plot BZ (new)            (legacy v32)
 ```
 ![BZ](./pictures/bz.png)
 
@@ -321,7 +344,8 @@ Plot output figures default to MATLAB's painters renderer in releases before R20
 
 For better experiment planning, you can also plot the cut positions in k-space for different photon energies. Open another window by selecting:
 ```
-Main Window -> Visualization -> Plot cut in kz
+ARPES_data_browser_v5 -> Visualize -> KZ cut simulation
+Main Window -> Visualization -> KZ cut simulation        (legacy v32)
 ```
 ![kz cut](./pictures/kz_cut.png)
 
@@ -336,21 +360,24 @@ Several other functions for visualizing ARPES data are provided below. These ope
 ### EDC MDC line plot
 
 ```
-Main Window -> Visualoztion -> EDC MDC plot
+ARPES_data_browser_v5 -> Visualize -> Cuts and spectra -> EDC / MDC spectra
+Main Window -> Visualization -> EDC MDC plot             (legacy v32)
 ```
 ![EDC/MDC line plot](./pictures/edcmdc_plot.png)
 
 ### Slice 3D plot
 
 ```
-Main Window -> Visualoztion -> Slice 3D plot
+ARPES_data_browser_v5 -> Visualize -> Volumes and viewers -> 3D slices
+Main Window -> Visualization -> Slice 3D plot            (legacy v32)
 ```
 ![Slice 3D plot](./pictures/slice_plot.png)
 
 ### Volume with notch plot
 
 ```
-Main Window -> Visualoztion -> Volume 3D plot
+ARPES_data_browser_v5 -> Visualize -> Volumes and viewers -> 3D volume
+Main Window -> Visualization -> Volume 3D plot           (legacy v32)
 ```
 ![Volume 3D plot](./pictures/volume_plot.png)
 

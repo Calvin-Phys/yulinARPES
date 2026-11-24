@@ -16,8 +16,12 @@ ARPES_data_browser_v5;
 [`data_browser_demo_v32.m`](data_browser_demo_v32.m) is **legacy**, retained for
 compatibility. Browser v5 itself uses built-in MATLAB layout components and
 does not require GUI Layout Toolbox. Legacy v32 and some launched tools,
-including `PlotSlices`, still require it. Measured-data classes and several
-tools also use the separate OX_ARPES package.
+including `PlotSlices`, still require GUI Layout Toolbox 2.3.5 (provided under
+`Manual/`). Measured-data classes and several tools also use the separate
+OX_ARPES package; `setup_yulinARPES` does not add that checkout. The
+recommended MATLAB range is R2022a–R2024a; PeakFit and the OX_ARPES Fermi-edge
+fitter were tested on R2023a, and browser v5 includes R2025a compatibility
+patches.
 
 Use **Load → Export NXmpes...** in browser v5, or
 **Loader → Export NXmpes...** in legacy v32, to select workspace datasets
